@@ -350,11 +350,14 @@ def caption_chunks(words, tm, plan, layout, overlays_c):
     if cur:
         chunks.append(cur)
     body = [(o["t"], o["t"] + o["dur"]) for o in overlays_c if o.get("zone_name") == "body"]
+    stop = tm.out(cc["until"]) if "until" in cc else tm.duration  # e.g. no captions on a channel end card
     out = []
     for k, ch in enumerate(chunks):
         t0 = ch[0]["t0"]
+        if t0 >= stop:
+            break
         nxt = chunks[k + 1][0]["t0"] if k + 1 < len(chunks) else tm.duration
-        t1 = min(nxt, ch[-1]["t1"] + 0.45)
+        t1 = min(nxt, ch[-1]["t1"] + 0.45, stop)
         low = any(t0 < b1 and t1 > b0 for b0, b1 in body)
         out.append({"t0": round(t0, 3), "t1": round(max(t1, t0 + 0.25), 3),
                     "y": layout["caption_y_low"] if low else layout["caption_y"],

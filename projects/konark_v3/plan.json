@@ -32,6 +32,7 @@
 
   "captions": {
     "style": "pop",
+    "until": 40.13,
     "size": 80,
     "max_words": 3,
     "uppercase": true,
@@ -85,7 +86,7 @@
     {"type": "note10", "t_out": 33.4, "until": 40.13,
      "times": {"wheel": {"w": 90}, "card": {"w": 92}, "label": {"w": 96}, "flip": {"w": 102}, "label_out": {"w": 103}, "zoom": {"w": 109}}},
     {"type": "lower_third", "w": 103, "until": 39.4, "name": "🔔 Follow karo", "role": "aise aur facts ke liye", "align": "top"},
-    {"type": "flash", "t_out": 40.13, "strength": 0.9, "dur": 0.35, "sfx": "none"}
+    {"type": "flash", "t_out": 40.13, "in": 0, "strength": 0.9, "sfx": "none"}
   ],
 
   "sfx": [

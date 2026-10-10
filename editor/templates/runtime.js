@@ -503,8 +503,10 @@
 
       flash(o) {
         const el = mk("div", "flash", fx);
-        tl.fromTo(el, { opacity: 0 }, { opacity: o.strength ?? 0.85, duration: 0.05 }, o.t);
-        tl.to(el, { opacity: 0, duration: o.dur || 0.3, ease: "power2.out" }, o.t + 0.05);
+        const rise = o.in ?? 0.05;  // 0 = full white on the first frame (flash on a hard cut)
+        if (rise > 0) tl.fromTo(el, { opacity: 0 }, { opacity: o.strength ?? 0.85, duration: rise }, o.t);
+        tl.fromTo(el, { opacity: o.strength ?? 0.85 }, { opacity: 0, duration: o.dur || 0.3, ease: "power2.out",
+                                                         immediateRender: false }, o.t + rise);
       },
     };
     R.image = R.media;

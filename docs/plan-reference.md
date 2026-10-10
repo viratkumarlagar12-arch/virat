@@ -36,6 +36,7 @@ Use `"t_out"` for an exact time in the finished video.
     "breaks": [17],                  // force a new caption line at this word
     "emoji": {"40": "🔥"},           // emoji pops after a word
     "y": null,                       // auto (below the chin) — or a fixed pixel centre
+    "until": 40.13,                  // optional (src sec): no captions from here on, e.g. a channel end card
     "off": false
   },
 
@@ -60,7 +61,7 @@ Use `"t_out"` for an exact time in the finished video.
     {"type": "lower_third", "w": 3, "dur": 2.5, "name": "Virat", "role": "Creator"},
     {"type": "countdown", "w": 70, "n": 3, "tag": "Comment your answer!"},
     {"type": "text_slam", "w": 76, "dur": 1.2, "text": "*FINALLY*"},
-    {"type": "flash", "w": 76},
+    {"type": "flash", "w": 76},                      // "in": 0 = full white on the first frame (flash on a hard cut)
     {"type": "sundial", "w": 45, "until_w": 71, "title": "Sooraj + Shadow = *Time*",   // wheel-as-sundial explainer
      "times": {"shadow": {"w": 55}, "move0": {"w": 59}, "move1": {"w": 71}}},          // named moments -> t_shadow, ...
     {"type": "cta", "w": 78, "dur": 2.4, "text": "Follow for *Part 2*", "button": "SUBSCRIBE"}
