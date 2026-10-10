@@ -8,6 +8,14 @@ masterclass summarised in `docs/masterclass-notes.md`. Talk to them in simple En
 npm and PyPI work; Hugging Face, stock-footage sites, YouTube and most CDNs are blocked — that's why models come
 from sherpa-onnx GitHub releases and music/SFX are synthesized.
 
+## Getting the raw video
+Chat attachments are capped at 30 MB (the app says "some images were too large to attach"). Drive/Dropbox/WeTransfer
+are blocked here. Large originals come as a GitHub release asset on the user's public repo: find the asset name with
+the GitHub MCP release tools (`get_release_by_tag`), then
+`curl -fL -o projects/<name>/raw.mp4 https://github.com/viratkumarlagar12-arch/virat/releases/download/<tag>/<file>`.
+Then remind the user to delete the release (the repo is public). Split uploads: join with ffmpeg concat
+(`-f concat -safe 0 -i list.txt -c copy`, or re-encode if the parts' codecs differ).
+
 ## Workflow for every video
 1. Put the raw file in `projects/<name>/` (never commit media; `.gitignore` covers it).
 2. `analyze.py <video> projects/<name>/work` then `transcribe.py projects/<name>/work [--lang hi|en]`.

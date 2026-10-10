@@ -18,6 +18,20 @@ zoom punches, sound effects, music, loudness — and checks every frame so nothi
 Optional extras: your own b-roll folder (step 2.1), a reference Short whose style you want copied (step 3),
 your channel name for an intro (step 5), a topic that needs 3D (step 6).
 
+## Sending your video (the chat has a 30 MB limit per file)
+The Claude app refuses attachments over 30 MB ("some images were too large to attach"). Google Drive, Dropbox,
+WeTransfer and Telegram links don't work from this cloud machine; GitHub does. Pick one:
+
+1. **Make it smaller than 30 MB, then attach** (easiest). In CapCut: import the video → Export → Resolution
+   **1080p**, Frame rate **30**, Code rate **Recommended** or **Lower**, and check the file size it shows before exporting.
+   Rule of thumb: about 27 MB for a 60-second Short at 1080p — YouTube compresses Shorts to about this level anyway.
+   On a computer: `ffmpeg -i in.mp4 -vf "scale=1080:1920:force_original_aspect_ratio=decrease:force_divisible_by=2" -c:v libx264 -preset slow -crf 23 -maxrate 3.5M -bufsize 7M -c:a aac -b:a 160k out.mp4`
+2. **Split it** into 2–3 parts, each under 30 MB, and attach all of them in one message. Claude joins them back.
+3. **Full original quality, any size (up to 2 GB): a GitHub release.** On github.com/viratkumarlagar12-arch/virat
+   (phone browser works) → **Releases** → **Draft a new release** → tag e.g. `raw-1` → drag the video into
+   "Attach binaries" → **Publish**. Tell Claude the tag. ⚠️ The repo is public, so anyone with the link can download
+   the video while the release exists. Delete the release once Claude confirms it has the file.
+
 ## The 6 masterclass steps → tools here
 
 | Step in the video | Here |
