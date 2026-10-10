@@ -713,6 +713,15 @@ def main():
          "-pix_fmt", "yuv420p", "-profile:v", "high", "-c:a", "aac", "-b:a", "320k", "-ar", "48000",
          "-shortest", "-movflags", "+faststart", final])
     print(f"DONE -> {final}")
+    if final.stat().st_size > 29 * 2 ** 20:  # chat/file delivery caps at 30 MiB: make a 2-pass copy that fits
+        upload = final.with_name(final.stem + "_upload.mp4")
+        vbit = int((27.5 * 2 ** 20 * 8 / tm.duration - 192_000) / 1000)
+        common = ["-c:v", "libx264", "-preset", "slow", "-b:v", f"{vbit}k", "-maxrate", f"{int(vbit * 1.4)}k",
+                  "-bufsize", f"{vbit * 2}k", "-passlogfile", str(work / "x264pass")]
+        run(["ffmpeg", "-v", "error", "-y", "-i", final, *common, "-pass", "1", "-an", "-f", "mp4", "/dev/null"])
+        run(["ffmpeg", "-v", "error", "-y", "-i", final, *common, "-pass", "2", "-pix_fmt", "yuv420p",
+             "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", upload])
+        print(f"upload copy ({upload.stat().st_size / 2 ** 20:.1f} MiB) -> {upload}")
 
 
 if __name__ == "__main__":

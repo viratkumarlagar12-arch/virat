@@ -32,7 +32,8 @@ Then remind the user to delete the release (the repo is public). Split uploads: 
 6. `build.py projects/<name>` (add `--no-render` to iterate on layout; `hyperframes check` runs in `projects/<name>/hf`).
    Build prints "note: … shortened" when two graphics collide — re-time them in the plan.
 7. `review.py projects/<name>` → look at `work/review/final_*.jpg`, face check must say OK, loudness ≈ −14 LUFS.
-8. Deliver the MP4 with SendUserFile; ask for one round of notes; bump version (v2, v3…).
+8. Deliver with SendUserFile (30 MiB cap: build.py also writes `<name>_vN_upload.mp4` when needed); ask for one
+   round of notes; bump version (v2, v3…).
 
 ## Gotchas
 - HyperFrames lint: no CSS transform on elements GSAP animates; video b-roll must be in index.html statically
