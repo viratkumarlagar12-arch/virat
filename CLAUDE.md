@@ -43,8 +43,14 @@ Then remind the user to delete the release (the repo is public). Split uploads: 
 ## Channel end card
 The user's channel is "Science Unseen Hindi". Their CapCut exports end with a ~1.5 s still logo card (black,
 "SCIENCE / UNSEEN HINDI" over the Earth; in the Konark upload it starts at 44.467 s, 480×854). When they ask for
-"my channel clip at the end", append it as the last shot (in-point a frame after its start), flash + low impact
-into it, slow push-in (it's a still), and let the music fade out under it.
+"my channel clip at the end", append it as the last shot (~2 s; in-point a frame after its start), dip to black and
+fade the logo in, slow push-in (it's a still), fade out to black at the end (`fade` overlays — the user asked for
+fades over a flash), stop captions before it (`captions.until`), and let the music fade out under it.
+
+## Music level
+The user thinks in CapCut terms: "music 8 to 10 volume" → `"music": {"volume": 9}`. Phone speakers don't play
+sub-bass, so a bass-heavy bed is inaudible on a phone even when the meter says it's there — use the `documentary`
+mood (or another with mid-range content) for facts/history videos.
 
 ## Gotchas
 - HyperFrames lint: no CSS transform on elements GSAP animates; video b-roll must be in index.html statically

@@ -179,3 +179,4 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; 
 /* ---------- fx ---------- */
 #progress { position: absolute; left: 0; top: 0; height: 10px; width: 1080px; background: var(--accent); transform-origin: 0 50%; }
 .flash { position: absolute; inset: 0; background: #fff; opacity: 0; }
+.fade { position: absolute; inset: 0; background: #000; opacity: 0; z-index: 2; } /* above captions + progress bar */

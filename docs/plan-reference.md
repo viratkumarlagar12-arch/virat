@@ -62,6 +62,8 @@ Use `"t_out"` for an exact time in the finished video.
     {"type": "countdown", "w": 70, "n": 3, "tag": "Comment your answer!"},
     {"type": "text_slam", "w": 76, "dur": 1.2, "text": "*FINALLY*"},
     {"type": "flash", "w": 76},                      // "in": 0 = full white on the first frame (flash on a hard cut)
+    {"type": "fade", "t_out": 39.8, "in": 0.3, "hold": 0, "out": 0.5},  // dip to black over everything (also "color")
+    {"type": "fade", "t_out": 41.6, "in": 0.5, "out": 0},               // ...or finish the video on black
     {"type": "sundial", "w": 45, "until_w": 71, "title": "Sooraj + Shadow = *Time*",   // wheel-as-sundial explainer
      "times": {"shadow": {"w": 55}, "move0": {"w": 59}, "move1": {"w": 71}}},          // named moments -> t_shadow, ...
     {"type": "cta", "w": 78, "dur": 2.4, "text": "Follow for *Part 2*", "button": "SUBSCRIBE"}
@@ -75,6 +77,8 @@ Use `"t_out"` for an exact time in the finished video.
   // library: whoosh swoosh whoosh_down pop bubble click tick ding cash success riser impact glitch typing camera
 
   "music": {"mood": "upbeat", "seed": 3, "under_voice_db": 19, "gap_db": 11},
+  // moods: upbeat lofi cinematic tech suspense documentary (piano + strings; the one that's heard on phone speakers)
+  // or "volume": 9 instead of the dB pair = CapCut-style music volume (100 = full track; 10 ≈ 14 dB under the voice)
   // mood: upbeat | lofi | cinematic | tech | suspense  — or {"file": "my_track.mp3"} for your own licence-free track
 
   "progress_bar": true

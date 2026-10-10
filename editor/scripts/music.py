@@ -1,7 +1,8 @@
 """Copyright-free background-music bed, composed and synthesized from scratch.
 
 Moods: upbeat (explainer / motivation), lofi (story / calm), cinematic (big reveal / facts),
-tech (AI / coding / fast facts), suspense (puzzle / countdown).
+tech (AI / coding / fast facts), suspense (puzzle / countdown), documentary (history / science facts; piano +
+strings, audible on phone speakers).
 If you have a track you prefer (e.g. from YouTube Audio Library), put it in the plan instead.
 
 usage: python music.py <out.wav> --mood upbeat --duration 45 [--bpm 112] [--seed 3]
@@ -21,6 +22,9 @@ MOODS = {
     "cinematic": (92, 57, "minor", [0, 5, 2, 6], 0.0),
     "tech":      (122, 57, "minor", [0, 0, 5, 6], 0.0),
     "suspense":  (100, 50, "minor", [0, 0, 1, 0], 0.0),
+    # piano ostinato + strings + bell over a soft pulse: most of its energy is in the mids, so it is still heard on
+    # phone speakers (the other cinematic bed is mostly sub-bass and disappears on a phone)
+    "documentary": (90, 57, "minor", [0, 5, 2, 6], 0.0),
 }
 SCALES = {"major": [0, 2, 4, 5, 7, 9, 11], "minor": [0, 2, 3, 5, 7, 8, 10]}
 
@@ -112,13 +116,36 @@ def epiano(f, d):
     return x * np.exp(-t * 1.2) * adsr(n, 0.004, 0.2, 0.8, 0.15) * (1 + 0.15 * np.sin(2 * np.pi * 4.5 * t))
 
 
-def pad(freqs, d):
+def pad(freqs, d, cutoff=1400, attack=0.35):
     n = int(d * SR)
     x = np.zeros(n)
     for f in freqs:
         for det in (-0.12, 0.0, 0.11):
             x += saw(f * 2 ** (det / 12), n, 10)
-    return lp(x / (3 * len(freqs)), 1400) * adsr(n, 0.35, 0.3, 0.8, 0.4)
+    return lp(x / (3 * len(freqs)), cutoff) * adsr(n, attack, 0.3, 0.8, 0.4)
+
+
+def piano(f, d, vel=1.0):
+    """soft 'felt' piano: slightly stretched partials, the higher ones dying faster"""
+    n = int(d * SR)
+    t = np.arange(n) / SR
+    x = np.zeros(n)
+    for k in range(1, 9):
+        fk = f * k * np.sqrt(1 + 0.0004 * k * k)
+        if fk > SR / 2.2:
+            break
+        x += np.sin(2 * np.pi * fk * t) * np.exp(-t * (1.4 + 0.8 * k)) / k ** 1.4
+    x = lp(x * adsr(n, 0.004, 0.05, 1.0, 0.08), 2600 + 1400 * vel)
+    return x / (np.max(np.abs(x)) + 1e-9) * vel
+
+
+def bell(f, d):
+    """mallet / celesta: inharmonic partials, long ring"""
+    n = int(d * SR)
+    t = np.arange(n) / SR
+    x = sum(a * np.sin(2 * np.pi * f * r * t) * np.exp(-t * dk)
+            for r, a, dk in ((1, 1.0, 1.6), (2.76, 0.35, 3.5), (5.4, 0.15, 7), (8.93, 0.06, 12)) if f * r < SR / 2.2)
+    return x * adsr(n, 0.002, 0.05, 1.0, 0.2)
 
 
 def reverb(x, secs=1.8, mix=0.22, seed=1):
@@ -180,10 +207,17 @@ def compose(mood, duration, bpm=None, seed=3):
             for q in range(4):
                 drums.add(hat(rng), t0 + q * beat, 0.25, pan=-0.2)  # clock tick
             drums.add(K, t0, 0.6)
+        elif mood == "documentary" and 2 <= b < nbars - 1:  # heartbeat pulse once the piano has set the mood
+            drums.add(K, t0, 0.5)
+            drums.add(K, t0 + 2 * beat, 0.25)
 
         # ---- bass
         bnote = hz(ch[0] - 12)
-        if mood in ("upbeat", "tech", "cinematic"):
+        if mood == "documentary":
+            if b >= 1:
+                n = int(bar * SR)
+                bass.add(np.sin(2 * np.pi * bnote * np.arange(n) / SR) * adsr(n, 0.08, 0.3, 0.8, 0.3), t0, 0.3)
+        elif mood in ("upbeat", "tech", "cinematic"):
             for e in range(8):
                 d = beat / 2 * 0.9
                 n = int(d * SR)
@@ -199,6 +233,9 @@ def compose(mood, duration, bpm=None, seed=3):
         if mood == "lofi":
             for k, m in enumerate(ch):
                 keys.add(epiano(hz(m), bar * 0.95), t0 + k * 0.012 + swing * 0.05, 0.22, pan=(k - 1.5) * 0.15)
+        elif mood == "documentary":  # strings: brighter than the pad, slow swell, top voice an octave up
+            pads.add(pad([hz(m) for m in ch] + [hz(ch[0] + 12)], bar, cutoff=2400, attack=0.7), t0,
+                     0.22 if intro else 0.32)
         else:
             pads.add(pad([hz(m) for m in ch], bar), t0, 0.5 if mood != "suspense" else 0.35)
 
@@ -214,9 +251,20 @@ def compose(mood, duration, bpm=None, seed=3):
             for e, off in enumerate((0, 0.75, 1.5, 3)):
                 m = ch[(e + 1) % 4] + 12
                 lead.add(epiano(hz(m), beat), t0 + off * beat, 0.1, pan=0.2)
+        elif mood == "documentary":
+            # piano ostinato in 8ths (A4-G5 range), accents on the beat; a bell on the chord's fifth every bar
+            arp = [ch[0], ch[1], ch[2], ch[1], ch[3], ch[1], ch[2], ch[1]]
+            last = b == nbars - 1
+            for e in range(1 if last else 8):
+                vel = (0.8 if e % 2 == 0 else 0.58) * rng.uniform(0.9, 1.05)
+                keys.add(piano(hz(arp[e] + 12), bar if last else beat * 2, vel), t0 + e * beat / 2, 0.42,
+                         pan=0.18 if e % 2 else -0.18)
+            if b >= 1:
+                lead.add(bell(hz(ch[2] + 24), bar), t0, 0.1, pan=0.3)
 
     side2 = side[:, None]
-    music = (drums.buf * 0.9 + bass.buf * side2 + keys.buf * side2 + reverb(pads.buf, 2.4, 0.35) * side2
+    keys_mix = reverb(keys.buf, 2.0, 0.3, seed=2) if mood == "documentary" else keys.buf
+    music = (drums.buf * 0.9 + bass.buf * side2 + keys_mix * side2 + reverb(pads.buf, 2.4, 0.35) * side2
              + reverb(lead.buf, 1.6, 0.3) * side2)
     if mood == "lofi":
         music = lp(music, 4200)

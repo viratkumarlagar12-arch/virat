@@ -1,7 +1,9 @@
 """Final audio mix: clean voice + ducked music + SFX, mastered to YouTube loudness (-14 LUFS, -1 dBTP).
 
 Voice chain (ffmpeg): high-pass 80 Hz, light denoise, de-mud, presence lift, compressor.
-Music: scaled relative to the voice, ducked while you talk, scooped in the voice frequency band.
+Music: scaled relative to the voice (K-weighted, i.e. as loud as ears hear it), ducked while you talk, scooped in the
+voice frequency band. Level: "under_voice_db"/"gap_db", or "volume" like CapCut's music volume (100 = the track's
+full level; a normally mastered track at 10 sits about 14 dB under a voiceover).
 SFX: placed at event times with per-effect default levels.
 
 usage (normally called from build.py):
@@ -15,7 +17,7 @@ from pathlib import Path
 
 import numpy as np
 import soundfile as sf
-from scipy.signal import butter, resample_poly, sosfilt
+from scipy.signal import butter, lfilter, resample_poly, sosfilt
 
 SR = 48000
 ED = Path(__file__).resolve().parent.parent
@@ -41,6 +43,13 @@ def load(path, sr=SR):
     if a.shape[1] == 1:
         a = np.repeat(a, 2, 1)
     return a[:, :2]
+
+
+def kweight(x):
+    """ITU-R BS.1770 K-weighting (48 kHz): levels as ears hear them, so a bass-heavy music bed isn't over-counted"""
+    y = lfilter([1.53512485958697, -2.69169618940638, 1.19839281085285], [1.0, -1.69065929318241, 0.73248077421585],
+                x, axis=0)
+    return lfilter([1.0, -2.0, 1.0], [1.0, -1.99004745483398, 0.99007225036621], y, axis=0)
 
 
 def rms_env(x, win=0.05):
@@ -87,6 +96,33 @@ def loudnorm(src, dst, target=-14.0, tp=-1.5):
                     str(dst)], check=True)
 
 
+def music_stem(voice, music, music_cfg, n):
+    """the music exactly as it goes into the mix: looped/cut to n samples, voice band scooped, levelled and ducked"""
+    m = load(music)
+    if len(m) < n:  # loop with a short crossfade
+        reps = int(np.ceil(n / len(m))) + 1
+        m = np.concatenate([m] * reps)
+    m = m[:n].copy()
+    band = sosfilt(butter(2, [900, 4500], "bandpass", fs=SR, output="sos"), m, axis=0)
+    m -= 0.35 * band  # make room for the voice
+    # levels as heard (K-weighted); the music's first/last 2 s (fades) don't count
+    vk, speaking = speech_rms(kweight(voice))
+    core = m[2 * SR : max(2 * SR + SR, n - 2 * SR)]
+    mr = float(np.sqrt((kweight(core) ** 2).mean()) + 1e-9)
+    if "volume" in music_cfg:  # CapCut-style: track mastered ~-10 LUFS, voiceover ~-16 LUFS
+        under = -6 - 20 * np.log10(max(music_cfg["volume"], 0.1) / 100)
+        gap = under - 2
+    else:
+        under = music_cfg.get("under_voice_db", 19)  # how far below the voice while talking
+        gap = music_cfg.get("gap_db", 11)  # in pauses / intro / outro
+    g_talk, g_gap = vk / mr * 10 ** (-under / 20), vk / mr * 10 ** (-gap / 20)
+    duck = smooth(speaking.astype(np.float32))
+    gain = g_gap + (g_talk - g_gap) * duck
+    fo = int(1.2 * SR)
+    gain[-fo:] *= np.linspace(1, 0, fo)
+    return m * gain[:, None]
+
+
 def mix(voice_wav, out_wav, music=None, music_cfg=None, sfx_events=(), duration=None, work=None):
     work = Path(work or Path(out_wav).parent)
     music_cfg = music_cfg or {}
@@ -96,26 +132,11 @@ def mix(voice_wav, out_wav, music=None, music_cfg=None, sfx_events=(), duration=
     voice = load(vproc)
     n = int((duration or len(voice) / SR) * SR)
     voice = np.pad(voice, ((0, max(0, n - len(voice))), (0, 0)))[:n]
-    vr, speaking = speech_rms(voice)
+    vr = speech_rms(voice)[0]  # SFX levels are relative to this (plain RMS)
     out = voice.copy()
 
     if music:
-        m = load(music)
-        if len(m) < n:  # loop with a short crossfade
-            reps = int(np.ceil(n / len(m))) + 1
-            m = np.concatenate([m] * reps)
-        m = m[:n].copy()
-        band = sosfilt(butter(2, [900, 4500], "bandpass", fs=SR, output="sos"), m, axis=0)
-        m -= 0.35 * band  # make room for the voice
-        mr = float(np.sqrt((m ** 2).mean()) + 1e-9)
-        under = music_cfg.get("under_voice_db", 19)  # how far below the voice while talking
-        gap = music_cfg.get("gap_db", 11)  # in pauses / intro / outro
-        g_talk, g_gap = vr / mr * 10 ** (-under / 20), vr / mr * 10 ** (-gap / 20)
-        duck = smooth(speaking.astype(np.float32))
-        gain = g_gap + (g_talk - g_gap) * duck
-        fo = int(1.2 * SR)
-        gain[-fo:] *= np.linspace(1, 0, fo)
-        out += m * gain[:, None]
+        out += music_stem(voice, music, music_cfg, n)
 
     for ev in sfx_events:
         name = ev["name"]

@@ -508,6 +508,18 @@
         tl.fromTo(el, { opacity: o.strength ?? 0.85 }, { opacity: 0, duration: o.dur || 0.3, ease: "power2.out",
                                                          immediateRender: false }, o.t + rise);
       },
+
+      // fade to / from a colour over everything (black by default): "in" s to full, "hold" s, "out" s back to clear.
+      // Dip to black between shots, or "out": 0 at the very end to finish on black.
+      fade(o) {
+        const el = mk("div", "fade", fx);
+        if (o.color) el.style.background = o.color;
+        const a = o.in ?? 0.3, h = o.hold ?? 0, b = o.out ?? 0.3, peak = o.strength ?? 1;
+        if (a > 0) tl.fromTo(el, { opacity: 0 }, { opacity: peak, duration: a, ease: "power1.inOut" }, o.t);
+        else tl.set(el, { opacity: peak }, o.t);
+        if (b > 0) tl.fromTo(el, { opacity: peak }, { opacity: 0, duration: b, ease: "power1.inOut",
+                                                      immediateRender: false }, o.t + a + h);
+      },
     };
     R.image = R.media;
     R.video = R.media;

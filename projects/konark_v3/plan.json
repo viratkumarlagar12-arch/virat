@@ -63,7 +63,7 @@
       {"t_out": 30.25, "from": 1.0, "scale": 1.4, "dur": 1.72, "ease": "power2.in"},
       {"t_out": 31.97, "from": 1.0, "scale": 1.05, "dur": 1.43},
       {"t_out": 33.4, "from": 1.0},
-      {"t_out": 40.13, "from": 1.0, "scale": 1.05, "dur": 1.6, "ease": "power1.out", "origin": [540, 900]}
+      {"t_out": 40.13, "from": 1.0, "scale": 1.05, "dur": 2.0, "ease": "power1.out", "origin": [540, 900]}
     ],
     "shakes": [{"w": 40, "amp": 12, "dur": 0.3}]
   },
@@ -86,7 +86,8 @@
     {"type": "note10", "t_out": 33.4, "until": 40.13,
      "times": {"wheel": {"w": 90}, "card": {"w": 92}, "label": {"w": 96}, "flip": {"w": 102}, "label_out": {"w": 103}, "zoom": {"w": 109}}},
     {"type": "lower_third", "w": 103, "until": 39.4, "name": "🔔 Follow karo", "role": "aise aur facts ke liye", "align": "top"},
-    {"type": "flash", "t_out": 40.13, "in": 0, "strength": 0.9, "sfx": "none"}
+    {"type": "fade", "t_out": 39.83, "in": 0.3, "out": 0.5},
+    {"type": "fade", "t_out": 41.63, "in": 0.5, "out": 0}
   ],
 
   "sfx": [
@@ -96,6 +97,6 @@
     {"t_out": 40.13, "name": "impact", "gain_db": -7}
   ],
 
-  "music": {"mood": "cinematic", "seed": 5, "under_voice_db": 18, "gap_db": 10},
+  "music": {"mood": "documentary", "seed": 5, "volume": 9},
   "progress_bar": true
 }

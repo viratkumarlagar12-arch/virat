@@ -79,8 +79,9 @@ GRADES = {
 DEFAULT_SFX = {"hook": "impact", "card": "whoosh", "stat": "whoosh", "bars": "whoosh", "list": "swoosh",
                "compare": "whoosh", "emoji": "bubble", "image": "whoosh", "video": "whoosh",
                "lower_third": "swoosh", "countdown": None, "cta": "pop", "text_slam": "impact", "flash": "camera",
-               "sundial": "whoosh", "ring": "pop", "stamp": "impact", "hand": None, "flare": None, "note10": None}
-OVERLAY_ONLY = {"emoji", "flash", "hand", "ring", "flare", "note10"}  # drawn on the footage; don't take a layout zone
+               "sundial": "whoosh", "ring": "pop", "stamp": "impact", "hand": None, "flare": None, "note10": None,
+               "fade": None}
+OVERLAY_ONLY = {"emoji", "flash", "hand", "ring", "flare", "note10", "fade"}  # drawn on the footage; don't take a layout zone
 
 
 # ----------------------------------------------------------------------------- helpers
@@ -450,6 +451,8 @@ def compile_overlays(plan, words, tm, layout, media_dir, verbose=False):
             t1 = t0 + o.get("n", 3) + 0.3
         if typ == "flash":
             t1 = t0 + 0.35
+        if typ == "fade":
+            t1 = t0 + o.get("in", 0.3) + o.get("hold", 0) + o.get("out", 0.3)
         o["t"], o["dur"] = round(t0, 3), round(max(0.4, t1 - t0), 3)
         if typ in ("image", "video"):
             o["mode"] = o.get("mode", "pip")
