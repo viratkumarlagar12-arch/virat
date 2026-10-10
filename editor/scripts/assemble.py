@@ -31,15 +31,16 @@ def scene_cuts(src, thresh=0.18):
     return _cuts[src]
 
 
-def check_cuts(shots, base):
-    """warn when a shot's source range runs across a scene cut (a stray frame of the neighbouring shot)"""
+def check_cuts(shots, base, fps=30):
+    """warn when a shot's source range runs across a scene cut (a stray frame of the neighbouring shot).
+    Frame rounding can pull in one extra frame at either end, so the window is padded by ~1.5 frames."""
     for i, s in enumerate(shots):
         if s.get("blur"):
             continue
         src = (base / s["src"]).resolve()
         a = s.get("in", 0)
         b = a + s["dur"] * s.get("speed", 1.0)
-        hits = [c for c in scene_cuts(src) if a + 0.02 < c < b - 0.02]
+        hits = [c for c in scene_cuts(src) if a - 0.5 / fps < c < b + 1.5 / fps]
         if hits:
             print(f"  WARNING shot {i} ({s.get('note', '')}): {Path(s['src']).name} {a:.2f}-{b:.2f} crosses "
                   f"possible cut(s) at {', '.join(f'{c:.2f}' for c in hits)}")
@@ -49,7 +50,7 @@ def main():
     edl_path, out = Path(sys.argv[1]), Path(sys.argv[2])
     edl = json.loads(edl_path.read_text())
     base = edl_path.parent
-    check_cuts(edl["shots"], base)
+    check_cuts(edl["shots"], base, edl.get("fps", 30))
     fps = edl.get("fps", 30)
     audio = (base / edl["audio"]).resolve()
     inputs, chains, t = [], [], 0.0
