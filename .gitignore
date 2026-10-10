@@ -17,4 +17,7 @@ projects/**/*.wav
 projects/**/*.mp3
 projects/**/*.jpg
 projects/**/*.png
+projects/**/*.gif
+projects/**/*.webm
+projects/**/download/
 projects/**/broll_lib/
