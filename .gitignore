@@ -21,3 +21,8 @@ projects/**/*.gif
 projects/**/*.webm
 projects/**/download/
 projects/**/broll_lib/
+projects/**/tight/
+projects/**/vo_work/
+projects/**/media/
+projects/**/sheets_src/
+projects/**/assemble_graph.txt

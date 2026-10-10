@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<title>Konark wheel sundial 3D</title>
+<!-- Konark Sun Temple chariot wheel as a sundial (Three.js inside HyperFrames, CPU-renderable, deterministic).
+     Weathered sandstone wheel (8 thick + 8 thin spokes, beaded rim, medallions, projecting axle) set into a carved
+     plinth wall, lit by a golden-hour sun with real shadow mapping: the axle's shadow falls on the spokes.
+     Settings live in the one-line window.CFG below; render3d.py --config '{"mode":"spokes"}' merges JSON over it.
+       mode "sweep"  : off-axis slow orbit; sun travels sunFrom -> sunTo (deg, 0 = straight up, - = left) between
+                       sweepStart and sweepEnd; the hub shadow turns across the spokes like a clock hand.
+       mode "spokes" : front-on; sun fixed at sunFixed; the 8 thick spokes light up one by one (spokeStart,
+                       spokeStagger), "8 PRAHAR" pops at praharAt, the 12-to-1:30 wedge fills gold at wedgeAt
+                       with a "3 GHANTE" label.
+     Keep-out: nothing important in the top 150 px or bottom 420 px (captions / Shorts UI). -->
+<script>
+window.CFG = { duration: 4.5, mode: "sweep", sunFrom: -70, sunTo: 70, sweepStart: 0.2, sweepEnd: 4.2, spokeStart: 0.4, spokeStagger: 0.22, praharAt: 2.4, wedgeAt: 3.0, sunFixed: -62 };
+</script>
+<script src="assets/gsap.min.js"></script>
+<script type="importmap">{ "imports": { "three": "./assets/three.module.js" } }</script>
+<style>
+@font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-900.ttf"); font-weight: 900; }
+@font-face { font-family: "Poppins"; src: url("assets/fonts/Poppins-700.ttf"); font-weight: 700; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+#root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #1a120b; }
+#gl { position: absolute; inset: 0; width: 1080px; height: 1920px; display: block; }
+#vig { position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 78% 52% at 50% 45%, rgba(0,0,0,0) 58%, rgba(12,6,2,0.55) 100%),
+    linear-gradient(to bottom, rgba(10,5,2,0.42) 0%, rgba(10,5,2,0) 16%, rgba(10,5,2,0) 72%, rgba(10,5,2,0.5) 100%); }
+#sun { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
+#sun .halo { position: absolute; left: -300px; top: -300px; width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,220,150,0.55) 0%, rgba(255,180,90,0.28) 22%, rgba(255,150,60,0.10) 45%, rgba(255,140,60,0) 70%);
+  mix-blend-mode: screen; }
+#sun .core { position: absolute; left: -48px; top: -48px; width: 96px; height: 96px; border-radius: 50%;
+  background: radial-gradient(circle, #fffdf2 0%, #fff4c4 42%, #ffd877 72%, #ffbf55 100%);
+  box-shadow: 0 0 36px 14px rgba(255,210,120,0.75), 0 0 110px 40px rgba(255,170,70,0.35); }
+#prahar { position: absolute; left: 0; right: 0; top: 238px; text-align: center; white-space: nowrap;
+  font-family: "Montserrat"; font-weight: 900; font-size: 124px; line-height: 1; letter-spacing: 0.01em; color: #fff;
+  -webkit-text-stroke: 18px #1c0f05; paint-order: stroke fill; opacity: 0; transform-origin: 50% 55%;
+  text-shadow: 0 10px 28px rgba(0,0,0,0.55); }
+#prahar .y, #ghante .y { color: #FFD60A; }
+#ghante { position: absolute; left: 640px; top: 392px; width: 392px; text-align: center; white-space: nowrap;
+  font-family: "Poppins"; font-weight: 700; font-size: 64px; line-height: 1; color: #fff;
+  padding: 18px 0 14px; border-radius: 999px; background: rgba(24,13,5,0.88); border: 4px solid #FFC233;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.55); opacity: 0; transform-origin: 20% 100%; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4.5" data-width="1080" data-height="1920">
+  <canvas id="gl" width="1080" height="1920"></canvas>
+  <div id="vig"></div>
+  <div id="sun"><div class="halo"></div><div class="core"></div></div>
+  <div id="prahar"><span class="y">8</span> PRAHAR</div>
+  <div id="ghante"><span class="y">3</span> GHANTE</div>
+</div>
+<script>
+  (function () {
+    const C = window.CFG, root = document.getElementById("root");
+    root.setAttribute("data-duration", String(C.duration));
+    const tl = gsap.timeline({ paused: true });
+    if (C.mode === "spokes") {
+      tl.fromTo("#prahar", { opacity: 0, scale: 0.35 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(2.4)" }, C.praharAt);
+      tl.fromTo("#ghante", { opacity: 0, scale: 0.5, y: 24 }, { opacity: 1, scale: 1, y: 0, duration: 0.42, ease: "back.out(2.2)" }, C.wedgeAt + 0.18);
+    }
+    tl.set({}, {}, C.duration); // timeline length == composition length
+    window.__timelines = window.__timelines || {};
+    window.__timelines["main"] = tl;
+  })();
+</script>
+<script type="module">
+import * as THREE from "three";
+
+const CFG = window.CFG;
+const W = 1080, H = 1920, D2R = Math.PI / 180;
+const MODE = CFG.mode === "spokes" ? "spokes" : "sweep";
+const ALT = 27 * D2R;          // sun height above the wheel plane: sets the shadow length
+const FOV = 28;
+const clamp01 = (x) => Math.max(0, Math.min(1, x));
+const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const lerp = (a, b, t) => a + (b - a) * t;
+
+// ---------------------------------------------------------------- seeded, tileable value noise
+let seed = 20240917;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const P = new Uint8Array(512);
+for (let i = 0; i < 256; i++) P[i] = i;
+for (let i = 255; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [P[i], P[j]] = [P[j], P[i]]; }
+for (let i = 0; i < 256; i++) P[i + 256] = P[i];
+const wrap = (i, p) => ((i % p) + p) % p & 255;
+const GX = new Float32Array(256), GY = new Float32Array(256);
+for (let i = 0; i < 256; i++) { const a = rnd() * Math.PI * 2; GX[i] = Math.cos(a); GY[i] = Math.sin(a); }
+function tnoise(x, y, px, py) { // gradient noise, periodic in x with px and in y with py (integers); ~[0,1]
+  const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi;
+  const u = fx * fx * fx * (fx * (fx * 6 - 15) + 10), v = fy * fy * fy * (fy * (fy * 6 - 15) + 10);
+  const x0 = wrap(xi, px), x1 = wrap(xi + 1, px), y0 = wrap(yi, py), y1 = wrap(yi + 1, py);
+  const g = (ix, iy, dx, dy) => { const h = P[P[ix] + iy]; return GX[h] * dx + GY[h] * dy; };
+  const a = g(x0, y0, fx, fy), b = g(x1, y0, fx - 1, fy), c = g(x0, y1, fx, fy - 1), d = g(x1, y1, fx - 1, fy - 1);
+  return 0.5 + 0.75 * (a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v);
+}
+function tfbm(x, y, f, oct) { // x, y in [0,1): tileable fbm starting at integer frequency f
+  let s = 0, a = 0.5, n = 0;
+  for (let i = 0; i < oct; i++) { s += a * tnoise(x * f, y * f, f, f); n += a; f *= 2; a *= 0.5; }
+  return s / n;
+}
+
+// ---------------------------------------------------------------- sandstone textures (colour + bump)
+function makeCanvas(n) { const c = document.createElement("canvas"); c.width = c.height = n; return c; }
+const TS = 1024;
+const stoneC = makeCanvas(TS), bumpC = makeCanvas(TS);
+{
+  const ci = stoneC.getContext("2d").createImageData(TS, TS), bi = bumpC.getContext("2d").createImageData(TS, TS);
+  for (let j = 0; j < TS; j++) {
+    const v = j / TS;
+    for (let i = 0; i < TS; i++) {
+      const u = i / TS;
+      const n = tfbm(u, v, 4, 6);                                   // broad mottling
+      const st = tnoise(u * 2 + n * 1.2, v * 40, 2, 40);            // faint bedding strata
+      const w = tfbm(u + 0.37, v + 0.71, 4, 4);                     // weathered (deeper ochre) patches
+      const sp = tnoise(u * 160 + 0.5, v * 160 + 0.5, 160, 160);    // tiny dark lichen specks
+      const pr = tfbm(u + 0.13, v + 0.59, 32, 3);                   // soft erosion pitting
+      const gr = tnoise(u * 256, v * 256, 256, 256) - 0.5;          // grain
+      const t = smooth(0.3, 0.7, n * 0.85 + st * 0.15);
+      let r = lerp(184, 217, t), g = lerp(137, 185, t), b = lerp(90, 140, t); // #B8895A -> #D9B98C
+      const wk = smooth(0.55, 0.8, w) * 0.22;
+      r = lerp(r, 150, wk); g = lerp(g, 112, wk); b = lerp(b, 76, wk);
+      const pk = smooth(0.58, 0.78, pr) * 0.12, sk = smooth(0.8, 0.95, sp) * 0.3;
+      const dk = 1 - pk - sk;
+      r *= dk; g *= dk * 0.99; b *= dk * 0.97;
+      r += gr * 12; g += gr * 10; b += gr * 9;
+      const k = (j * TS + i) * 4;
+      ci.data[k] = r; ci.data[k + 1] = g; ci.data[k + 2] = b; ci.data[k + 3] = 255;
+      const h = 255 * clamp01(0.55 * n + 0.12 * st + 0.2 - 1.2 * pk - 0.6 * sk + 0.1 * gr);
+      bi.data[k] = bi.data[k + 1] = bi.data[k + 2] = h; bi.data[k + 3] = 255;
+    }
+  }
+  stoneC.getContext("2d").putImageData(ci, 0, 0);
+  bumpC.getContext("2d").putImageData(bi, 0, 0);
+}
+// wall: the same stone shifted, with large weathered blocks (one tile = 2 world units, 4 courses of 2 blocks)
+const wallC = makeCanvas(TS), wallBC = makeCanvas(TS);
+for (const [dst, src, joint, jw, hi] of [[wallC, stoneC, "rgba(78,52,32,0.55)", 3, "rgba(255,228,186,0.10)"],
+                                         [wallBC, bumpC, "rgba(0,0,0,0.9)", 4, "rgba(0,0,0,0)"]]) {
+  const x = dst.getContext("2d"), ox = 371, oy = 613;
+  for (const dx of [-TS, 0]) for (const dy of [-TS, 0]) x.drawImage(src, ox + dx, oy + dy);
+  const ch = TS / 4, bw = TS / 2;
+  x.lineCap = "round";
+  for (let row = 0; row < 4; row++) {
+    const y = row * ch, off = (row % 2) * bw / 2;
+    const lines = row ? [[0, y, TS, y]] : [[0, 0, TS, 0], [0, TS, TS, TS]];
+    for (let b = 0; b < 3; b++) { const bx = off + b * bw; lines.push([bx, y, bx, y + ch]); }
+    for (const [x0, y0, x1, y1] of lines) {
+      x.strokeStyle = joint; x.lineWidth = jw; x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.stroke();
+      x.strokeStyle = hi; x.lineWidth = 1.5; x.beginPath(); x.moveTo(x0 + 3, y0 + 3); x.lineTo(x1 + 3, y1 + 3); x.stroke();
+    }
+  }
+}
+function tex(canvas, rep, srgb) {
+  const t = new THREE.CanvasTexture(canvas);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep, rep); t.anisotropy = 4;
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const STONE_REP = 1 / 1.3;          // one stone tile = 1.3 world units (wheel radius = 1)
+const stoneMap = tex(stoneC, STONE_REP, true), stoneBump = tex(bumpC, STONE_REP, false);
+const wallMap = tex(wallC, 0.5, true), wallBump = tex(wallBC, 0.5, false);
+
+// box-projected UVs in object space so every part gets the same texel density
+function boxUV(geo, ox = 0, oy = 0) {
+  const p = geo.attributes.position, n = geo.attributes.normal, uv = new Float32Array(p.count * 2);
+  for (let i = 0; i < p.count; i++) {
+    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i));
+    let u, v;
+    if (az >= ax && az >= ay) { u = p.getX(i); v = p.getY(i); }
+    else if (ay >= ax) { u = p.getX(i) + 0.31; v = p.getZ(i) + 0.17; }
+    else { u = p.getZ(i) + 0.53; v = p.getY(i); }
+    uv[2 * i] = u + ox; uv[2 * i + 1] = v + oy;
+  }
+  geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+  return geo;
+}
+
+// ---------------------------------------------------------------- renderer / scene
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("gl"), antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H, false); renderer.setPixelRatio(1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap; // r186 removed PCFSoftShadowMap; PCF is now the soft (vogel-disk) filter
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a120b);
+const camera = new THREE.PerspectiveCamera(FOV, W / H, 0.1, 60);
+camera.setViewOffset(W, H, 0, H * 0.05, W, H); // wheel centre lands at y = 0.45 H
+
+const stoneMat = new THREE.MeshStandardMaterial({ map: stoneMap, bumpMap: stoneBump, bumpScale: 1.0, roughness: 1.0, metalness: 0 });
+const wallMat = new THREE.MeshStandardMaterial({ map: wallMap, bumpMap: wallBump, bumpScale: 1.4, roughness: 1.0, metalness: 0,
+  color: new THREE.Color(0.70, 0.635, 0.575) });
+const darkStone = stoneMat.clone(); darkStone.color = new THREE.Color(0.78, 0.71, 0.64);
+
+function mesh(geo, mat, parent, uvOff = [0, 0]) {
+  boxUV(geo, uvOff[0], uvOff[1]);
+  const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m;
+}
+function inst(geo, mat, parent, mats) {
+  boxUV(geo);
+  const m = new THREE.InstancedMesh(geo, mat, mats.length);
+  mats.forEach((x, i) => m.setMatrixAt(i, x));
+  m.castShadow = true; m.receiveShadow = true; parent.add(m); return m;
+}
+const M4 = (pos, rotZ = 0, scl = [1, 1, 1]) => new THREE.Matrix4().compose(new THREE.Vector3(...pos),
+  new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, rotZ)), new THREE.Vector3(...scl));
+function ring(rIn, rOut, front, back = 0, bevel = 0.01) { // annulus extruded from z=back to z=front
+  const s = new THREE.Shape(); s.absarc(0, 0, rOut, 0, Math.PI * 2, false);
+  const h = new THREE.Path(); h.absarc(0, 0, rIn, 0, Math.PI * 2, true); s.holes.push(h);
+  const g = new THREE.ExtrudeGeometry(s, { depth: front - back - 2 * bevel, curveSegments: 160, bevelEnabled: bevel > 0,
+    bevelThickness: bevel, bevelSize: bevel * 0.8, bevelSegments: 2 });
+  return g.translate(0, 0, back + bevel);
+}
+function bar(pts, front, back = 0, bevel = 0.012) { // polygon (x,y) list extruded along z
+  const s = new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y)));
+  const g = new THREE.ExtrudeGeometry(s, { depth: front - back - 2 * bevel, bevelEnabled: true, bevelThickness: bevel,
+    bevelSize: bevel * 0.8, bevelSegments: 2 });
+  return g.translate(0, 0, back + bevel);
+}
+const cylZ = (r, z0, z1, seg = 48) => new THREE.CylinderGeometry(r, r, z1 - z0, seg, 1).rotateX(Math.PI / 2).translate(0, 0, (z0 + z1) / 2);
+
+// ---------------------------------------------------------------- the plinth wall
+const world = new THREE.Group(); scene.add(world);
+const wall = new THREE.Mesh(boxUV(new THREE.PlaneGeometry(14, 16), 0.37, 0.21), wallMat);
+wall.receiveShadow = true; world.add(wall);
+const moldings = [ // [yCenter, height, depth]
+  [-1.085, 0.11, 0.30], [-1.44, 0.09, 0.24], [-1.535, 0.06, 0.15], [1.80, 0.12, 0.15], [1.715, 0.05, 0.09]];
+for (const [y, h, d] of moldings) mesh(new THREE.BoxGeometry(14, h, d).translate(0, y, d / 2), darkStone, world, [0.2, y]);
+// carved frieze between the base mouldings: blocks alternating with round bosses
+{
+  const blocks = [], bosses = [];
+  for (let i = -30; i <= 30; i++) {
+    blocks.push(M4([i * 0.24, -1.29, 0.05], 0, [1, 1, 1]));
+    bosses.push(M4([i * 0.24 + 0.12, -1.29, 0.03], 0, [1, 1, 0.55]));
+  }
+  inst(new THREE.BoxGeometry(0.13, 0.19, 0.10), darkStone, world, blocks);
+  inst(new THREE.SphereGeometry(0.045, 16, 12), darkStone, world, bosses);
+}
+
+// ---------------------------------------------------------------- the wheel (radius 1, face towards +z)
+const wheel = new THREE.Group(); world.add(wheel);
+const RIN = 0.80;                         // inner edge of the rim = where spokes end
+mesh(ring(0.885, 1.0, 0.165), stoneMat, wheel);        // outer band
+mesh(ring(0.855, 0.887, 0.11, 0, 0.006), darkStone, wheel); // groove
+mesh(ring(RIN - 0.01, 0.857, 0.152), stoneMat, wheel); // inner band
+{
+  const beads = [], ros = [], inner = [], dent = [];
+  for (let i = 0; i < 120; i++) { const a = (i / 120) * Math.PI * 2; beads.push(M4([Math.cos(a) * 0.975, Math.sin(a) * 0.975, 0.16])); }
+  for (let i = 0; i < 56; i++) { const a = ((i + 0.5) / 56) * Math.PI * 2; ros.push(M4([Math.cos(a) * 0.928, Math.sin(a) * 0.928, 0.162], 0, [1, 1, 0.45])); }
+  for (let i = 0; i < 100; i++) { const a = (i / 100) * Math.PI * 2; inner.push(M4([Math.cos(a) * 0.815, Math.sin(a) * 0.815, 0.15])); }
+  for (let i = 0; i < 110; i++) { const a = (i / 110) * Math.PI * 2; dent.push(M4([Math.cos(a) * 0.871, Math.sin(a) * 0.871, 0.11], a)); }
+  inst(new THREE.SphereGeometry(0.019, 12, 8), stoneMat, wheel, beads);
+  inst(new THREE.SphereGeometry(0.031, 16, 10), stoneMat, wheel, ros);
+  inst(new THREE.SphereGeometry(0.0125, 10, 6), stoneMat, wheel, inner);
+  inst(new THREE.BoxGeometry(0.03, 0.017, 0.04), stoneMat, wheel, dent);
+}
+// hub + projecting axle (the shadow caster)
+{
+  const hub = new THREE.Group(); wheel.add(hub);
+  mesh(cylZ(0.27, 0, 0.16, 64), stoneMat, hub);
+  mesh(new THREE.TorusGeometry(0.27, 0.018, 10, 72).translate(0, 0, 0.15), stoneMat, hub);
+  const pet = [];
+  for (let i = 0; i < 20; i++) { const a = (i / 20) * Math.PI * 2;
+    pet.push(M4([Math.cos(a) * 0.2, Math.sin(a) * 0.2, 0.16], a - Math.PI / 2)); }
+  inst(new THREE.SphereGeometry(1, 16, 10).scale(0.03, 0.062, 0.022), stoneMat, hub, pet);
+  mesh(cylZ(0.135, 0.15, 0.205, 48), stoneMat, hub);
+  mesh(new THREE.TorusGeometry(0.135, 0.012, 8, 48).translate(0, 0, 0.2), stoneMat, hub);
+  mesh(cylZ(0.10, 0.2, 0.5, 48), stoneMat, hub);                       // axle: sticks out ~0.35 R
+  mesh(new THREE.TorusGeometry(0.10, 0.017, 10, 48).translate(0, 0, 0.465), stoneMat, hub);
+  mesh(new THREE.SphereGeometry(0.10, 32, 12, 0, Math.PI * 2, 0, Math.PI / 2).rotateX(Math.PI / 2).scale(1, 1, 0.3).translate(0, 0, 0.5), stoneMat, hub);
+  mesh(new THREE.BoxGeometry(0.034, 0.27, 0.04).translate(0, 0, 0.415), stoneMat, hub); // linch-pin
+}
+// spokes: 8 thick (0, 45, 90 ... deg clockwise from 12 o'clock) and 8 thin in between
+const thick = []; // { pop: Group, mat, halo }
+const haloTex = (() => {
+  const c = makeCanvas(256), x = c.getContext("2d");
+  const g = x.createRadialGradient(128, 128, 0, 128, 128, 128);
+  g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.45, "rgba(255,255,255,0.35)"); g.addColorStop(1, "rgba(255,255,255,0)");
+  x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+  return new THREE.CanvasTexture(c);
+})();
+const RMID = 0.53;
+for (let i = 0; i < 8; i++) {
+  const ang = i * 45 * D2R;
+  const g = new THREE.Group(); g.rotation.z = -ang; wheel.add(g);
+  const pop = new THREE.Group(); pop.position.y = RMID; g.add(pop);
+  const body = new THREE.Group(); body.position.y = -RMID; pop.add(body);
+  const mat = stoneMat.clone(); mat.emissive = new THREE.Color(0xff8a10); mat.emissiveIntensity = 0;
+  const off = [i * 0.37, i * 0.61];
+  mesh(bar([[-0.072, 0.25], [0.072, 0.25], [0.056, 0.36], [0.053, RMID], [0.056, 0.70], [0.078, RIN + 0.005], [-0.078, RIN + 0.005],
+            [-0.056, 0.70], [-0.053, RMID], [-0.056, 0.36]], 0.115), mat, body, off);
+  mesh(bar([[-0.024, 0.31], [0.024, 0.31], [0.024, 0.75], [-0.024, 0.75]], 0.138, 0.08, 0.008), mat, body, off); // raised rib
+  for (const y of [0.295, 0.755]) mesh(new THREE.BoxGeometry(0.165, 0.036, 0.05).translate(0, y, 0.113), mat, body, off);
+  mesh(cylZ(0.088, 0, 0.155, 40).translate(0, RMID, 0), mat, body, off);             // medallion
+  mesh(new THREE.TorusGeometry(0.088, 0.013, 8, 40).translate(0, RMID, 0.15), mat, body, off);
+  mesh(new THREE.SphereGeometry(0.048, 20, 12).scale(1, 1, 0.5).translate(0, RMID, 0.155), mat, body, off);
+  const halo = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.95), new THREE.MeshBasicMaterial({ map: haloTex, color: 0xff9d1f,
+    transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+  halo.position.set(0, RMID, 0.2); halo.renderOrder = 5; g.add(halo);
+  thick.push({ pop, mat, halo });
+}
+for (let i = 0; i < 8; i++) {
+  const g = new THREE.Group(); g.rotation.z = -(22.5 + i * 45) * D2R; wheel.add(g);
+  mesh(bar([[-0.022, 0.255], [0.022, 0.255], [0.022, RIN + 0.005], [-0.022, RIN + 0.005]], 0.08, 0, 0.008), stoneMat, g, [i * 0.29, i * 0.43]);
+  const b = [];
+  for (const y of [0.36, 0.47, 0.58, 0.69]) b.push(M4([0, y, 0.058]));
+  inst(new THREE.SphereGeometry(0.031, 16, 10), stoneMat, g, b);
+}
+// gold wedge (spokes mode): between 12 o'clock and 1:30
+const wedgeMat = new THREE.MeshBasicMaterial({ color: 0xffb020, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide });
+const wedgeArcMat = new THREE.MeshBasicMaterial({ color: 0xffd60a, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide });
+const wedge = new THREE.Mesh(new THREE.BufferGeometry(), wedgeMat); wedge.position.z = 0.172; wedge.renderOrder = 6; wheel.add(wedge);
+const wedgeArc = new THREE.Mesh(new THREE.BufferGeometry(), wedgeArcMat); wedgeArc.position.z = 0.174; wedgeArc.renderOrder = 7; wheel.add(wedgeArc);
+let wedgeLen = -1;
+function setWedge(len) {
+  if (Math.abs(len - wedgeLen) < 1e-5) return;
+  wedgeLen = len;
+  const L = Math.max(len, 1e-4), start = Math.PI / 2 - L;
+  wedge.geometry.dispose(); wedge.geometry = new THREE.RingGeometry(0.28, RIN, 48, 1, start, L);
+  wedgeArc.geometry.dispose(); wedgeArc.geometry = new THREE.RingGeometry(RIN - 0.022, RIN + 0.004, 48, 1, start, L);
+}
+
+// ---------------------------------------------------------------- lights
+const sun = new THREE.DirectionalLight(0xffd29a, 8.5);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -1.55, right: 1.55, top: 1.55, bottom: -1.55, near: 1, far: 14 });
+sun.shadow.camera.updateProjectionMatrix();
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.012; sun.shadow.radius = 2.2;
+sun.target.position.set(0, 0, 0.15);
+scene.add(sun, sun.target);
+scene.add(new THREE.HemisphereLight(0xaebfe6, 0x6e4f34, 0.95));
+const fill = new THREE.DirectionalLight(0x9fb6e6, 0.55); fill.position.set(2.5, -1.5, 6); scene.add(fill);
+const LOW = new THREE.Color(0xffc290), HIGH = new THREE.Color(0xffe4c0);
+
+// ---------------------------------------------------------------- framing
+const tanH = Math.tan((FOV / 2) * D2R) * (W / H);  // half-width per unit distance
+const DIST_FRONT = 1.0 / (0.85 * tanH);            // wheel ~85 % of frame width, front-on
+const YAW0 = 21, YAW1 = 16;
+const DIST_SWEEP = Math.cos(18.5 * D2R) * 1.0 / (0.86 * tanH);
+function placeCamera(t) {
+  const k = clamp01(t / CFG.duration), e = k * k * (3 - 2 * k);
+  if (MODE === "sweep") {
+    const yaw = lerp(YAW0, YAW1, e) * D2R, pitch = lerp(5, 3, e) * D2R, d = DIST_SWEEP * (1 - 0.03 * e);
+    camera.position.set(Math.sin(yaw) * Math.cos(pitch) * d, Math.sin(pitch) * d, 0.15 + Math.cos(yaw) * Math.cos(pitch) * d);
+  } else {
+    camera.position.set(0, 0, 0.15 + DIST_FRONT * (1 - 0.015 * e));
+  }
+  camera.lookAt(0, 0, 0.15);
+  camera.updateMatrixWorld();
+}
+
+// ---------------------------------------------------------------- HTML: sun disc + label placement
+const sunEl = document.getElementById("sun");
+const S70 = Math.sin(70 * D2R), C70 = 1 - Math.cos(70 * D2R);
+function sunScreen(phi) { // arc across the top of the frame, synced with the light direction
+  return [540 + 450 * Math.sin(phi) / S70, 222 + 150 * (1 - Math.cos(phi)) / C70];
+}
+const ghanteEl = document.getElementById("ghante"), praharEl = document.getElementById("prahar");
+if (MODE !== "spokes") { ghanteEl.style.display = "none"; praharEl.style.display = "none"; }
+else {
+  placeCamera(0);
+  const a = 30 * D2R, p = new THREE.Vector3(Math.sin(a) * 1.0, Math.cos(a) * 1.0, 0.16).project(camera);
+  const sx = (p.x * 0.5 + 0.5) * W, sy = (-p.y * 0.5 + 0.5) * H;
+  ghanteEl.style.left = Math.round(Math.min(sx - 120, W - 30 - 392)) + "px";
+  ghanteEl.style.top = Math.round(sy - 74) + "px";
+}
+
+// ---------------------------------------------------------------- deterministic frame
+function sunAngle(t) {
+  if (MODE === "spokes") return CFG.sunFixed;
+  const k = clamp01((t - CFG.sweepStart) / Math.max(0.01, CFG.sweepEnd - CFG.sweepStart));
+  return lerp(CFG.sunFrom, CFG.sunTo, 0.45 * k + 0.55 * k * k * (3 - 2 * k));
+}
+const ease3 = (x) => 1 - Math.pow(1 - x, 3);
+function renderAt(t) {
+  t = Math.max(0, t || 0);
+  placeCamera(t);
+  const phi = sunAngle(t) * D2R;
+  const L = new THREE.Vector3(Math.sin(phi) * Math.cos(ALT), Math.cos(phi) * Math.cos(ALT), Math.sin(ALT));
+  sun.position.copy(L).multiplyScalar(7).add(sun.target.position);
+  const hk = clamp01((Math.cos(phi) - Math.cos(75 * D2R)) / (1 - Math.cos(75 * D2R)));
+  sun.color.copy(LOW).lerp(HIGH, hk);
+  sun.intensity = 8.6 + 1.0 * hk;
+  const [sx, sy] = sunScreen(phi);
+  sunEl.style.left = sx.toFixed(1) + "px"; sunEl.style.top = sy.toFixed(1) + "px";
+
+  if (MODE === "spokes") {
+    thick.forEach((s, i) => {
+      const dt = t - (CFG.spokeStart + i * CFG.spokeStagger);
+      let e = 0, sc = 1;
+      if (dt > 0) {
+        e = dt < 0.12 ? 1.25 * (dt / 0.12) : 0.45 + 0.8 * Math.exp(-(dt - 0.12) / 0.22);
+        const p = clamp01(dt / 0.38);
+        sc = 1 + 0.12 * Math.sin(Math.PI * p) * (1 - 0.35 * p);
+      }
+      s.mat.emissiveIntensity = e;
+      s.pop.scale.set(sc, sc, 1 + (sc - 1) * 2);
+      s.halo.material.opacity = 0.38 * Math.min(1, e / 1.25);
+    });
+    const dw = t - CFG.wedgeAt;
+    setWedge((Math.PI / 4) * ease3(clamp01(dw / 0.45)));
+    wedgeMat.opacity = 0.58 * clamp01(dw / 0.2);
+    wedgeArcMat.opacity = 0.95 * clamp01(dw / 0.2);
+  } else {
+    setWedge(0); wedgeMat.opacity = 0; wedgeArcMat.opacity = 0;
+  }
+  renderer.render(scene, camera);
+}
+window.addEventListener("hf-seek", (e) => renderAt(e.detail.time));
+renderAt(window.__hfThreeTime || 0);
+</script>
+</body>
+</html>
