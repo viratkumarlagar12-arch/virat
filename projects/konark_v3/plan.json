@@ -94,7 +94,8 @@
     {"t_out": 20.3, "name": "swoosh", "gain_db": -2},
     {"t_out": 25.95, "name": "swoosh", "gain_db": -2},
     {"t_out": 30.4, "name": "riser", "gain_db": -1},
-    {"t_out": 40.13, "name": "impact", "gain_db": -7}
+    {"t_out": 40.13, "name": "impact", "gain_db": -7},
+    {"t_out": 40.15, "name": "ding", "gain_db": -3}
   ],
 
   "music": {"mood": "documentary", "seed": 5, "volume": 9},

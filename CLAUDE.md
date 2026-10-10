@@ -29,7 +29,8 @@ Then remind the user to delete the release (the repo is public). Split uploads: 
 4. First reply = what can be better (hook, dead air, retakes, missing visuals) — masterclass step 1 — then edit.
 5. Write `projects/<name>/plan.json` (`docs/plan-reference.md`). Every number/claim → a visual; hook in first 2 s;
    punch-ins on emphasis; SFX on visual events; CTA at the end. Keep graphics off the face (zones are automatic).
-6. `build.py projects/<name>` (add `--no-render` to iterate on layout; `hyperframes check` runs in `projects/<name>/hf`).
+6. `build.py projects/<name>` (add `--no-render` to iterate on layout; `--remix` for audio-only changes reuses the
+   last picture render and takes minutes instead of ~20; `hyperframes check` runs in `projects/<name>/hf`).
    Build prints "note: … shortened" when two graphics collide — re-time them in the plan.
 7. `review.py projects/<name>` → look at `work/review/final_*.jpg`, face check must say OK, loudness ≈ −14 LUFS.
 8. Deliver with SendUserFile (30 MiB cap: build.py also writes `<name>_vN_upload.mp4` when needed); ask for one

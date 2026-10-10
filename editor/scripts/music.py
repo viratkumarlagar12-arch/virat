@@ -166,6 +166,7 @@ def compose(mood, duration, bpm=None, seed=3):
     beat = 60 / bpm
     bar = 4 * beat
     nbars = int(np.ceil((duration + 1.5) / bar))
+    end_bar = int(max(0.0, duration - 0.01) // bar)  # the bar the video ends in
     total = nbars * bar + 2.0
     drums, bass, keys, pads, lead = (Mix(int(total * SR)) for _ in range(5))
     K, S, H = kick(rng), snare(rng, soft=mood == "lofi"), hat(rng)
@@ -174,6 +175,9 @@ def compose(mood, duration, bpm=None, seed=3):
     for b in range(nbars):
         t0 = b * bar
         deg = prog[b % len(prog)]
+        final = mood == "documentary" and b >= end_bar > 0  # resolve home: the video fades out on the tonic
+        if final:
+            deg = 0
         ch = chord(root, scale, deg, 4)
         intro = b == 0
         # ---- drums
@@ -207,7 +211,7 @@ def compose(mood, duration, bpm=None, seed=3):
             for q in range(4):
                 drums.add(hat(rng), t0 + q * beat, 0.25, pan=-0.2)  # clock tick
             drums.add(K, t0, 0.6)
-        elif mood == "documentary" and 2 <= b < nbars - 1:  # heartbeat pulse once the piano has set the mood
+        elif mood == "documentary" and 2 <= b and not final:  # heartbeat pulse once the piano has set the mood
             drums.add(K, t0, 0.5)
             drums.add(K, t0 + 2 * beat, 0.25)
 
@@ -234,7 +238,8 @@ def compose(mood, duration, bpm=None, seed=3):
             for k, m in enumerate(ch):
                 keys.add(epiano(hz(m), bar * 0.95), t0 + k * 0.012 + swing * 0.05, 0.22, pan=(k - 1.5) * 0.15)
         elif mood == "documentary":  # strings: brighter than the pad, slow swell, top voice an octave up
-            pads.add(pad([hz(m) for m in ch] + [hz(ch[0] + 12)], bar, cutoff=2400, attack=0.7), t0,
+            notes = ch[:3] if final else ch  # plain minor triad to end on, no 7th
+            pads.add(pad([hz(m) for m in notes] + [hz(ch[0] + 12)], bar, cutoff=2400, attack=0.7), t0,
                      0.22 if intro else 0.32)
         else:
             pads.add(pad([hz(m) for m in ch], bar), t0, 0.5 if mood != "suspense" else 0.35)
@@ -254,11 +259,14 @@ def compose(mood, duration, bpm=None, seed=3):
         elif mood == "documentary":
             # piano ostinato in 8ths (A4-G5 range), accents on the beat; a bell on the chord's fifth every bar
             arp = [ch[0], ch[1], ch[2], ch[1], ch[3], ch[1], ch[2], ch[1]]
-            last = b == nbars - 1
-            for e in range(1 if last else 8):
-                vel = (0.8 if e % 2 == 0 else 0.58) * rng.uniform(0.9, 1.05)
-                keys.add(piano(hz(arp[e] + 12), bar if last else beat * 2, vel), t0 + e * beat / 2, 0.42,
-                         pan=0.18 if e % 2 else -0.18)
+            if final:  # one rolled tonic chord, left to ring
+                for k, m in enumerate((ch[0], ch[1], ch[2], ch[0] + 12)):
+                    keys.add(piano(hz(m + 12), bar, 0.75 - 0.05 * k), t0 + 0.05 * k, 0.42, pan=(k - 1.5) * 0.12)
+            else:
+                for e in range(8):
+                    vel = (0.8 if e % 2 == 0 else 0.58) * rng.uniform(0.9, 1.05)
+                    keys.add(piano(hz(arp[e] + 12), beat * 2, vel), t0 + e * beat / 2, 0.42,
+                             pan=0.18 if e % 2 else -0.18)
             if b >= 1:
                 lead.add(bell(hz(ch[2] + 24), bar), t0, 0.1, pan=0.3)
 

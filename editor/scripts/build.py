@@ -631,6 +631,8 @@ def main():
     ap.add_argument("project")
     ap.add_argument("--draft", action="store_true", help="fast low-quality render")
     ap.add_argument("--no-render", action="store_true", help="only build the HyperFrames project")
+    ap.add_argument("--remix", action="store_true",
+                    help="audio-only change (music/SFX/levels): reuse the last picture render, redo the mix + encode")
     ap.add_argument("--version", type=int)
     args = ap.parse_args()
     proj = Path(args.project).resolve()
@@ -649,7 +651,8 @@ def main():
     print(f"cuts: {len(keep)} segments, {info['duration']:.1f}s -> {tm.duration:.1f}s")
 
     cw, ch, crops = crop_plan(info, analysis, keep, plan)
-    render_base(analysis["source"], info, keep, cw, ch, crops, plan.get("grade", "natural"), work)
+    if not (args.remix and (work / "base.mp4").exists()):  # the picture is reused as-is on --remix
+        render_base(analysis["source"], info, keep, cw, ch, crops, plan.get("grade", "natural"), work)
     lay = plan.get("layout", {})
     if lay.get("face") == "none":  # faceless video (b-roll + voiceover): graphics above centre, zoom from centre
         face, origin = [W / 2, lay.get("graphics_bottom", 760)] * 2, [W // 2, H // 2]
@@ -725,14 +728,21 @@ def main():
     v = args.version or (1 + max([int(m.group(1)) for p in out_dir.glob(f"{name}_v*.mp4")
                                   if (m := re.search(r"_v(\d+)\.mp4$", p.name))] + [0]))
     silent = work / "render_silent.mp4"
-    q = "draft" if args.draft else "delivery"
-    print(f"rendering ({q}) ...")
-    r = hf(["render", "--quality", q, "--output", str(silent)], hfdir)
-    tail = (r.stdout + r.stderr)[-2500:]
-    if r.returncode or not silent.exists():
-        print(tail)
-        raise SystemExit("render failed")
-    print("\n".join(l for l in tail.splitlines() if "rendered in" in l or "capture ·" in l))
+    if args.remix:
+        got = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0",
+                                    str(silent)], capture_output=True, text=True).stdout or 0) if silent.exists() else 0
+        if abs(got - tm.duration) > 1.5 / FPS:
+            raise SystemExit(f"--remix needs a picture render of {tm.duration:.2f}s in {silent} (found {got:.2f}s)")
+        print("remix: reusing the last picture render")
+    else:
+        q = "draft" if args.draft else "delivery"
+        print(f"rendering ({q}) ...")
+        r = hf(["render", "--quality", q, "--output", str(silent)], hfdir)
+        tail = (r.stdout + r.stderr)[-2500:]
+        if r.returncode or not silent.exists():
+            print(tail)
+            raise SystemExit("render failed")
+        print("\n".join(l for l in tail.splitlines() if "rendered in" in l or "capture ·" in l))
     final = out_dir / f"{name}_v{v}.mp4"
     # final encode at YouTube's recommended 1080p bitrate range (the render itself is near-lossless and huge)
     run(["ffmpeg", "-v", "error", "-y", "-i", silent, "-i", work / "final_audio.wav", "-map", "0:v", "-map", "1:a",

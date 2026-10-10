@@ -91,7 +91,7 @@ def loudnorm(src, dst, target=-14.0, tp=-1.5):
     m = json.loads(re.search(r"\{[^{}]*\"input_i\"[^{}]*\}", p1, re.S).group(0))
     af = (f"loudnorm=I={target}:TP={tp}:LRA=11:measured_I={m['input_i']}:measured_TP={m['input_tp']}:"
           f"measured_LRA={m['input_lra']}:measured_thresh={m['input_thresh']}:offset={m['target_offset']}:linear=true,"
-          f"alimiter=limit={10 ** (tp / 20):.4f}:level=false")
+          f"alimiter=limit={10 ** (tp / 20):.4f}:level=false:latency=true")  # latency: no 5 ms audio delay
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-af", af, "-ar", str(SR), "-c:a", "pcm_s24le",
                     str(dst)], check=True)
 
