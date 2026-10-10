@@ -60,14 +60,6 @@ def apply_config(page, config, duration=None):
 
 def stage(template, title=None, sub=None, duration=None, config=None):
     """Copy the template + gsap/three/fonts into a temp HyperFrames project dir; returns its path."""
-    tmp = Path(tempfile.mkdtemp(prefix="hf3d_"))
-    assets = tmp / "assets"
-    (assets / "fonts").mkdir(parents=True)
-    shutil.copy(ED / "node_modules" / "gsap" / "dist" / "gsap.min.js", assets)
-    shutil.copy(ED / "node_modules" / "three" / "build" / "three.module.js", assets)
-    shutil.copy(ED / "node_modules" / "three" / "build" / "three.core.js", assets)
-    for f in (ED / "assets" / "fonts").glob("*.ttf"):
-        shutil.copy(f, assets / "fonts")
     page = Path(template).read_text()
     if title:
         t = re.sub(r"\*([^*]+)\*", r'<span class="acc">\1</span>', html.escape(title))
@@ -78,6 +70,14 @@ def stage(template, title=None, sub=None, duration=None, config=None):
         page, duration = apply_config(page, config or {}, duration)
     if duration:
         page = re.sub(r'data-duration="[\d.]+"', f'data-duration="{float(duration):g}"', page, count=1)
+    tmp = Path(tempfile.mkdtemp(prefix="hf3d_"))
+    assets = tmp / "assets"
+    (assets / "fonts").mkdir(parents=True)
+    shutil.copy(ED / "node_modules" / "gsap" / "dist" / "gsap.min.js", assets)
+    shutil.copy(ED / "node_modules" / "three" / "build" / "three.module.js", assets)
+    shutil.copy(ED / "node_modules" / "three" / "build" / "three.core.js", assets)
+    for f in (ED / "assets" / "fonts").glob("*.ttf"):
+        shutil.copy(f, assets / "fonts")
     (tmp / "index.html").write_text(page)
     return tmp
 
@@ -101,18 +101,20 @@ def main():
         if not isinstance(config, dict):
             raise SystemExit("--config must be a JSON object")
     tmp = stage(a.template, a.title, a.sub, a.duration, config)
-    env = {**os.environ, "HYPERFRAMES_NO_TELEMETRY": "1", "DO_NOT_TRACK": "1"}
-    out = Path(a.out).resolve()
-    r = subprocess.run([str(ED / "node_modules" / ".bin" / "hyperframes"), "render", "--quality",
-                        "draft" if a.draft else "delivery", "--output", str(out)], cwd=tmp, capture_output=True,
-                       text=True, env=env)
-    tail = (r.stdout + r.stderr)[-2000:]
-    if r.returncode or not out.exists():
-        print(tail)
-        raise SystemExit("3D render failed")
-    print("\n".join(l for l in tail.splitlines() if "rendered in" in l or "capture ·" in l))
-    print("wrote", out)
-    shutil.rmtree(tmp, ignore_errors=True)
+    try:
+        env = {**os.environ, "HYPERFRAMES_NO_TELEMETRY": "1", "DO_NOT_TRACK": "1"}
+        out = Path(a.out).resolve()
+        r = subprocess.run([str(ED / "node_modules" / ".bin" / "hyperframes"), "render", "--quality",
+                            "draft" if a.draft else "delivery", "--output", str(out)], cwd=tmp, capture_output=True,
+                           text=True, env=env)
+        tail = (r.stdout + r.stderr)[-2000:]
+        if r.returncode or not out.exists():
+            print(tail)
+            raise SystemExit("3D render failed")
+        print("\n".join(l for l in tail.splitlines() if "rendered in" in l or "capture ·" in l))
+        print("wrote", out)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 if __name__ == "__main__":
