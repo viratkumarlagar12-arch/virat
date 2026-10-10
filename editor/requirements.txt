@@ -1,0 +1,9 @@
+sherpa-onnx>=1.13
+numpy
+scipy
+soundfile
+opencv-python-headless
+pillow
+fonttools
+brotli
+scikit-image  # only for make_test_clip.py

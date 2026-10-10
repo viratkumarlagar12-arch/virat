@@ -1,0 +1,20 @@
+# environments and downloads (recreated by editor/setup.sh)
+.venv/
+editor/node_modules/
+editor/models/
+editor/assets/fonts/
+editor/assets/sfx/
+__pycache__/
+
+# per-video working files and renders (videos are delivered directly, not stored in git)
+projects/**/work/
+projects/**/hf/
+projects/**/out/
+projects/**/*.mp4
+projects/**/*.mov
+projects/**/*.m4v
+projects/**/*.wav
+projects/**/*.mp3
+projects/**/*.jpg
+projects/**/*.png
+projects/**/broll_lib/

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<title>Earth orbit 3D</title>
+<!-- Step 6 of the masterclass (3D like Nitish Rajput), done with Three.js inside HyperFrames:
+     procedural Earth (day/night + city lights + clouds + atmosphere), ISS on a 51.6° orbit, stars.
+     Everything is generated from seeded noise: no downloads, fully deterministic, renders on CPU.
+     Variables: title / sub text and the orbit speed. Render: hyperframes render -> use as full-screen b-roll. -->
+<script src="assets/gsap.min.js"></script>
+<script type="importmap">{ "imports": { "three": "./assets/three.module.js" } }</script>
+<style>
+@font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-900.ttf"); font-weight: 900; }
+@font-face { font-family: "Poppins"; src: url("assets/fonts/Poppins-700.ttf"); font-weight: 700; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+#root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #02030a; }
+#gl { position: absolute; inset: 0; width: 1080px; height: 1920px; display: block; }
+#title { position: absolute; left: 60px; right: 60px; top: 230px; text-align: center; font-family: "Montserrat";
+  font-weight: 900; font-size: 104px; line-height: 1.02; color: #fff; letter-spacing: -0.02em; opacity: 0;
+  text-shadow: 0 10px 40px rgba(0,0,0,.8); }
+#title .acc { color: #FFD60A; }
+#sub { position: absolute; left: 80px; right: 80px; top: 1530px; text-align: center; font-family: "Poppins"; font-weight: 700;
+  font-size: 50px; color: #cfe8ff; opacity: 0; text-shadow: 0 4px 20px rgba(0,0,0,.9); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1080" data-height="1920">
+  <canvas id="gl" width="1080" height="1920"></canvas>
+  <div id="title">16 <span class="acc">sunrises</span> every day</div>
+  <div id="sub">The ISS circles Earth every 90 minutes</div>
+</div>
+<script>
+  const tl = gsap.timeline({ paused: true });
+  tl.fromTo("#title", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.7, ease: "expo.out" }, 0.4);
+  tl.fromTo("#sub", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, 1.4);
+  tl.to(["#title", "#sub"], { opacity: 0, duration: 0.4 }, 5.5);
+  window.__timelines["main"] = tl;
+</script>
+<script type="module">
+import * as THREE from "three";
+
+const W = 1080, H = 1920;
+const ORBIT_SECONDS = 3.2; // one ISS orbit on screen
+let seed = 1234567;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+
+// ---------- seeded value noise for procedural textures
+const P = new Uint8Array(512);
+for (let i = 0; i < 256; i++) P[i] = i;
+for (let i = 255; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [P[i], P[j]] = [P[j], P[i]]; }
+for (let i = 0; i < 256; i++) P[i + 256] = P[i];
+const fade = (t) => t * t * (3 - 2 * t);
+function vnoise(x, y, z) {
+  const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
+  x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+  const u = fade(x), v = fade(y), w = fade(z);
+  const h = (a, b, c) => P[P[P[a] + b] + c] / 255;
+  const l = (a, b, t) => a + (b - a) * t;
+  return l(l(l(h(X, Y, Z), h(X + 1, Y, Z), u), l(h(X, Y + 1, Z), h(X + 1, Y + 1, Z), u), v),
+           l(l(h(X, Y, Z + 1), h(X + 1, Y, Z + 1), u), l(h(X, Y + 1, Z + 1), h(X + 1, Y + 1, Z + 1), u), v), w);
+}
+function fbm(x, y, z, oct = 6) {
+  let a = 0.5, f = 1, s = 0;
+  for (let i = 0; i < oct; i++) { s += a * vnoise(x * f, y * f, z * f); f *= 2; a *= 0.5; }
+  return s;
+}
+function sphereTexture(w, h, fn) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const ctx = c.getContext("2d"); const img = ctx.createImageData(w, h);
+  for (let j = 0; j < h; j++) {
+    const lat = Math.PI * (j / h - 0.5);
+    for (let i = 0; i < w; i++) {
+      const lon = 2 * Math.PI * (i / w);
+      const x = Math.cos(lat) * Math.cos(lon), y = Math.sin(lat), z = Math.cos(lat) * Math.sin(lon);
+      const [r, g, b, a] = fn(x, y, z, lat);
+      const k = (j * w + i) * 4;
+      img.data[k] = r; img.data[k + 1] = g; img.data[k + 2] = b; img.data[k + 3] = a;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return t;
+}
+const TW = 1024, TH = 512;
+const land = (x, y, z) => fbm(x * 1.6 + 7, y * 1.6, z * 1.6, 6);
+const day = sphereTexture(TW, TH, (x, y, z, lat) => {
+  const e = land(x, y, z), ice = Math.abs(lat) > 1.25 - 0.08 * fbm(x * 4, y * 4, z * 4, 3);
+  if (ice) return [235, 242, 250, 255];
+  if (e < 0.52) { const d = (0.52 - e) * 3; return [10 + 10 * (1 - d), 50 + 40 * (1 - d), 120 + 60 * (1 - d), 255]; }
+  const m = fbm(x * 5, y * 5, z * 5, 4), h = Math.min(1, (e - 0.52) * 4);
+  const dry = Math.max(0, Math.min(1, (m - 0.5) * 4)) * (Math.abs(lat) < 0.6 ? 1 : 0.2);
+  const g = [34 + 30 * m, 82 + 40 * m - 20 * h, 38 + 10 * m], d = [150 + 25 * m, 128 + 18 * m, 92 + 10 * m];
+  return [g[0] + (d[0] - g[0]) * dry, g[1] + (d[1] - g[1]) * dry, g[2] + (d[2] - g[2]) * dry, 255];
+});
+const night = sphereTexture(TW, TH, (x, y, z) => {
+  const e = land(x, y, z);
+  if (e < 0.54) return [0, 0, 0, 255];
+  const c = fbm(x * 40, y * 40, z * 40, 2);
+  const v = c > 0.56 ? Math.min(255, 255 * (c - 0.56) * 6) : 0;
+  return [v, v * 0.78, v * 0.45, 255];
+});
+const clouds = sphereTexture(TW, TH, (x, y, z) => {
+  const c = fbm(x * 2.5 + 30, y * 4, z * 2.5, 6);
+  const a = Math.max(0, (c - 0.5) * 3.2);
+  return [255, 255, 255, Math.min(255, a * 255)];
+});
+
+// ---------- scene
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("gl"), antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H, false); renderer.setPixelRatio(1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, W / H, 0.1, 200);
+const sunDir = new THREE.Vector3(1, 0.3, 0.45).normalize(); // light from the right: day/night line faces camera
+
+const earthMat = new THREE.ShaderMaterial({
+  uniforms: { dayT: { value: day }, nightT: { value: night }, sun: { value: sunDir } },
+  vertexShader: `varying vec2 vUv; varying vec3 vN; void main(){ vUv=uv; vN=normalize(mat3(modelMatrix)*normal);
+    gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader: `uniform sampler2D dayT; uniform sampler2D nightT; uniform vec3 sun; varying vec2 vUv; varying vec3 vN;
+    void main(){ float d=dot(normalize(vN),sun); vec3 dc=texture2D(dayT,vUv).rgb; vec3 nc=texture2D(nightT,vUv).rgb;
+      float k=smoothstep(-0.12,0.22,d); vec3 col=mix(nc*2.4, dc*(0.12+1.15*max(d,0.0)), k);
+      gl_FragColor=vec4(col,1.0); }`,
+});
+const earth = new THREE.Mesh(new THREE.SphereGeometry(1, 128, 96), earthMat);
+earth.rotation.z = 0.41;
+scene.add(earth);
+const cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.012, 96, 64),
+  new THREE.MeshLambertMaterial({ map: clouds, transparent: true, depthWrite: false }));
+earth.add(cloudMesh);
+const atmo = new THREE.Mesh(new THREE.SphereGeometry(1.06, 96, 64), new THREE.ShaderMaterial({
+  uniforms: { sun: { value: sunDir } }, transparent: true, blending: THREE.AdditiveBlending, side: THREE.BackSide, depthWrite: false,
+  vertexShader: `varying vec3 vN; varying vec3 vV; void main(){ vN=normalize(mat3(modelMatrix)*normal);
+    vec4 wp=modelMatrix*vec4(position,1.0); vV=normalize(cameraPosition-wp.xyz); gl_Position=projectionMatrix*viewMatrix*wp;}`,
+  fragmentShader: `uniform vec3 sun; varying vec3 vN; varying vec3 vV; void main(){ float f=pow(1.0-abs(dot(vN,vV)),2.5);
+    float lit=0.35+0.65*smoothstep(-0.3,0.4,dot(vN,sun)); gl_FragColor=vec4(vec3(0.35,0.6,1.0)*f*lit*1.6, f*lit);}`,
+}));
+scene.add(atmo);
+scene.add(new THREE.AmbientLight(0x334466, 0.08));
+const sunLight = new THREE.DirectionalLight(0xffffff, 2.2); sunLight.position.copy(sunDir).multiplyScalar(10); scene.add(sunLight);
+
+// stars
+const sg = new THREE.BufferGeometry(); const sp = [];
+for (let i = 0; i < 2500; i++) {
+  const u = rnd() * 2 - 1, th = rnd() * Math.PI * 2, r = 60 + rnd() * 40, s = Math.sqrt(1 - u * u);
+  sp.push(r * s * Math.cos(th), r * u, r * s * Math.sin(th));
+}
+sg.setAttribute("position", new THREE.Float32BufferAttribute(sp, 3));
+scene.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.16, sizeAttenuation: true })));
+
+// ISS: truss, modules, solar arrays; on an inclined orbit with a faint trail ring
+const orbit = new THREE.Group(); orbit.rotation.x = THREE.MathUtils.degToRad(51.6); scene.add(orbit);
+const ring = new THREE.Mesh(new THREE.TorusGeometry(1.22, 0.0025, 8, 256),
+  new THREE.MeshBasicMaterial({ color: 0x9fd0ff, transparent: true, opacity: 0.45 }));
+ring.rotation.x = Math.PI / 2; orbit.add(ring);
+const iss = new THREE.Group(); orbit.add(iss);
+const metal = new THREE.MeshStandardMaterial({ color: 0xd9dde3, metalness: 0.7, roughness: 0.35 });
+const panelM = new THREE.MeshStandardMaterial({ color: 0x1b3a8a, metalness: 0.4, roughness: 0.3, emissive: 0x0a1840, emissiveIntensity: 0.4 });
+iss.add(new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.012, 0.012), metal));
+iss.add(new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.07, 16).rotateX(Math.PI / 2), metal));
+for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+  const p = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.002, 0.11), panelM);
+  p.position.set(sx * 0.06, 0, sz * 0.065); iss.add(p);
+}
+iss.scale.setScalar(0.75);
+
+function renderAt(t) {
+  const k = Math.min(1, t / 6);
+  const dist = 8.6 - 1.2 * k; // slow push-in
+  camera.position.set(Math.sin(-0.25 + 0.2 * k) * dist, 1.4 - 0.6 * k, Math.cos(-0.25 + 0.2 * k) * dist);
+  camera.lookAt(0, -0.05, 0);
+  earth.rotation.y = 0.8 + t * 0.12;
+  cloudMesh.rotation.y = t * 0.02;
+  const a = (t / ORBIT_SECONDS) * Math.PI * 2;
+  iss.position.set(Math.cos(a) * 1.22, 0, Math.sin(a) * 1.22);
+  iss.rotation.y = -a;
+  renderer.render(scene, camera);
+}
+window.addEventListener("hf-seek", (e) => renderAt(e.detail.time));
+renderAt(window.__hfThreeTime || 0);
+</script>
+</body>
+</html>

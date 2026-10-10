@@ -1,0 +1,139 @@
+/* Shorts editor — base styles. Colours/fonts come from CSS variables set per theme by runtime.js.
+   Rule: never give an element a CSS transform that GSAP also animates (HyperFrames lint). */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+#root { position: relative; width: 100%; height: 100%; overflow: hidden; font-family: var(--ui-font), "Noto Color Emoji", sans-serif; }
+
+/* camera = talking-head video wrapper; zooms/shakes/splits animate this, never the timed <video> */
+#cam { position: absolute; inset: 0; }
+#cam video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+#grade { position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 40%, rgba(0,0,0,0) 55%, rgba(0,0,0,var(--vignette)) 100%); }
+
+#broll, #overlays, #captions, #fx { position: absolute; inset: 0; pointer-events: none; }
+
+/* ---------- captions ---------- */
+.cap-chunk { position: absolute; left: 70px; right: 70px; display: flex; flex-wrap: wrap; justify-content: center;
+  align-items: baseline; column-gap: 0.36em; row-gap: 0.05em; opacity: 0; text-align: center; }
+.cap-word { display: inline-block; position: relative; font-family: var(--cap-font), "Noto Color Emoji", sans-serif;
+  font-weight: var(--cap-weight); color: var(--cap-color); line-height: 1.08; white-space: nowrap;
+  -webkit-text-stroke: var(--cap-stroke) var(--cap-stroke-color); paint-order: stroke fill;
+  text-shadow: 0 6px 18px rgba(0,0,0,.55), 0 2px 4px rgba(0,0,0,.6); }
+.cap-upper .cap-word { text-transform: uppercase; }
+.cap-word.hl { color: var(--accent); }
+.cap-pill { position: absolute; border-radius: 18px; background: var(--accent); opacity: 0; }
+.cap-karaoke .cap-word.on { color: #111; -webkit-text-stroke: 0; text-shadow: none; }
+
+/* ---------- cards ---------- */
+.card { position: absolute; left: 90px; right: 90px; border-radius: 40px; padding: 38px 46px;
+  background: var(--card-bg); color: var(--card-fg); box-shadow: 0 24px 70px rgba(0,0,0,.38), 0 2px 0 rgba(255,255,255,.06) inset;
+  display: flex; align-items: center; gap: 34px; opacity: 0; }
+.card .icon { font-size: 104px; line-height: 1; flex: none; font-family: "Noto Color Emoji", sans-serif; }
+.card .txt { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.card .label { font-family: var(--ui-font); font-weight: 600; font-size: 38px; letter-spacing: .02em; color: var(--card-muted); }
+.card .value { font-family: var(--head-font); font-weight: var(--head-weight); font-size: 92px; line-height: 1.02; letter-spacing: -0.02em; }
+.card .value .acc, .hook .acc, .list .acc, .text-slam .acc { color: var(--accent-strong); }
+.card .sub { font-family: var(--ui-font); font-weight: 500; font-size: 36px; color: var(--card-muted); }
+.card .bar { position: absolute; left: 0; top: 34px; bottom: 34px; width: 12px; border-radius: 0 8px 8px 0; background: var(--accent); }
+
+/* ---------- hook / big text ---------- */
+.hook { position: absolute; left: 60px; right: 60px; display: flex; flex-wrap: wrap; justify-content: center;
+  column-gap: 0.24em; text-align: center; font-family: var(--head-font); font-weight: var(--head-weight);
+  font-size: 108px; line-height: 1.04; letter-spacing: -0.02em; color: #fff;
+  -webkit-text-stroke: 12px rgba(0,0,0,.9); paint-order: stroke fill; text-shadow: 0 10px 30px rgba(0,0,0,.5); }
+.hook .w { display: inline-block; position: relative; }
+.hook .tx { position: relative; }
+.hook .hlbox { position: absolute; left: -10px; right: -10px; top: 12%; bottom: 6%; background: var(--accent); border-radius: 14px; }
+.hook.boxed .w.acc { color: #111; -webkit-text-stroke: 0; }
+.hook-sub { position: absolute; left: 80px; right: 80px; text-align: center; font-family: var(--ui-font); font-weight: 700;
+  font-size: 46px; color: #fff; text-shadow: 0 4px 14px rgba(0,0,0,.7); opacity: 0; }
+
+.text-slam { position: absolute; left: 50px; right: 50px; text-align: center; font-family: var(--head-font);
+  font-weight: var(--head-weight); font-size: 150px; line-height: .98; color: #fff; letter-spacing: -0.03em;
+  -webkit-text-stroke: 14px #000; paint-order: stroke fill; opacity: 0; }
+.dim { position: absolute; inset: 0; background: rgba(0,0,0,.55); opacity: 0; }
+
+/* ---------- stat counter ---------- */
+.stat { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; opacity: 0; }
+.stat .num { font-family: var(--head-font); font-weight: var(--head-weight); font-size: 190px; line-height: 1; letter-spacing: -0.04em;
+  color: #fff; -webkit-text-stroke: 14px rgba(0,0,0,.9); paint-order: stroke fill; text-shadow: 0 12px 40px rgba(0,0,0,.45); }
+.stat .num .unit { color: var(--accent); }
+.stat .lbl { margin-top: 10px; padding: 12px 30px; border-radius: 999px; background: var(--accent); color: #111;
+  font-family: var(--ui-font); font-weight: 800; font-size: 44px; letter-spacing: .01em; }
+
+/* ---------- bars ---------- */
+.chart { position: absolute; left: 70px; right: 70px; padding: 34px 40px 30px; border-radius: 40px; background: var(--card-bg);
+  color: var(--card-fg); box-shadow: 0 24px 70px rgba(0,0,0,.38); opacity: 0; }
+.chart h3 { font-family: var(--head-font); font-weight: var(--head-weight); font-size: 52px; margin-bottom: 18px; letter-spacing: -0.01em; }
+.chart .row { display: grid; grid-template-columns: 280px 1fr; align-items: center; gap: 18px; height: 64px; }
+.chart .row .l { font-family: var(--ui-font); font-weight: 700; font-size: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chart .track { position: relative; height: 46px; }
+.chart .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 12px; background: var(--accent); }
+.chart .row.hot .fill { background: var(--hot); }
+.chart .v { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; padding-left: 14px;
+  font-family: var(--ui-font); font-weight: 800; font-size: 32px; white-space: nowrap; }
+
+/* ---------- list ---------- */
+.list { position: absolute; left: 80px; right: 80px; padding: 34px 40px; border-radius: 40px; background: var(--card-bg);
+  color: var(--card-fg); box-shadow: 0 24px 70px rgba(0,0,0,.38); opacity: 0; }
+.list h3 { font-family: var(--head-font); font-weight: var(--head-weight); font-size: 50px; margin-bottom: 14px; }
+.list .it { display: flex; align-items: center; gap: 22px; font-family: var(--ui-font); font-weight: 700; font-size: 44px;
+  padding: 10px 0; opacity: 0; }
+.list .ck { flex: none; width: 54px; height: 54px; border-radius: 50%; background: var(--good); color: #fff; display: flex;
+  align-items: center; justify-content: center; font-size: 34px; font-weight: 900; }
+.list .ck.bad { background: var(--hot); }
+
+/* ---------- compare ---------- */
+.compare { position: absolute; left: 60px; right: 60px; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.compare .side { border-radius: 36px; padding: 30px 26px; background: var(--card-bg); color: var(--card-fg); text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,.35); opacity: 0; }
+.compare .side .t { font-family: var(--ui-font); font-weight: 700; font-size: 36px; color: var(--card-muted); }
+.compare .side .v { font-family: var(--head-font); font-weight: var(--head-weight); font-size: 76px; line-height: 1.05; margin-top: 6px; }
+.compare .side.win .v { color: var(--good); }
+.compare .side.lose .v { color: var(--hot); }
+.compare .vs { position: absolute; left: 50%; top: 50%; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%;
+  background: #111; color: #fff; border: 6px solid var(--accent); display: flex; align-items: center; justify-content: center;
+  font-family: var(--head-font); font-weight: 900; font-size: 44px; opacity: 0; }
+
+/* ---------- emoji / sticker ---------- */
+.emoji { position: absolute; width: 220px; height: 220px; display: flex; align-items: center; justify-content: center;
+  font-size: 190px; line-height: 1; font-family: "Noto Color Emoji", sans-serif; opacity: 0; filter: drop-shadow(0 12px 22px rgba(0,0,0,.4)); }
+
+/* ---------- media ---------- */
+.pip { position: absolute; left: 80px; right: 80px; border-radius: 40px; overflow: hidden; background: #111;
+  box-shadow: 0 26px 80px rgba(0,0,0,.5); border: 6px solid rgba(255,255,255,.9); opacity: 0; }
+.pip img, .pip video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pip .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 24px; background: linear-gradient(transparent, rgba(0,0,0,.75));
+  color: #fff; font-family: var(--ui-font); font-weight: 700; font-size: 34px; }
+.full { position: absolute; inset: 0; overflow: hidden; opacity: 0; background: #000; }
+.full .kb { position: absolute; inset: 0; }
+.full img, .full video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------- lower third ---------- */
+.l3 { position: absolute; left: 70px; display: flex; flex-direction: column; gap: 6px; padding: 22px 34px 22px 40px; border-radius: 26px;
+  background: var(--card-bg); color: var(--card-fg); box-shadow: 0 18px 50px rgba(0,0,0,.35); opacity: 0; overflow: hidden; }
+.l3 .n { font-family: var(--head-font); font-weight: var(--head-weight); font-size: 48px; }
+.l3 .r { font-family: var(--ui-font); font-weight: 600; font-size: 32px; color: var(--card-muted); }
+.l3 .bar { position: absolute; left: 0; top: 0; bottom: 0; width: 12px; background: var(--accent); }
+
+/* ---------- countdown ---------- */
+.countdown { position: absolute; left: 0; right: 0; display: flex; justify-content: center; opacity: 0; }
+.countdown .ring { position: relative; width: 300px; height: 300px; }
+.countdown svg { position: absolute; inset: 0; }
+.countdown .n { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--head-font);
+  font-weight: 900; font-size: 150px; color: #fff; -webkit-text-stroke: 10px #000; paint-order: stroke fill; opacity: 0; }
+.countdown .tag { position: absolute; left: -200px; right: -200px; bottom: -86px; text-align: center; font-family: var(--ui-font);
+  font-weight: 800; font-size: 46px; color: #fff; text-shadow: 0 4px 14px rgba(0,0,0,.8); }
+
+/* ---------- CTA ---------- */
+.cta { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 18px; opacity: 0; }
+.cta .btn { display: flex; align-items: center; gap: 18px; padding: 26px 54px; border-radius: 999px; background: #FF0033; color: #fff;
+  font-family: var(--ui-font); font-weight: 800; font-size: 54px; box-shadow: 0 18px 50px rgba(255,0,51,.45); }
+.cta .btn.done { background: #3a3a3c; box-shadow: 0 18px 50px rgba(0,0,0,.4); }
+.cta .line { font-family: var(--head-font); font-weight: var(--head-weight); font-size: 62px; color: #fff; text-align: center;
+  -webkit-text-stroke: 10px #000; paint-order: stroke fill; padding: 0 60px; }
+.cta .cursor { position: absolute; width: 90px; height: 90px; font-size: 80px; font-family: "Noto Color Emoji", sans-serif; opacity: 0; }
+
+/* ---------- fx ---------- */
+#progress { position: absolute; left: 0; top: 0; height: 10px; width: 1080px; background: var(--accent); transform-origin: 0 50%; }
+.flash { position: absolute; inset: 0; background: #fff; opacity: 0; }
