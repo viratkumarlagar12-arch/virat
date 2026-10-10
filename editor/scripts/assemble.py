@@ -72,9 +72,12 @@ def main():
         t += s["dur"]
     n = len(edl["shots"])
     graph = ";".join(chains) + ";" + "".join(f"[v{i}]" for i in range(n)) + f"concat=n={n}:v=1:a=0[v]"
+    # silence under shots after the voice ends (e.g. a channel end card); padded to the exact picture length so
+    # -shortest doesn't drop the last frame
+    graph += f";[{n}:a]apad=whole_dur={round(t * fps) / fps:.4f}[a]"
     (out.parent / "assemble_graph.txt").write_text(graph)
     cmd = ["ffmpeg", "-v", "error", "-y", *inputs, "-i", str(audio), "-filter_complex_script",
-           str(out.parent / "assemble_graph.txt"), "-map", "[v]", "-map", f"{n}:a", "-c:v", "libx264", "-preset", "medium",
+           str(out.parent / "assemble_graph.txt"), "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium",
            "-crf", "14", "-g", str(fps), "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "256k", "-shortest", str(out)]
     subprocess.run(cmd, check=True)
     print(f"wrote {out} ({t:.2f}s of picture)")

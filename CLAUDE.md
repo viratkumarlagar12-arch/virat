@@ -35,6 +35,17 @@ Then remind the user to delete the release (the repo is public). Split uploads: 
 8. Deliver with SendUserFile (30 MiB cap: build.py also writes `<name>_vN_upload.mp4` when needed); ask for one
    round of notes; bump version (v2, v3…).
 
+## New voiceover over existing footage (example: `projects/konark_v3`)
+`tighten_vo.py` shortens the pauses in the VO → transcribe it → write `edl.json` (one shot per line of the script) →
+`assemble.py edl.json assembled.mp4` (it warns when a shot runs across a source cut; check those frames) →
+`analyze.py assembled.mp4 work` → plan with `"cuts": {"auto": false}` → build. Shots after the voice ends get silence.
+
+## Channel end card
+The user's channel is "Science Unseen Hindi". Their CapCut exports end with a ~1.5 s still logo card (black,
+"SCIENCE / UNSEEN HINDI" over the Earth; in the Konark upload it starts at 44.467 s, 480×854). When they ask for
+"my channel clip at the end", append it as the last shot (in-point a frame after its start), flash + low impact
+into it, slow push-in (it's a still), and let the music fade out under it.
+
 ## Gotchas
 - HyperFrames lint: no CSS transform on elements GSAP animates; video b-roll must be in index.html statically
   (build.py writes it); timeline registers after fonts load (inline script in index.html).

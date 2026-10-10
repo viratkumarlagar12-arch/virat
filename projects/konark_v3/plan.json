@@ -1,6 +1,6 @@
 {
   "name": "konark_v3",
-  "source_note": "new VO (download/vo.mp3) tightened to tight/voice48k.wav; picture cut with assemble.py from edl.json -> assembled.mp4",
+  "source_note": "new VO (download/vo.mp3) tightened to tight/voice48k.wav; picture cut with assemble.py from edl.json -> assembled.mp4; last shot = channel end card (Science Unseen Hindi logo) from 40.13",
   "theme": "bold",
   "grade": "upscale",
   "layout": {"face": "none"},
@@ -61,7 +61,8 @@
       {"t_out": 25.95, "from": 1.0},
       {"t_out": 30.25, "from": 1.0, "scale": 1.4, "dur": 1.72, "ease": "power2.in"},
       {"t_out": 31.97, "from": 1.0, "scale": 1.05, "dur": 1.43},
-      {"t_out": 33.4, "from": 1.0}
+      {"t_out": 33.4, "from": 1.0},
+      {"t_out": 40.13, "from": 1.0, "scale": 1.05, "dur": 1.6, "ease": "power1.out", "origin": [540, 900]}
     ],
     "shakes": [{"w": 40, "amp": 12, "dur": 0.3}]
   },
@@ -83,13 +84,15 @@
     {"type": "text_slam", "w": 83, "dt": -0.05, "until": 33.35, "text": "ANCIENT *SUNDIAL* ☀️", "size": 128},
     {"type": "note10", "t_out": 33.4, "until": 40.13,
      "times": {"wheel": {"w": 90}, "card": {"w": 92}, "label": {"w": 96}, "flip": {"w": 102}, "label_out": {"w": 103}, "zoom": {"w": 109}}},
-    {"type": "lower_third", "w": 103, "until": 39.4, "name": "🔔 Follow karo", "role": "aise aur facts ke liye", "align": "top"}
+    {"type": "lower_third", "w": 103, "until": 39.4, "name": "🔔 Follow karo", "role": "aise aur facts ke liye", "align": "top"},
+    {"type": "flash", "t_out": 40.13, "strength": 0.9, "dur": 0.35, "sfx": "none"}
   ],
 
   "sfx": [
     {"t_out": 20.3, "name": "swoosh", "gain_db": -2},
     {"t_out": 25.95, "name": "swoosh", "gain_db": -2},
-    {"t_out": 30.4, "name": "riser", "gain_db": -1}
+    {"t_out": 30.4, "name": "riser", "gain_db": -1},
+    {"t_out": 40.13, "name": "impact", "gain_db": -7}
   ],
 
   "music": {"mood": "cinematic", "seed": 5, "under_voice_db": 18, "gap_db": 10},

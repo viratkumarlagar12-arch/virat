@@ -100,6 +100,12 @@
    "blur": 22,
    "dim": 0.18,
    "note": "Rs10 note ending (blurred bg)"
+  },
+  {
+   "src": "../short1/fixed.mp4",
+   "in": 44.5,
+   "dur": 1.6,
+   "note": "channel end card: Science Unseen Hindi logo (still; starts 44.467 in the original upload)"
   }
  ]
 }
