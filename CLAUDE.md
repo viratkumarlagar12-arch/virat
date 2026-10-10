@@ -18,7 +18,12 @@ Then remind the user to delete the release (the repo is public). Split uploads: 
 
 ## Workflow for every video
 1. Put the raw file in `projects/<name>/` (never commit media; `.gitignore` covers it).
-2. `analyze.py <video> projects/<name>/work` then `transcribe.py projects/<name>/work [--lang hi|en]`.
+2. Already-edited CapCut exports often have black bars (a clip/photo not filling 9:16): run
+   `fill_bars.py raw.mp4 projects/<name>/fixed.mp4 [--keep-from <end-card start>]` and edit `fixed.mp4`.
+   Then `analyze.py <video> projects/<name>/work` and `transcribe.py projects/<name>/work [--lang hi|en]`.
+   For Hindi, transcribe uses the Omnilingual CTC words (sherpa's Whisper drops Devanagari bytes); some CTC words
+   come out in the wrong script (Bengali/Tamil letters) — the Whisper line and context tell you the real word.
+   Faceless videos: `"layout": {"face": "none"}` (face detection finds "faces" in carvings/patterns).
 3. LOOK at `work/sheets/*.jpg` (Read the images) and read `work/transcript.txt`. Fix transcript mistakes via
    `word_text` in the plan. For Hinglish captions, transliterate Devanagari words to Roman via `word_text`.
 4. First reply = what can be better (hook, dead air, retakes, missing visuals) — masterclass step 1 — then edit.

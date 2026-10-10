@@ -132,6 +132,8 @@ def main():
     ap.add_argument("project")
     ap.add_argument("--lang", default="auto", help="auto | hi | en | any Whisper language code")
     ap.add_argument("--threads", type=int, default=4)
+    ap.add_argument("--text", default="auto", choices=["auto", "whisper", "ctc"],
+                    help="where word text comes from (auto: CTC for Hindi, Whisper otherwise)")
     args = ap.parse_args()
     proj = Path(args.project)
     audio, sr = sf.read(proj / "audio16k.wav", dtype="float32")
@@ -161,11 +163,16 @@ def main():
         num_threads=args.threads,
     )
 
+    # sherpa-onnx's Whisper drops bytes of multi-byte Devanagari tokens ("कोार" for "कोणार्क"), so for
+    # Hindi the CTC model's own words are the reliable text; Claude then rewrites them via word_text.
+    use_ctc = args.text == "ctc" or (args.text == "auto" and lang == "hi")
+    if use_ctc:
+        print("caption text source: Omnilingual CTC (Whisper text kept for reference)")
     segments, all_words = [], []
     for s, e, off, a1, ctext, ctoks, ctimes in chunks:
         a0 = int(off * SR)
         wtext = decode(whisper, audio[a0:a1]).text.strip()
-        words = wtext.split() if wtext else ctext.split()
+        words = ctext.split() if (use_ctc or not wtext) else wtext.split()
         timed = align(words, ctoks, ctimes, e + PAD) if words else []
         for w in timed:
             w["start"], w["end"] = round(w["start"], 3), round(w["end"], 3)
@@ -176,7 +183,8 @@ def main():
 
     data = {"language": lang, "duration": len(audio) / SR, "segments": segments, "words": all_words}
     (proj / "transcript.json").write_text(json.dumps(data, ensure_ascii=False, indent=1))
-    lines = [f"[{sg['start']:6.2f}-{sg['end']:6.2f}] {sg['text']}\n    ctc: {sg['ctc_text']}" for sg in segments]
+    lines = [f"[{sg['start']:6.2f}-{sg['end']:6.2f}] {sg['text']}\n    ctc: {sg['ctc_text']}\n    words: "
+             + " ".join(f"{w['i']}:{w['w']}@{w['start']:.2f}" for w in sg["words"]) for sg in segments]
     (proj / "transcript.txt").write_text("\n".join(lines) + "\n")
     print(f"wrote {proj/'transcript.json'} ({len(all_words)} words)")
 

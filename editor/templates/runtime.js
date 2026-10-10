@@ -101,12 +101,13 @@
         tl.set(box, { opacity: 0 }, ch.t1);
         if (C.style === "pop") {
           spans.forEach(({ s, inner, w }) => {
-            tl.fromTo(s, { opacity: 0, scale: 0.45, y: 26 }, { opacity: 1, scale: 1, y: 0, duration: 0.13, ease: "back.out(3)" }, w.t0);
+            // gentle overshoot + small bump: bigger values make wide uppercase words collide with their neighbours
+            tl.fromTo(s, { opacity: 0, scale: 0.55, y: 22 }, { opacity: 1, scale: 1, y: 0, duration: 0.13, ease: "back.out(1.7)" }, w.t0);
             if (!w.hl) {
               tl.set(s, { color: T.active }, w.t0);
               tl.set(s, { color: T.vars["--cap-color"] }, Math.min(w.t1, ch.t1 - 0.01));
             }
-            tl.fromTo(inner, { scale: 1 }, { scale: w.hl ? 1.16 : 1.08, duration: 0.09, ease: "power2.out" }, w.t0);
+            tl.fromTo(inner, { scale: 1 }, { scale: w.hl ? 1.07 : 1.04, duration: 0.09, ease: "power2.out" }, w.t0);
             tl.to(inner, { scale: 1, duration: 0.16, ease: "power2.inOut" }, w.t0 + 0.09);
           });
         } else if (C.style === "karaoke") {
@@ -342,6 +343,52 @@
         tl.fromTo(el, { opacity: 0, scale: 2.2 }, { opacity: 1, scale: 1, duration: 0.25, ease: "power4.out" }, o.t);
         tl.to(el, { scale: 1.06, duration: o.dur - 0.45, ease: "none" }, o.t + 0.25);
         tl.to(el, { opacity: 0, scale: 0.9, duration: 0.2 }, o.t + o.dur - 0.2);
+      },
+
+      // animated explainer: a chariot wheel used as a sundial — the sun moves across the sky and the
+      // hub's shadow swings the opposite way. times: t_shadow (shadow appears), t_move0..t_move1 (sun moves)
+      sundial(o) {
+        const el = mk("div", "sundial", overlays);
+        if (o.title) mk("h3", null, el, markup(o.title));
+        const cx = 320, cy = 300, R = 250, a0 = o.from ?? -68, a1 = o.to ?? 68;
+        const pt = (a, r) => [cx + r * Math.sin((a * Math.PI) / 180), cy - r * Math.cos((a * Math.PI) / 180)];
+        const spokes = (n, off, r0, r1, w, c) => Array.from({ length: n }, (_, k) => {
+          const a = off + (360 / n) * k, [x0, y0] = pt(a, r0), [x1, y1] = pt(a, r1);
+          return `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
+        }).join("");
+        const beads = Array.from({ length: 48 }, (_, k) => {
+          const [x, y] = pt(k * 7.5, 110);
+          return `<circle cx="${x}" cy="${y}" r="3.4" fill="#7A5634"/>`;
+        }).join("");
+        const [sx0, sy0] = pt(a0, R), [sx1, sy1] = pt(a1, R);
+        const svg = mk("div", "sd-art", el);
+        svg.innerHTML = `<svg viewBox="0 0 640 420" width="640" height="420">
+          <path d="M ${sx0} ${sy0} A ${R} ${R} 0 0 1 ${sx1} ${sy1}" fill="none" stroke="rgba(255,214,10,.45)" stroke-width="4" stroke-dasharray="10 12"/>
+          <text x="${sx0 - 4}" y="${sy0 + 86}" class="sd-lbl" text-anchor="middle">Subah</text>
+          <text x="${sx1 + 4}" y="${sy1 + 86}" class="sd-lbl" text-anchor="middle">Shaam</text>
+          <g class="sd-wheel">
+            <circle cx="${cx}" cy="${cy}" r="110" fill="#E6CBA4" stroke="#C69A6B" stroke-width="16"/>
+            <circle cx="${cx}" cy="${cy}" r="92" fill="none" stroke="#B0855A" stroke-width="4"/>
+            ${spokes(8, 22.5, 26, 92, 4, "#B98E61")}${spokes(8, 0, 26, 92, 11, "#C69A6B")}${beads}
+          </g>
+          <g class="sd-shadow"><polygon points="${cx - 15},${cy} ${cx + 15},${cy} ${cx + 5},${cy + 96} ${cx - 5},${cy + 96}" fill="rgba(35,20,8,.78)"/></g>
+          <circle cx="${cx}" cy="${cy}" r="26" fill="#8B6A4A" stroke="#F3DDBB" stroke-width="5"/>
+          <g class="sd-sun">
+            <line x1="${cx}" y1="${cy - R + 34}" x2="${cx}" y2="${cy - 34}" stroke="rgba(255,214,10,.55)" stroke-width="5" stroke-dasharray="4 14" stroke-linecap="round"/>
+            <circle cx="${cx}" cy="${cy - R}" r="44" fill="rgba(255,190,0,.22)"/>
+            <circle cx="${cx}" cy="${cy - R}" r="27" fill="#FFD60A" stroke="#FFF3B0" stroke-width="4"/>
+          </g>
+        </svg>`;
+        place(el, o.zone);
+        const wheel = $(".sd-wheel", el), shadow = $(".sd-shadow", el), sun = $(".sd-sun", el);
+        const org = `${cx} ${cy}`;
+        tl.fromTo(el, { opacity: 0, y: 40, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "expo.out" }, o.t);
+        tl.fromTo(wheel, { rotation: -120, svgOrigin: org, opacity: 0 }, { rotation: 0, svgOrigin: org, opacity: 1, duration: 0.9, ease: "power3.out" }, o.t + 0.1);
+        tl.fromTo(sun, { opacity: 0 }, { opacity: 1, duration: 0.35 }, o.t + 0.35);
+        tl.fromTo(shadow, { opacity: 0 }, { opacity: 1, duration: 0.4 }, o.t_shadow ?? o.t + 0.6);
+        const m0 = o.t_move0 ?? o.t + 1, m1 = Math.max(m0 + 0.5, o.t_move1 ?? o.t + o.dur - 0.6);
+        tl.fromTo([sun, shadow], { rotation: a0, svgOrigin: org }, { rotation: a1, svgOrigin: org, duration: m1 - m0, ease: "sine.inOut" }, m0);
+        tl.to(el, { opacity: 0, y: -30, duration: 0.3, ease: "power2.in" }, o.t + o.dur - 0.3);
       },
 
       flash(o) {

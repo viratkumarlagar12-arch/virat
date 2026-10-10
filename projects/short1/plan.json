@@ -1,0 +1,77 @@
+{
+  "name": "konark_sundial",
+  "source_note": "raw = download/raw.mp4 (CapCut export, 480x854, Hindi VO). Black bars fixed with fill_bars.py -> fixed.mp4",
+  "theme": "bold",
+  "grade": "upscale",
+  "layout": {"face": "none"},
+  "cuts": {"auto": false},
+
+  "word_text": {
+    "0": "800", "1": "", "2": "saal", "3": "pehle,",
+    "4": "bina", "5": "modern", "6": "clock ke",
+    "7": "Konark", "8": "ke", "9": "patthar", "10": "time", "11": "kaise", "12": "batate", "13": "the?",
+    "14": "Odisha ka", "15": "Konark", "16": "Sun", "17": "Temple",
+    "18": "13vi", "19": "", "20": "sadi", "21": "mein", "22": "banaya", "23": "gaya", "24": "tha.",
+    "25": "aur", "26": "iske", "27": "chariot", "28": "par", "29": "24", "30": "giant", "31": "stone", "32": "wheels", "33": "hain.",
+    "34": "ye", "35": "wheels", "36": "sirf", "37": "decoration", "38": "nahi", "39": "the.",
+    "40": "inmein", "41": "se", "42": "kuch", "43": "wheels", "44": "par", "45": "sooraj", "46": "ki", "47": "roshni",
+    "48": "padne", "49": "par,", "50": "beech", "51": "ka", "52": "raised", "53": "hub", "54": "ek", "55": "shadow",
+    "56": "cast", "57": "karta", "58": "hai.",
+    "59": "jaise-jaise", "60": "sooraj", "61": "aasmaan", "62": "mein", "63": "move", "64": "karta", "65": "hai,",
+    "66": "shadow", "67": "ki", "68": "position", "69": "bhi", "70": "badalti", "71": "hai.",
+    "72": "wheel", "73": "ke", "74": "spokes", "75": "aur", "76": "markings", "77": "ko", "78": "reference", "79": "banakar",
+    "80": "time", "81": "ka", "82": "andaaza", "83": "lagaya", "84": "ja", "85": "sakta", "86": "hai.",
+    "87": "matlab", "88": "ye", "89": "ek", "90": "tarah", "91": "ka", "92": "ancient", "93": "sundial", "94": "tha!",
+    "95": "yahan", "96": "astronomy,", "97": "geometry", "98": "aur", "99": "sunlight", "100": "ek", "101": "saath",
+    "102": "kaam", "103": "kar", "104": "rahe", "105": "the.",
+    "106": "yahan", "107": "waqt", "108": "ghadi", "109": "se", "110": "nahi,",
+    "111": "sooraj", "112": "ki", "113": "shadow", "114": "se", "115": "samjha", "116": "ja", "117": "sakta", "118": "tha."
+  },
+
+  "captions": {
+    "style": "pop",
+    "size": 80,
+    "max_words": 3,
+    "uppercase": true,
+    "keywords": ["time", "konark", "sooraj", "shadow", "sundial", "ghadi", "astronomy", "geometry", "sunlight"],
+    "emoji": {"13": "🤔", "45": "☀️"},
+    "hide_words": [92, 93, 94]
+  },
+
+  "camera": {
+    "drift": true,
+    "punches": [
+      {"w": 10, "scale": 1.12, "hold": 0.9},
+      {"w": 29, "scale": 1.1, "hold": 1.4},
+      {"w": 55, "scale": 1.1, "hold": 1.2},
+      {"w": 108, "scale": 1.1, "hold": 0.8}
+    ]
+  },
+
+  "overlays": [
+    {"type": "hook", "t_out": 0.05, "until": 3.2, "text": "800 saal purani *GHADI?* ⏳", "boxed": true, "zone": [430, 860]},
+    {"type": "lower_third", "w": 14, "dur": 2.0, "name": "Konark Sun Temple", "role": "📍 Odisha, India"},
+    {"type": "card", "w": 18, "until_w": 24, "icon": "🏛️", "label": "Kab bana?", "value": "*13vi* sadi", "sub": "~800 saal pehle"},
+    {"type": "stat", "w": 29, "dt": -0.25, "dur": 2.3, "from": 0, "to": 24, "count_dur": 0.9, "label": "GIANT STONE WHEELS", "end_sfx": "ding"},
+    {"type": "card", "w": 36, "until_w": 39, "icon": "🤔", "label": "Sirf decoration?", "value": "*NAHI!* ❌", "side": "right"},
+    {"type": "sundial", "w": 45, "until_w": 71, "title": "Sooraj + Shadow = *Time*",
+     "times": {"shadow": {"w": 55}, "move0": {"w": 59}, "move1": {"w": 71}}},
+    {"type": "list", "w": 72, "until_w": 86, "title": "Wheel = *Ghadi* 🕰️",
+     "items": [{"text": "*Spokes*", "w": 74}, {"text": "*Markings*", "w": 76}, {"text": "= Time ka *andaaza* ⏱️", "w": 82}]},
+    {"type": "text_slam", "w": 92, "dur": 1.5, "text": "ANCIENT *SUNDIAL* ☀️", "size": 130},
+    {"type": "list", "w": 96, "dt": -0.1, "until_w": 105, "title": "Ek saath kaam 🤝",
+     "items": [{"text": "🔭 *Astronomy*", "w": 96}, {"text": "📐 *Geometry*", "w": 97}, {"text": "☀️ *Sunlight*", "w": 99}]},
+    {"type": "compare", "w": 107, "until": 44.42,
+     "a": {"title": "⌚ Ghadi", "value": "❌", "lose": true},
+     "b": {"title": "☀️ Shadow", "value": "✅", "win": true, "w": 113}},
+    {"type": "cta", "t_out": 44.5, "dur": 1.47, "text": "Follow for *more* 🔔", "button": "SUBSCRIBE", "zone": "top"}
+  ],
+
+  "sfx": [
+    {"w": 38, "name": "impact", "gain_db": -8},
+    {"t_out": 32.85, "name": "riser", "gain_db": -2}
+  ],
+
+  "music": {"mood": "cinematic", "seed": 5, "under_voice_db": 18, "gap_db": 10},
+  "progress_bar": true
+}

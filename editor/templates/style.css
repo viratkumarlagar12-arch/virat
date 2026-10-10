@@ -14,7 +14,7 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; 
 
 /* ---------- captions ---------- */
 .cap-chunk { position: absolute; left: 70px; right: 70px; display: flex; flex-wrap: wrap; justify-content: center;
-  align-items: baseline; column-gap: 0.36em; row-gap: 0.05em; opacity: 0; text-align: center; }
+  align-items: baseline; column-gap: 0.42em; row-gap: 0.05em; opacity: 0; text-align: center; }
 .cap-word { display: inline-block; position: relative; font-family: var(--cap-font), "Noto Color Emoji", sans-serif;
   font-weight: var(--cap-weight); color: var(--cap-color); line-height: 1.08; white-space: nowrap;
   -webkit-text-stroke: var(--cap-stroke) var(--cap-stroke-color); paint-order: stroke fill;
@@ -133,6 +133,14 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; 
 .cta .line { font-family: var(--head-font); font-weight: var(--head-weight); font-size: 62px; color: #fff; text-align: center;
   -webkit-text-stroke: 10px #000; paint-order: stroke fill; padding: 0 60px; }
 .cta .cursor { position: absolute; width: 90px; height: 90px; font-size: 80px; font-family: "Noto Color Emoji", sans-serif; opacity: 0; }
+
+/* ---------- sundial explainer ---------- */
+.sundial { position: absolute; left: 90px; right: 90px; padding: 26px 30px 16px; border-radius: 40px; background: var(--card-bg);
+  color: var(--card-fg); box-shadow: 0 24px 70px rgba(0,0,0,.38); display: flex; flex-direction: column; align-items: center; opacity: 0; }
+.sundial h3 { font-family: var(--head-font); font-weight: var(--head-weight); font-size: 50px; letter-spacing: -0.01em; text-align: center; }
+.sundial h3 .acc { color: var(--accent-strong); }
+.sundial .sd-art { width: 640px; height: 420px; }
+.sundial .sd-lbl { font-family: var(--ui-font); font-weight: 700; font-size: 26px; fill: var(--card-muted); }
 
 /* ---------- fx ---------- */
 #progress { position: absolute; left: 0; top: 0; height: 10px; width: 1080px; background: var(--accent); transform-origin: 0 50%; }

@@ -10,7 +10,9 @@ Use `"t_out"` for an exact time in the finished video.
   "name": "salary_short",            // output file name -> out/salary_short_vN.mp4
   "theme": "bold",                   // bold (dark cards, Montserrat, yellow) | clean (Apple, white cards, Inter) | desi (Poppins, white cards, red)
   "theme_vars": {"--accent": "#FFD60A"},   // optional colour overrides
-  "grade": "punchy",                 // none | natural | punchy | warm | cinematic
+  "grade": "punchy",                 // none | natural | punchy | warm | cinematic | upscale (480p/720p sources)
+  "layout": {"face": "none"},        // faceless (b-roll + voiceover): graphics above centre, zooms from centre.
+                                     // or "face": [x0,y0,x1,y1] in output px to override the detected face
   "reframe": {"zoom": 1.0},          // >1 crops tighter (4K sources)
 
   "cuts": {
@@ -59,6 +61,8 @@ Use `"t_out"` for an exact time in the finished video.
     {"type": "countdown", "w": 70, "n": 3, "tag": "Comment your answer!"},
     {"type": "text_slam", "w": 76, "dur": 1.2, "text": "*FINALLY*"},
     {"type": "flash", "w": 76},
+    {"type": "sundial", "w": 45, "until_w": 71, "title": "Sooraj + Shadow = *Time*",   // wheel-as-sundial explainer
+     "times": {"shadow": {"w": 55}, "move0": {"w": 59}, "move1": {"w": 71}}},          // named moments -> t_shadow, ...
     {"type": "cta", "w": 78, "dur": 2.4, "text": "Follow for *Part 2*", "button": "SUBSCRIBE"}
   ],
   // every overlay: "zone": "auto" | "top" | "lower" | "body" | "center" | [y0, y1]  (auto keeps it off the face)

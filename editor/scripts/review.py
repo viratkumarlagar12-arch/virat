@@ -78,7 +78,11 @@ def main():
     print("contact sheets:", sorted(p.name for p in rev.glob("final_*.jpg")))
 
     base = proj / "work" / "base.mp4"
-    if base.exists() and YUNET.exists():
+    plan_file = proj / "plan.json"
+    faceless = plan_file.exists() and json.loads(plan_file.read_text()).get("layout", {}).get("face") == "none"
+    if faceless:
+        print("face check: skipped (plan says this video has no face)")
+    elif base.exists() and YUNET.exists():
         fb, ff = face_flags(base, 4), face_flags(vid, 4)
         hf = (proj / "hf" / "index.html").read_text()
         m = re.search(r"window\.EDIT = (\{.*?\});</script>", hf, re.S)

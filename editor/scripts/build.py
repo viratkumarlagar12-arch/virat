@@ -69,6 +69,8 @@ THEMES = {
 GRADES = {
     "none": "",
     "natural": "eq=contrast=1.03:saturation=1.08,unsharp=5:5:0.35",
+    # low-res sources (480p/720p) blown up to 1080x1920: a little more contrast and detail
+    "upscale": "eq=contrast=1.05:saturation=1.1,unsharp=5:5:0.75:3:3:0.3",
     "punchy": "eq=contrast=1.08:saturation=1.16:gamma=0.98,unsharp=5:5:0.5",
     "warm": "colorbalance=rs=0.04:bs=-0.04:rm=0.02:bm=-0.03,eq=contrast=1.05:saturation=1.1,unsharp=5:5:0.35",
     "cinematic": "colorbalance=rs=-0.03:bs=0.04:rh=0.04:bh=-0.03,eq=contrast=1.08:saturation=1.04:gamma=0.97,unsharp=5:5:0.4",
@@ -76,7 +78,8 @@ GRADES = {
 
 DEFAULT_SFX = {"hook": "impact", "card": "whoosh", "stat": "whoosh", "bars": "whoosh", "list": "swoosh",
                "compare": "whoosh", "emoji": "bubble", "image": "whoosh", "video": "whoosh",
-               "lower_third": "swoosh", "countdown": None, "cta": "pop", "text_slam": "impact", "flash": "camera"}
+               "lower_third": "swoosh", "countdown": None, "cta": "pop", "text_slam": "impact", "flash": "camera",
+               "sundial": "whoosh"}
 
 
 # ----------------------------------------------------------------------------- helpers
@@ -281,6 +284,7 @@ def make_layout(face, origin, max_zoom, cap_size, plan):
 
 # natural height (px) each graphic needs to render without shrinking
 NEED = {"bars": 420, "list": 360, "compare": 220, "image": 420, "video": 420, "card": 210, "stat": 300,
+        "sundial": 540,
         "hook": 240, "cta": 230, "countdown": 400, "lower_third": 140, "text_slam": 300}
 
 
@@ -438,6 +442,9 @@ def compile_overlays(plan, words, tm, layout, media_dir, verbose=False):
             o["zone_name"], o["zone"] = "full", layout["zones"]["full"]
         else:
             o["zone_name"], o["zone"] = pick_zone(o, layout)
+        # named moments inside an overlay, e.g. "times": {"shadow": {"w": 55}} -> o["t_shadow"]
+        for key, at in o.pop("times", {}).items():
+            o[f"t_{key}"] = round(anchor(at, words, tm), 3)
         # sub-item timing
         if typ == "bars":
             for k, it in enumerate(o["items"]):
@@ -616,8 +623,13 @@ def main():
 
     cw, ch, crops = crop_plan(info, analysis, keep, plan)
     render_base(analysis["source"], info, keep, cw, ch, crops, plan.get("grade", "natural"), work)
-    face = face_out_box(info, analysis, cw, ch, crops)
-    origin = [round((face[0] + face[2]) / 2), round(face[1] + (face[3] - face[1]) * 0.55)]
+    lay = plan.get("layout", {})
+    if lay.get("face") == "none":  # faceless video (b-roll + voiceover): graphics above centre, zoom from centre
+        face, origin = [W / 2, lay.get("graphics_bottom", 760)] * 2, [W // 2, H // 2]
+    else:
+        face = lay.get("face") or face_out_box(info, analysis, cw, ch, crops)
+        origin = [round((face[0] + face[2]) / 2), round(face[1] + (face[3] - face[1]) * 0.55)]
+    origin = plan.get("camera", {}).get("origin", origin)
 
     hfdir = proj / "hf"
     if hfdir.exists():
@@ -695,8 +707,11 @@ def main():
         raise SystemExit("render failed")
     print("\n".join(l for l in tail.splitlines() if "rendered in" in l or "capture ·" in l))
     final = out_dir / f"{name}_v{v}.mp4"
+    # final encode at YouTube's recommended 1080p bitrate range (the render itself is near-lossless and huge)
     run(["ffmpeg", "-v", "error", "-y", "-i", silent, "-i", work / "final_audio.wav", "-map", "0:v", "-map", "1:a",
-         "-c:v", "copy", "-c:a", "aac", "-b:a", "320k", "-ar", "48000", "-shortest", "-movflags", "+faststart", final])
+         "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-maxrate", "12M", "-bufsize", "24M",
+         "-pix_fmt", "yuv420p", "-profile:v", "high", "-c:a", "aac", "-b:a", "320k", "-ar", "48000",
+         "-shortest", "-movflags", "+faststart", final])
     print(f"DONE -> {final}")
 
 
