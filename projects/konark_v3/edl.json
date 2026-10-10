@@ -1,0 +1,22 @@
+{
+  "audio": "tight/voice48k.wav",
+  "fps": 30,
+  "shots": [
+    {"src": "../short1/fixed.mp4", "in": 42.6, "dur": 1.0, "note": "Kehte hain... (full side wheel)"},
+    {"src": "../short1/fixed.mp4", "in": 16.5, "dur": 1.95, "note": "is pahiye mein ek ghadi chhupi hai (front wheel, clock hand)"},
+    {"src": "../short1/fixed.mp4", "in": 7.2, "dur": 2.0, "note": "Lagbhag 800 saal purana (temple front)"},
+    {"src": "../short1/fixed.mp4", "in": 0.85, "dur": 2.1, "note": "Odisha ka Konark Sun Temple (aerial + label)"},
+    {"src": "../short1/fixed.mp4", "in": 5.4, "dur": 1.4, "note": "13vi sadi mein bana (temple wide)"},
+    {"src": "../short1/fixed.mp4", "in": 35.0, "dur": 3.0, "speed": 0.8, "note": "Surya dev ka patthar ka rath (sunset photo)"},
+    {"src": "../short1/fixed.mp4", "in": 40.8, "dur": 1.75, "note": "24 vishaal pahiye (wall of wheels)"},
+    {"src": "../short1/fixed.mp4", "in": 9.4, "dur": 1.15, "note": "Aur kaha jaata hai (golden wheel)"},
+    {"src": "../short1/fixed.mp4", "in": 13.6, "dur": 1.75, "note": "sirf decoration nahi (hub close)"},
+    {"src": "../short1/fixed.mp4", "in": 3.0, "dur": 1.8, "note": "Jab sooraj ki roshni (sunny side wheel)"},
+    {"src": "../short1/fixed.mp4", "in": 20.1, "dur": 2.4, "note": "beech ka hub ek shadow (hub close, ring)"},
+    {"src": "media/sweep.mp4", "in": 0, "dur": 4.3, "note": "3D: sooraj chalta hai, shadow ghoomti hai"},
+    {"src": "../short1/fixed.mp4", "in": 25.2, "dur": 1.35, "note": "Guides ke hisaab se (hub 3/4)"},
+    {"src": "media/spokes.mp4", "in": 0, "dur": 4.3, "note": "3D: 8 mote spokes = 8 prahar, 3 ghante"},
+    {"src": "../short1/fixed.mp4", "in": 37.6, "dur": 3.15, "note": "ancient sundial (sunlit 3/4 hub dolly)"},
+    {"src": "../short1/fixed.mp4", "in": 22.5, "dur": 6.73, "blur": 22, "dim": 0.18, "note": "Rs10 note ending (blurred bg)"}
+  ]
+}

@@ -79,7 +79,8 @@ GRADES = {
 DEFAULT_SFX = {"hook": "impact", "card": "whoosh", "stat": "whoosh", "bars": "whoosh", "list": "swoosh",
                "compare": "whoosh", "emoji": "bubble", "image": "whoosh", "video": "whoosh",
                "lower_third": "swoosh", "countdown": None, "cta": "pop", "text_slam": "impact", "flash": "camera",
-               "sundial": "whoosh"}
+               "sundial": "whoosh", "ring": "pop", "stamp": "impact", "hand": None, "flare": None, "note10": None}
+OVERLAY_ONLY = {"emoji", "flash", "hand", "ring", "flare", "note10"}  # drawn on the footage; don't take a layout zone
 
 
 # ----------------------------------------------------------------------------- helpers
@@ -284,7 +285,7 @@ def make_layout(face, origin, max_zoom, cap_size, plan):
 
 # natural height (px) each graphic needs to render without shrinking
 NEED = {"bars": 420, "list": 360, "compare": 220, "image": 420, "video": 420, "card": 210, "stat": 300,
-        "sundial": 540,
+        "sundial": 540, "stamp": 280,
         "hook": 240, "cta": 230, "countdown": 400, "lower_third": 140, "text_slam": 300}
 
 
@@ -414,6 +415,17 @@ def camera_events(tm, plan, words, overlays_c):
         target = min(1.32, base * p.get("scale", punch))
         events.append({"t": round(t0, 3), "scale": round(target, 4), "dur": p.get("in", 0.16), "ease": "power3.out"})
         events.append({"t": round(t1 - 0.35, 3), "scale": round(base, 4), "dur": 0.35, "ease": "power2.inOut"})
+    # explicit per-shot moves for assembled montages: {"t_out": 1.0, "from": 1.0, "scale": 1.12, "dur": 1.9,
+    # "ease": "none", "origin": [x, y]} — origin changes only on a cut (scale is reset with "from")
+    for kf in cam.get("keyframes", []):
+        t0 = anchor(kf, words, tm)
+        if "from" in kf or "origin" in kf:
+            ev = {"t": round(t0, 3), "scale": kf.get("from", kf.get("scale", 1.0)), "dur": 0}
+            if "origin" in kf:
+                ev["origin"] = kf["origin"]
+            events.append(ev)
+        if kf.get("dur"):
+            events.append({"t": round(t0 + 0.001, 3), "scale": kf["scale"], "dur": kf["dur"], "ease": kf.get("ease", "none")})
     for s in cam.get("shakes", []):
         t0 = anchor(s, words, tm)
         events.append({"t": round(t0, 3), "type": "shake", "dur": s.get("dur", 0.35), "amp": s.get("amp", 14)})
@@ -438,7 +450,7 @@ def compile_overlays(plan, words, tm, layout, media_dir, verbose=False):
         o["t"], o["dur"] = round(t0, 3), round(max(0.4, t1 - t0), 3)
         if typ in ("image", "video"):
             o["mode"] = o.get("mode", "pip")
-        if o.get("mode") == "full":
+        if o.get("mode") == "full" or typ in OVERLAY_ONLY - {"emoji"}:
             o["zone_name"], o["zone"] = "full", layout["zones"]["full"]
         else:
             o["zone_name"], o["zone"] = pick_zone(o, layout)
@@ -463,6 +475,15 @@ def compile_overlays(plan, words, tm, layout, media_dir, verbose=False):
             for k in range(o.get("n", 3)):
                 sfx.append({"t": o["t"] + k, "name": "tick"})
             sfx.append({"t": o["t"] + o.get("n", 3), "name": "ding"})
+        if typ == "hand" and o.get("style", "glow") == "glow" and o.get("tick_sfx", True):
+            steps = o.get("steps") or max(1, round(o["dur"] / 0.5))
+            for k in range(steps):
+                sfx.append({"t": round(o["t"] + k * (o["dur"] - 0.2) / steps, 3), "name": "tick", "gain_db": -3})
+        if typ == "note10":
+            for key, name, g in (("t_wheel", "whoosh", 0), ("t_card", "pop", 0), ("t_label", "cash", -2),
+                                 ("t_flip", "swoosh", 0), ("t_zoom", "whoosh", -1)):
+                if key in o:
+                    sfx.append({"t": o[key], "name": name, "gain_db": g})
         if typ == "cta":
             sfx.append({"t": o["t"] + 1.0, "name": "click"})
             sfx.append({"t": o["t"] + 1.1, "name": "success", "gain_db": -3})
@@ -505,7 +526,7 @@ def compile_overlays(plan, words, tm, layout, media_dir, verbose=False):
                 sfx.append({"t": o["t"] + 0.02, "name": "whoosh", "gain_db": -4})
         out.append(o)
     # one graphic per zone at a time: an earlier one leaves just as the next one arrives
-    solo = [o for o in out if o["type"] not in ("emoji", "flash") and o.get("mode") != "full"]
+    solo = [o for o in out if o["type"] not in OVERLAY_ONLY and o.get("mode") != "full"]
     solo.sort(key=lambda o: o["t"])
     for a, b in zip(solo, solo[1:]):
         za, zb = a["zone"], b["zone"]

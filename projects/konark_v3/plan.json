@@ -1,0 +1,97 @@
+{
+  "name": "konark_v3",
+  "source_note": "new VO (download/vo.mp3) tightened to tight/voice48k.wav; picture cut with assemble.py from edl.json -> assembled.mp4",
+  "theme": "bold",
+  "grade": "upscale",
+  "layout": {"face": "none"},
+  "cuts": {"auto": false},
+
+  "word_text": {
+    "0": "Kehte hain...",
+    "1": "is", "2": "pahiye", "3": "mein", "4": "ek", "5": "ghadi", "6": "chhupi", "7": "hai.",
+    "8": "Lagbhag", "9": "800", "10": "", "11": "saal", "12": "purana,",
+    "13": "Odisha", "14": "ka", "15": "Konark", "16": "Sun", "17": "Temple",
+    "18": "13vi", "19": "sadi", "20": "mein", "21": "bana.",
+    "22": "Poora", "23": "mandir", "24": "Surya", "25": "dev", "26": "ka", "27": "patthar", "28": "ka rath", "29": "hai,",
+    "30": "24", "31": "vishaal", "32": "pahiye.",
+    "33": "Aur", "34": "kaha", "35": "jaata", "36": "hai,",
+    "37": "ye", "38": "sirf", "39": "decoration", "40": "nahi", "41": "the.",
+    "42": "Jab", "43": "sooraj", "44": "ki", "45": "roshni", "46": "padti", "47": "hai,",
+    "48": "beech", "49": "ka", "50": "hub", "51": "ek", "52": "shadow", "53": "banata", "54": "hai.",
+    "55": "Sooraj", "56": "chalta", "57": "hai...",
+    "58": "shadow", "59": "ghoomti", "60": "hai,",
+    "61": "bilkul", "62": "ghadi", "63": "ki", "64": "sui", "65": "ki", "66": "tarah.",
+    "67": "Guides", "68": "ke", "69": "hisaab", "70": "se,",
+    "71": "8", "72": "mote spokes", "73": "=", "74": "8", "75": "prahar,",
+    "76": "har", "77": "ek", "78": "3", "79": "ghante.",
+    "80": "Isiliye", "81": "ise", "82": "ancient", "83": "sundial", "84": "bhi", "85": "kaha", "86": "jaata", "87": "hai!",
+    "88": "Aur", "89": "ye", "90": "pahiya", "91": "aapki", "92": "jeb", "93": "mein", "94": "bhi", "95": "hai,",
+    "96": "10", "97": "rupaye", "98": "ke", "99": "naye", "100": "note", "101": "ke", "102": "peeche.",
+    "103": "Toh", "104": "agli", "105": "baar", "106": "ye", "107": "note", "108": "dekho,", "109": "yaad", "110": "rakhna..."
+  },
+
+  "captions": {
+    "style": "pop",
+    "size": 80,
+    "max_words": 3,
+    "uppercase": true,
+    "keywords": ["ghadi", "konark", "sooraj", "shadow", "hub", "sundial", "prahar", "spokes", "rath", "note", "jeb"],
+    "hide_words": [0, 1, 2, 3, 4, 5, 6, 7, 37, 38, 39, 40, 41, 82, 83],
+    "emoji": {"43": "☀️", "64": "⏱️"}
+  },
+
+  "camera": {
+    "drift": false,
+    "alternate": false,
+    "keyframes": [
+      {"t_out": 0.0, "from": 1.0, "scale": 1.08, "dur": 1.0, "origin": [540, 960]},
+      {"t_out": 1.0, "from": 1.0, "scale": 1.12, "dur": 1.95, "origin": [432, 883]},
+      {"t_out": 2.95, "from": 1.0, "scale": 1.06, "dur": 2.0, "origin": [540, 960]},
+      {"t_out": 4.95, "from": 1.0, "scale": 1.05, "dur": 2.1},
+      {"t_out": 7.05, "from": 1.0, "scale": 1.05, "dur": 1.4},
+      {"t_out": 8.45, "from": 1.0, "scale": 1.12, "dur": 3.0, "origin": [540, 1000]},
+      {"t_out": 11.45, "from": 1.0, "origin": [540, 960]},
+      {"t_out": 11.6, "scale": 1.14, "dur": 0.18, "ease": "power3.out"},
+      {"t_out": 13.2, "from": 1.0, "scale": 1.05, "dur": 1.15},
+      {"t_out": 14.35, "from": 1.0, "scale": 1.04, "dur": 1.1},
+      {"t_out": 16.1, "from": 1.0, "scale": 1.07, "dur": 1.8},
+      {"t_out": 17.9, "from": 1.0, "scale": 1.08, "dur": 2.4, "origin": [389, 832]},
+      {"t_out": 20.3, "from": 1.0, "origin": [540, 960]},
+      {"t_out": 24.6, "from": 1.0, "scale": 1.06, "dur": 1.35},
+      {"t_out": 25.95, "from": 1.0},
+      {"t_out": 30.25, "from": 1.0, "scale": 1.4, "dur": 1.72, "ease": "power2.in"},
+      {"t_out": 31.97, "from": 1.0, "scale": 1.05, "dur": 1.43},
+      {"t_out": 33.4, "from": 1.0}
+    ],
+    "shakes": [{"w": 40, "amp": 12, "dur": 0.3}]
+  },
+
+  "overlays": [
+    {"type": "hook", "t_out": 0.0, "until": 2.95, "text": "Is pahiye mein *GHADI* chhupi hai? ⏳", "boxed": true, "zone": "top", "size": 100, "stagger": 0.0},
+    {"type": "hand", "t_out": 1.0, "dur": 1.95, "x": 432, "y": 883, "len": 240, "from": -30, "to": 150, "ticks": true},
+    {"type": "stat", "w": 8, "dt": -0.15, "until": 4.92, "from": 0, "to": 800, "prefix": "~", "count_dur": 0.8, "label": "SAAL PURANA", "end_sfx": "ding"},
+    {"type": "card", "w": 18, "dt": -0.15, "until": 8.42, "icon": "🏛️", "label": "Kab bana?", "value": "*13vi* sadi", "sub": "~1250 AD"},
+    {"type": "hook", "w": 24, "dt": -0.15, "until": 11.4, "text": "SURYA DEV KA *RATH* ☀️", "boxed": true, "zone": "top", "size": 96, "sfx": "whoosh"},
+    {"type": "stat", "w": 30, "dt": -0.15, "until": 13.15, "from": 0, "to": 24, "count_dur": 0.35, "label": "VISHAAL PAHIYE", "end_sfx": "ding"},
+    {"type": "hook", "w": 38, "dt": -0.1, "until": 15.45, "text": "SIRF *DECORATION?*", "zone": "top", "size": 96, "sfx": "swoosh"},
+    {"type": "stamp", "w": 40, "dur": 0.58, "text": "NAHI!", "zone": [560, 900]},
+    {"type": "flare", "w": 42, "dt": 0.05, "dur": 1.65},
+    {"type": "ring", "w": 50, "dt": -0.1, "until": 20.25, "x": 389, "y": 832, "r": 290, "label": "HUB"},
+    {"type": "hand", "w": 52, "dt": -0.05, "until": 20.25, "x": 389, "y": 832, "len": 360, "from": 128, "to": 142, "style": "shadow", "sfx": "swoosh"},
+    {"type": "lower_third", "w": 67, "dt": -0.15, "until": 25.9, "name": "🧭 Guides ke hisaab se", "align": "top"},
+    {"type": "flash", "w": 83, "dt": -0.05},
+    {"type": "text_slam", "w": 83, "dt": -0.05, "until": 33.35, "text": "ANCIENT *SUNDIAL* ☀️", "size": 128},
+    {"type": "note10", "t_out": 33.4, "until": 40.13,
+     "times": {"wheel": {"w": 90}, "card": {"w": 92}, "label": {"w": 96}, "flip": {"w": 102}, "label_out": {"w": 103}, "zoom": {"w": 109}}},
+    {"type": "lower_third", "w": 103, "until": 39.4, "name": "🔔 Follow karo", "role": "aise aur facts ke liye", "align": "top"}
+  ],
+
+  "sfx": [
+    {"t_out": 20.3, "name": "swoosh", "gain_db": -2},
+    {"t_out": 25.95, "name": "swoosh", "gain_db": -2},
+    {"t_out": 30.4, "name": "riser", "gain_db": -1}
+  ],
+
+  "music": {"mood": "cinematic", "seed": 5, "under_voice_db": 18, "gap_db": 10},
+  "progress_bar": true
+}

@@ -59,6 +59,7 @@
         tl.to(cam, { x: ev.x || 0, y: ev.y || 0, rotation: 0, duration: 0.05, ease: "none" }, ev.t + ev.dur);
         continue;
       }
+      if (ev.origin) tl.set(cam, { transformOrigin: `${ev.origin[0]}px ${ev.origin[1]}px` }, ev.t);
       const props = { scale: ev.scale };
       if (ev.x != null) props.x = ev.x;
       if (ev.y != null) props.y = ev.y;
@@ -389,6 +390,115 @@
         const m0 = o.t_move0 ?? o.t + 1, m1 = Math.max(m0 + 0.5, o.t_move1 ?? o.t + o.dur - 0.6);
         tl.fromTo([sun, shadow], { rotation: a0, svgOrigin: org }, { rotation: a1, svgOrigin: org, duration: m1 - m0, ease: "sine.inOut" }, m0);
         tl.to(el, { opacity: 0, y: -30, duration: 0.3, ease: "power2.in" }, o.t + o.dur - 0.3);
+      },
+
+      // golden clock hand (or a hub shadow) pinned to a point on the footage, e.g. the wheel's hub.
+      // o.x, o.y px; o.len; o.from/o.to degrees (0 = 12 o'clock, clockwise); o.style "glow" | "shadow"; o.ticks
+      hand(o) {
+        const el = mk("div", "ov-full", overlays);
+        const steps = o.steps ?? Math.max(1, Math.round(o.dur / 0.5));
+        const ticks = o.ticks ? Array.from({ length: 12 }, (_, k) => {
+          const a = (k * 30 * Math.PI) / 180, r0 = o.len * 1.12, r1 = o.len * (k % 3 ? 1.2 : 1.27);
+          return `<line class="tk" x1="${o.x + r0 * Math.sin(a)}" y1="${o.y - r0 * Math.cos(a)}" x2="${o.x + r1 * Math.sin(a)}" y2="${o.y - r1 * Math.cos(a)}" stroke="#FFD60A" stroke-width="${k % 3 ? 6 : 11}" stroke-linecap="round"/>`;
+        }).join("") : "";
+        const handSvg = o.style === "shadow"
+          ? `<polygon points="${o.x - 26},${o.y} ${o.x + 26},${o.y} ${o.x + 9},${o.y - o.len} ${o.x - 9},${o.y - o.len}" fill="rgba(25,12,2,.62)"/>`
+          : `<line x1="${o.x}" y1="${o.y + o.len * 0.18}" x2="${o.x}" y2="${o.y - o.len}" stroke="#FFD60A" stroke-width="16" stroke-linecap="round"/>
+             <circle cx="${o.x}" cy="${o.y - o.len}" r="15" fill="#FFF3B0"/>`;
+        el.innerHTML = `<svg viewBox="0 0 1080 1920" width="1080" height="1920">
+          <g class="tks">${ticks}</g>
+          <g class="hd" style="filter: drop-shadow(0 0 14px rgba(255,214,10,.85))">${handSvg}</g>
+          ${o.style === "shadow" ? "" : `<circle cx="${o.x}" cy="${o.y}" r="22" fill="#FFD60A" stroke="#3A2A10" stroke-width="5"/>`}
+        </svg>`;
+        const hd = $(".hd", el), org = `${o.x} ${o.y}`;
+        tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.18 }, o.t);
+        if (o.ticks) tl.fromTo(el.querySelectorAll(".tk"), { opacity: 0 }, { opacity: 1, duration: 0.05, stagger: 0.03 }, o.t);
+        tl.fromTo(hd, { rotation: o.from ?? 0, svgOrigin: org }, { rotation: o.to ?? 120, svgOrigin: org, duration: o.dur - 0.2,
+          ease: o.style === "shadow" ? "power2.out" : `steps(${steps})` }, o.t);
+        tl.to(el, { opacity: 0, duration: 0.2 }, o.t + o.dur - 0.2);
+      },
+
+      // circle drawn around something on the footage + a label pill
+      ring(o) {
+        const el = mk("div", "ov-full", overlays);
+        const C = 2 * Math.PI * o.r;
+        el.innerHTML = `<svg viewBox="0 0 1080 1920" width="1080" height="1920" style="filter: drop-shadow(0 0 12px rgba(255,214,10,.8))">
+          <circle class="rg" cx="${o.x}" cy="${o.y}" r="${o.r}" fill="none" stroke="#FFD60A" stroke-width="11"
+            stroke-dasharray="${C}" stroke-dashoffset="${C}" transform="rotate(-90 ${o.x} ${o.y})"/></svg>`;
+        const lab = mk("div", "ring-label", el, markup(o.label || ""));
+        const lx = Math.min(1080 - 360, Math.max(60, o.x + (o.label_dx ?? o.r * 0.55)));
+        Object.assign(lab.style, { left: lx + "px", top: o.y - o.r - 120 + (o.label_dy ?? 0) + "px" });
+        tl.set(el, { opacity: 1 }, o.t);
+        tl.to($(".rg", el), { attr: { "stroke-dashoffset": 0 }, duration: 0.45, ease: "power2.out" }, o.t);
+        tl.fromTo(lab, { opacity: 0, scale: 0.5, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: "back.out(2.5)" }, o.t + 0.2);
+        tl.to(el, { opacity: 0, duration: 0.2 }, o.t + o.dur - 0.2);
+        gsap.set(el, { opacity: 0 });
+      },
+
+      // red rubber stamp slammed on screen ("NAHI!")
+      stamp(o) {
+        const el = mk("div", "stamp", overlays, markup(o.text));
+        if (o.size) el.style.fontSize = o.size + "px";
+        place(el, o.zone);
+        el.style.left = Math.round((1080 - el.offsetWidth) / 2) + "px";
+        tl.fromTo(el, { opacity: 0, scale: 2.6, rotation: (o.rot ?? -10) - 8 }, { opacity: 1, scale: 1, rotation: o.rot ?? -10, duration: 0.16, ease: "power4.in" }, o.t);
+        tl.to(el, { scale: 1.06, duration: 0.08, yoyo: true, repeat: 1 }, o.t + 0.16);
+        tl.to(el, { opacity: 0, scale: 0.9, duration: 0.2 }, o.t + o.dur - 0.2);
+      },
+
+      // warm sunlight glow sweeping in (screen blend)
+      flare(o) {
+        const el = mk("div", "flare", fx);
+        tl.fromTo(el, { opacity: 0, x: -420, y: -380, scale: 0.7 }, { opacity: o.strength ?? 0.85, x: 0, y: 0, scale: 1.15, duration: o.dur * 0.55, ease: "sine.out" }, o.t);
+        tl.to(el, { opacity: 0, x: 160, duration: o.dur * 0.45, ease: "sine.in" }, o.t + o.dur * 0.55);
+      },
+
+      // ending: Konark wheel -> stylised (not a replica) Rs 10 note that flips to show the wheel on its back,
+      // then a push into the wheel that loops back to the opening shot.
+      // times: t_wheel, t_card, t_label, t_flip, t_zoom
+      note10(o) {
+        const el = mk("div", "n10", overlays);
+        const wheelSvg = (r, stroke) => {
+          const pt = (a, rr) => [r + rr * Math.sin((a * Math.PI) / 180), r - rr * Math.cos((a * Math.PI) / 180)];
+          const sp = (n, off, w) => Array.from({ length: n }, (_, k) => {
+            const [x0, y0] = pt(off + (360 / n) * k, r * 0.2), [x1, y1] = pt(off + (360 / n) * k, r * 0.84);
+            return `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${stroke}" stroke-width="${w}" stroke-linecap="round"/>`;
+          }).join("");
+          const beads = Array.from({ length: 40 }, (_, k) => { const [x, y] = pt(k * 9, r * 0.93); return `<circle cx="${x}" cy="${y}" r="${r * 0.025}" fill="${stroke}"/>`; }).join("");
+          return `<svg viewBox="0 0 ${2 * r} ${2 * r}" width="${2 * r}" height="${2 * r}">
+            <circle cx="${r}" cy="${r}" r="${r * 0.86}" fill="none" stroke="${stroke}" stroke-width="${r * 0.07}"/>${beads}
+            ${sp(8, 22.5, r * 0.025)}${sp(8, 0, r * 0.06)}
+            <circle cx="${r}" cy="${r}" r="${r * 0.2}" fill="none" stroke="${stroke}" stroke-width="${r * 0.05}"/>
+            <circle cx="${r}" cy="${r}" r="${r * 0.08}" fill="${stroke}"/></svg>`;
+        };
+        const label = mk("div", "n10-label", el, markup(o.label || "₹10 ke *NAYE* note ke *PEECHE*"));
+        const card = mk("div", "n10-card", el);
+        const front = mk("div", "n10-face n10-front", card,
+          `<div class="n10-amt">₹10</div><div class="n10-chip">NAYA NOTE</div><div class="n10-guil"></div>`);
+        const back = mk("div", "n10-face n10-back", card, `<div class="n10-guil"></div><div class="n10-motif">${wheelSvg(150, "#F3D9A4")}</div>`);
+        const big = mk("div", "n10-big", el, wheelSvg(260, "#FFD60A"));
+        gsap.set(card, { transformPerspective: 1600 });
+        gsap.set(back, { rotationY: 180 });
+        tl.set(el, { opacity: 1 }, o.t);
+        // the wheel spins in
+        tl.fromTo(big, { opacity: 0, scale: 0.2, rotation: -200 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.6, ease: "back.out(1.6)" }, o.t_wheel ?? o.t);
+        tl.to(big, { rotation: 30, duration: (o.t_card ?? o.t + 1) - (o.t_wheel ?? o.t) - 0.6 + 0.01, ease: "none" }, (o.t_wheel ?? o.t) + 0.6);
+        // "aapki jeb mein": the note slides up, the big wheel shrinks out of the way
+        tl.fromTo(card, { opacity: 0, y: 700, rotation: 8 }, { opacity: 1, y: 0, rotation: -3, duration: 0.55, ease: "expo.out" }, o.t_card);
+        tl.to(big, { scale: 0.42, x: 225, opacity: 0.95, duration: 0.5, ease: "power3.inOut" }, o.t_card);  // onto the note's right side
+        tl.fromTo(label, { opacity: 0, y: -30, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: "back.out(2)" }, o.t_label);
+        if (o.t_label_out) tl.to(label, { opacity: 0, y: -20, duration: 0.2 }, o.t_label_out);
+        // "peeche": flip to the back; the floating wheel drops into the motif
+        tl.to(card, { rotationY: 180, rotation: 0, duration: 0.6, ease: "power3.inOut" }, o.t_flip);
+        tl.to(front, { opacity: 0, duration: 0.01 }, o.t_flip + 0.3);
+        tl.to(big, { x: 0, scale: 0.58, opacity: 0, duration: 0.45, ease: "power2.in" }, o.t_flip + 0.05);
+        tl.fromTo($(".n10-motif", back), { rotation: 0 }, { rotation: 360, transformOrigin: "50% 50%", duration: (o.t_zoom ?? o.t + o.dur - 0.7) - o.t_flip, ease: "none" }, o.t_flip);
+        // "yaad rakhna...": dive into the wheel (loops into the opening wheel shot)
+        const tz = o.t_zoom ?? o.t + o.dur - 0.7;
+        tl.to(label, { opacity: 0, duration: 0.2 }, tz);
+        tl.to(card, { scale: 6.5, duration: o.t + o.dur - tz, ease: "power3.in" }, tz);
+        tl.to(el, { opacity: 0, duration: 0.15 }, o.t + o.dur - 0.15);
+        gsap.set(el, { opacity: 0 });
       },
 
       flash(o) {
