@@ -10,6 +10,7 @@ edl.json:
 usage: python assemble.py <project_dir>/edl.json <out.mp4>
 """
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -17,10 +18,38 @@ from pathlib import Path
 W, H = 1080, 1920
 
 
+_cuts = {}
+
+
+def scene_cuts(src, thresh=0.18):
+    """cut/dissolve times in a source (cached); some hits are just fast camera moves"""
+    if src not in _cuts:
+        err = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", str(src), "-vf",
+                              f"scale=320:-2,select='gt(scene,{thresh})',showinfo", "-an", "-f", "null", "-"],
+                             capture_output=True, text=True).stderr
+        _cuts[src] = [float(x) for x in re.findall(r"pts_time:([\d.]+)", err)]
+    return _cuts[src]
+
+
+def check_cuts(shots, base):
+    """warn when a shot's source range runs across a scene cut (a stray frame of the neighbouring shot)"""
+    for i, s in enumerate(shots):
+        if s.get("blur"):
+            continue
+        src = (base / s["src"]).resolve()
+        a = s.get("in", 0)
+        b = a + s["dur"] * s.get("speed", 1.0)
+        hits = [c for c in scene_cuts(src) if a + 0.02 < c < b - 0.02]
+        if hits:
+            print(f"  WARNING shot {i} ({s.get('note', '')}): {Path(s['src']).name} {a:.2f}-{b:.2f} crosses "
+                  f"possible cut(s) at {', '.join(f'{c:.2f}' for c in hits)}")
+
+
 def main():
     edl_path, out = Path(sys.argv[1]), Path(sys.argv[2])
     edl = json.loads(edl_path.read_text())
     base = edl_path.parent
+    check_cuts(edl["shots"], base)
     fps = edl.get("fps", 30)
     audio = (base / edl["audio"]).resolve()
     inputs, chains, t = [], [], 0.0
