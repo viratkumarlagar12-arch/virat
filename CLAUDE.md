@@ -5,8 +5,9 @@ masterclass summarised in `docs/masterclass-notes.md`. Talk to them in simple En
 
 ## Fresh container? Run setup first
 `bash editor/setup.sh` (≈2 GB of models/renderer; idempotent). Network here: GitHub releases, media.githubusercontent,
-npm and PyPI work; Hugging Face, stock-footage sites, YouTube and most CDNs are blocked — that's why models come
-from sherpa-onnx GitHub releases and music/SFX are synthesized.
+npm and PyPI work; YouTube is blocked — that's why models come from sherpa-onnx GitHub releases and music/SFX are
+synthesized. Since 2026-10-11 the environment also reaches Pixabay (API + cdn.pixabay.com), Hugging Face, Wikimedia
+Commons, NASA images and ElevenLabs.
 
 ## Getting the raw video
 Chat attachments are capped at 30 MB (the app says "some images were too large to attach"). Drive/Dropbox/WeTransfer
@@ -40,6 +41,12 @@ Then remind the user to delete the release (the repo is public). Split uploads: 
 `tighten_vo.py` shortens the pauses in the VO → transcribe it → write `edl.json` (one shot per line of the script) →
 `assemble.py edl.json assembled.mp4` (it warns when a shot runs across a source cut; check those frames) →
 `analyze.py assembled.mp4 work` → plan with `"cuts": {"auto": false}` → build. Shots after the voice ends get silence.
+
+## Stock b-roll (Pixabay)
+`pixabay.py search "underwater pool" [--images] [--sheet out.jpg]` → look at the sheet → `pixabay.py get <id> --out
+projects/<name>/media` (free licence, no attribution needed). Key: env `PIXABAY_API_KEY` (the script pulls the
+`12345678-abc…` key out of whatever was pasted around it). Landscape clips in `edl.json`: `"x": 0.55` moves the 9:16
+crop window off-centre (e.g. onto a face). Example: `projects/short2` (safety-line b-roll).
 
 ## AI voiceover ("you give new voice over")
 `tts.py <voice> script.txt out.wav --speed 1.34 --pauses '[...]' --json timings.json` — free offline Hindi voices

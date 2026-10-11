@@ -80,8 +80,8 @@ DEFAULT_SFX = {"hook": "impact", "card": "whoosh", "stat": "whoosh", "bars": "wh
                "compare": "whoosh", "emoji": "bubble", "image": "whoosh", "video": "whoosh",
                "lower_third": "swoosh", "countdown": None, "cta": "pop", "text_slam": "impact", "flash": "camera",
                "sundial": "whoosh", "ring": "pop", "stamp": "impact", "hand": None, "flare": None, "note10": None,
-               "fade": None}
-OVERLAY_ONLY = {"emoji", "flash", "hand", "ring", "flare", "note10", "fade"}  # drawn on the footage; don't take a layout zone
+               "fade": None, "timer": "pop", "chain": None}
+OVERLAY_ONLY = {"emoji", "flash", "hand", "ring", "flare", "note10", "fade", "timer"}  # drawn on the footage; don't take a layout zone
 
 
 # ----------------------------------------------------------------------------- helpers
@@ -286,7 +286,7 @@ def make_layout(face, origin, max_zoom, cap_size, plan):
 
 # natural height (px) each graphic needs to render without shrinking
 NEED = {"bars": 420, "list": 360, "compare": 220, "image": 420, "video": 420, "card": 210, "stat": 300,
-        "sundial": 540, "stamp": 280,
+        "sundial": 540, "stamp": 280, "chain": 300,
         "hook": 240, "cta": 230, "countdown": 400, "lower_third": 140, "text_slam": 300}
 
 
@@ -475,6 +475,18 @@ def compile_overlays(plan, words, tm, layout, media_dir, verbose=False):
         if typ == "compare" and "b" in o and ("w" in o["b"] or "t" in o["b"]):
             o["t_b"] = round(anchor(o["b"], words, tm), 3)
             sfx.append({"t": o["t_b"], "name": "whoosh"})
+        if typ == "chain":
+            for k, it in enumerate(o["items"]):
+                it["t"] = round(anchor(it, words, tm) if ("w" in it or "t_out" in it) else t0 + 0.3 + 0.6 * k, 3)
+                if k:
+                    sfx.append({"t": round(it["t"] - 0.15, 3), "name": "glitch", "gain_db": -9})
+                sfx.append({"t": it["t"], "name": it.get("sfx", "pop"), "gain_db": -2})
+        if typ == "timer":
+            ts = o.get("t_start", o["t"] + 0.5)
+            for k in range(o.get("n", 10)):
+                sfx.append({"t": round(ts + k, 3), "name": "tick", "gain_db": o.get("tick_db", -10)})
+            if o.get("zero_sfx", "ding") != "none":
+                sfx.append({"t": round(ts + o.get("n", 10), 3), "name": o.get("zero_sfx", "ding")})
         if typ == "stat":
             sfx.append({"t": o["t"] + 0.1 + o.get("count_dur", 1.0), "name": o.get("end_sfx", "cash")})
         if typ == "countdown":

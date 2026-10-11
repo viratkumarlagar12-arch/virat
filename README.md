@@ -64,6 +64,6 @@ P=projects/my_short
   music ducking under speech, mastered to −14 LUFS / −1.5 dBTP (YouTube standard).
 - **Output**: 1080×1920, 30 fps, H.264 + AAC 320 kbps.
 
-Note: stock-footage and YouTube Audio Library websites are not reachable from this cloud machine, so music and
-SFX are generated here (copyright-free) and b-roll comes from your own clips, generated graphics/3D, or
-files you upload.
+Note: YouTube Audio Library is not reachable from this cloud machine, so music and SFX are generated here
+(copyright-free). B-roll comes from your own clips, generated graphics/3D, files you upload, or Pixabay
+(`editor/scripts/pixabay.py`, free licence; needs the `PIXABAY_API_KEY` environment variable).

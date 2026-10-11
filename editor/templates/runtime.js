@@ -159,7 +159,7 @@
       },
 
       card(o) {
-        const el = mk("div", "card", overlays);
+        const el = mk("div", "card" + (o.variant ? " " + o.variant : ""), overlays);
         if (o.accent_bar !== false) mk("div", "bar", el);
         if (o.icon) mk("div", "icon", el, esc(o.icon));
         const txt = mk("div", "txt", el);
@@ -220,7 +220,7 @@
       },
 
       list(o) {
-        const el = mk("div", "list", overlays);
+        const el = mk("div", "list" + (o.variant ? " " + o.variant : ""), overlays);
         if (o.title) mk("h3", null, el, markup(o.title));
         const items = o.items.map((it) => {
           const row = mk("div", "it", el);
@@ -240,18 +240,23 @@
       compare(o) {
         const el = mk("div", "compare", overlays);
         const side = (s, cls) => {
-          const d = mk("div", "side " + cls + (s.win ? " win" : s.lose ? " lose" : ""), el);
+          const d = mk("div", "side " + cls + (s.win ? " win" : s.lose ? " lose" : "") + (s.dim ? " dimmed" : ""), el);
           mk("div", "t", d, markup(s.title));
-          mk("div", "v", d, markup(s.value));
+          const v = mk("div", "v", d, markup(s.value));
+          if (o.value_size) v.style.fontSize = o.value_size + "px";
           return d;
         };
         const a = side(o.a, "a"), b = side(o.b, "b");
         const vs = mk("div", "vs", el, "VS");
         place(el, o.zone);
+        // entrances must finish before the exit starts, or an element is left on screen after the compare ends
+        const tEnd = o.t + o.dur - 0.25;
+        const tb = Math.min(o.t_b ?? o.t + 0.25, tEnd - 0.5);
         tl.fromTo(a, { opacity: 0, x: -600 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out" }, o.t);
-        tl.fromTo(b, { opacity: 0, x: 600 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out" }, o.t_b ?? o.t + 0.25);
-        tl.fromTo(vs, { opacity: 0, scale: 0, rotation: -90 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.4, ease: "back.out(3)" }, (o.t_b ?? o.t + 0.25) + 0.25);
-        tl.to([a, b, vs], { opacity: 0, duration: 0.25 }, o.t + o.dur - 0.25);
+        tl.fromTo(b, { opacity: 0, x: 600 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out" }, tb);
+        tl.fromTo(vs, { opacity: 0, scale: 0, rotation: -90 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.4, ease: "back.out(3)" }, Math.min(tb + 0.25, tEnd - 0.4));
+        tl.to([a, b, vs], { opacity: 0, duration: 0.25 }, tEnd);
+        tl.set([a, b, vs], { opacity: 0 }, o.t + o.dur);
       },
 
       emoji(o) {
@@ -316,7 +321,7 @@
       cta(o) {
         const el = mk("div", "cta", overlays);
         if (o.text) mk("div", "line", el, markup(o.text));
-        const btn = mk("div", "btn", el, `<span>🔔</span><span class="lbl">${esc(o.button || "SUBSCRIBE")}</span>`);
+        const btn = mk("div", "btn", el, `<span>${esc(o.icon || "🔔")}</span><span class="lbl">${esc(o.button || "SUBSCRIBE")}</span>`);
         const lbl = $(".lbl", btn);
         const cur = mk("div", "cursor", el, "👆");
         place(el, o.zone);
@@ -325,8 +330,10 @@
         tl.fromTo(el, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.45, ease: "back.out(2)" }, o.t);
         tl.fromTo(cur, { opacity: 0, x: 160, y: 180 }, { opacity: 1, x: 0, y: 0, duration: 0.45, ease: "power3.out" }, o.t + 0.5);
         tl.to(btn, { scale: 0.9, duration: 0.08 }, o.t + 1.0);
-        tl.set(btn, { className: "btn done" }, o.t + 1.08);
-        tl.set(lbl, { textContent: o.done || "SUBSCRIBED" }, o.t + 1.08);
+        if (o.done !== false) {  // false: the button only bounces (e.g. "COMMENT KARO")
+          tl.set(btn, { className: "btn done" }, o.t + 1.08);
+          tl.set(lbl, { textContent: o.done || "SUBSCRIBED" }, o.t + 1.08);
+        }
         tl.to(btn, { scale: 1, duration: 0.25, ease: "back.out(3)" }, o.t + 1.08);
         tl.to(cur, { opacity: 0, duration: 0.2 }, o.t + 1.5);
         tl.to(el, { opacity: 0, duration: 0.3 }, o.t + o.dur - 0.3);
@@ -499,6 +506,64 @@
         tl.to(card, { scale: 6.5, duration: o.t + o.dur - tz, ease: "power3.in" }, tz);
         tl.to(el, { opacity: 0, duration: 0.15 }, o.t + o.dur - 0.15);
         gsap.set(el, { opacity: 0 });
+      },
+
+      // small corner timer pinned at (o.x, o.y): shows o.n from o.t, counts down from o.t_start, turns red at 0
+      timer(o) {
+        const size = o.size || 220, n = o.n ?? 10, ts = o.t_start ?? o.t + 0.5;
+        const el = mk("div", "timer", overlays);
+        Object.assign(el.style, { left: o.x - size / 2 + "px", top: o.y - size / 2 + "px", width: size + "px", height: size + "px" });
+        const C = 2 * Math.PI * 130;
+        el.innerHTML = `<svg viewBox="0 0 300 300"><circle class="bg" cx="150" cy="150" r="130" fill="rgba(0,0,0,.6)" stroke="rgba(255,255,255,.28)" stroke-width="20"/>
+          <circle class="arc" cx="150" cy="150" r="130" fill="none" stroke="${T.vars["--accent"]}" stroke-width="20" stroke-linecap="round"
+          stroke-dasharray="${C}" stroke-dashoffset="0" transform="rotate(-90 150 150)"/></svg>`;
+        const nums = [];
+        for (let k = n; k >= 0; k--) {
+          const d = mk("div", "n", el, String(k));
+          d.style.fontSize = Math.round(size * 0.46) + "px";
+          nums.push(d);
+        }
+        const tag = o.tag ? mk("div", "tag", el, markup(o.tag)) : null;
+        tl.fromTo(el, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2.5)" }, o.t);
+        nums.forEach((d, i) => {
+          tl.fromTo(d, { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: 0.2, ease: "power4.out" }, i === 0 ? o.t : ts + i);
+          if (i < n) tl.set(d, { opacity: 0 }, ts + i + 1);
+        });
+        tl.fromTo($(".arc", el), { attr: { "stroke-dashoffset": 0 } }, { attr: { "stroke-dashoffset": C }, duration: n, ease: "none" }, ts);
+        tl.to($(".bg", el), { attr: { stroke: "#FF453A", fill: "rgba(120,0,0,.65)" }, duration: 0.12 }, ts + n);
+        tl.fromTo(el, { scale: 1 }, { scale: 1.16, duration: 0.12, yoyo: true, repeat: 3, ease: "power1.inOut", immediateRender: false }, ts + n);
+        if (tag) tl.fromTo(tag, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.25, ease: "back.out(2)" }, ts + n);
+        tl.to(el, { opacity: 0, duration: 0.25 }, o.t + o.dur - 0.25);
+      },
+
+      // cause -> effect chain: nodes (icon + label) joined by arrows, each lights up at its own time (items[].t)
+      chain(o) {
+        const el = mk("div", "chain", overlays);
+        if (o.title) mk("h3", null, el, markup(o.title));
+        const row = mk("div", "chain-row", el);
+        const nodes = o.items.map((it, k) => {
+          let ar = null;
+          if (k) {
+            ar = mk("div", "ar", row);
+            mk("div", "ln", ar);
+            mk("div", "hd", ar, "▶");
+          }
+          const nd = mk("div", "nd", row);
+          mk("div", "ic", nd, esc(it.icon || "•"));
+          mk("div", "lb", nd, markup(it.text));
+          return { nd, ar, it };
+        });
+        place(el, o.zone);
+        tl.fromTo(el, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: "expo.out" }, o.t);
+        for (const { nd, ar, it } of nodes) {
+          if (ar) {
+            tl.fromTo($(".ln", ar), { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.25, ease: "power2.out" }, it.t - 0.2);
+            tl.fromTo($(".hd", ar), { opacity: 0 }, { opacity: 1, duration: 0.05 }, it.t - 0.02);
+          }
+          tl.fromTo(nd, { opacity: 0.25, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2.6)", immediateRender: true }, it.t);
+          tl.set(nd, { className: "nd on" }, it.t);
+        }
+        tl.to(el, { opacity: 0, y: -30, duration: 0.25, ease: "power2.in" }, o.t + o.dur - 0.25);
       },
 
       flash(o) {

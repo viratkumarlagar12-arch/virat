@@ -55,18 +55,26 @@ Use `"t_out"` for an exact time in the finished video.
     {"type": "bars", "w": 35, "dur": 3.6, "title": "Mumbai *1BHK*", "items": [{"label": "Thane", "value": 77, "display": "₹65–90L", "w": 37}]},
     {"type": "list", "w": 61, "dur": 3.2, "title": "Checklist", "items": [{"text": "Hook in *3s*", "w": 62}, {"text": "No dead air", "bad": true}]},
     {"type": "compare", "w": 66, "dur": 2.4, "a": {"title": "CTC", "value": "₹12L", "win": true}, "b": {"title": "In-hand", "value": "₹8.4L", "lose": true, "w": 68}},
+    //   compare sides can also be "dim": true (greyed out, not marked wrong); "value_size": 62 for longer values
     {"type": "emoji", "w": 22, "dur": 1.6, "emoji": "🤯", "side": "right"},
     {"type": "image", "w": 47, "dur": 2.3, "src": "media/photo.jpg", "caption": "optional", "side": "right"},   // pip card
     {"type": "video", "w": 53, "dur": 2.0, "src": "/path/broll.mp4", "mode": "full", "media_start": 3.0},     // full-screen cutaway
     {"type": "lower_third", "w": 3, "dur": 2.5, "name": "Virat", "role": "Creator"},
     {"type": "countdown", "w": 70, "n": 3, "tag": "Comment your answer!"},
+    {"type": "timer", "w": 5, "until_w": 31, "n": 10, "times": {"start": {"w": 7}}, "x": 905, "y": 335, "size": 210,   // small corner
+     "tick_db": -12, "zero_sfx": "none", "tag": "Ab saans lo"},     // countdown pinned at x/y; counts from t_start, red at 0
+    {"type": "chain", "w": 57, "until": 26.3, "title": "*SIGNAL*",  // cause -> effect: nodes light up one by one, arrows between
+     "items": [{"icon": "📡", "text": "Sensors", "w": 58}, {"icon": "🧠", "text": "Breathing centre", "w": 59}]},
     {"type": "text_slam", "w": 76, "dur": 1.2, "text": "*FINALLY*"},
     {"type": "flash", "w": 76},                      // "in": 0 = full white on the first frame (flash on a hard cut)
     {"type": "fade", "t_out": 39.8, "in": 0.3, "hold": 0, "out": 0.5},  // dip to black over everything (also "color")
     {"type": "fade", "t_out": 41.6, "in": 0.5, "out": 0},               // ...or finish the video on black
     {"type": "sundial", "w": 45, "until_w": 71, "title": "Sooraj + Shadow = *Time*",   // wheel-as-sundial explainer
      "times": {"shadow": {"w": 55}, "move0": {"w": 59}, "move1": {"w": 71}}},          // named moments -> t_shadow, ...
-    {"type": "cta", "w": 78, "dur": 2.4, "text": "Follow for *Part 2*", "button": "SUBSCRIBE"}
+    {"type": "cta", "w": 78, "dur": 2.4, "text": "Follow for *Part 2*", "button": "SUBSCRIBE"},
+    //   or "button": "COMMENT KARO", "icon": "💬", "done": false  (button only bounces, no SUBSCRIBED state)
+    {"type": "list", "w": 91, "until": 41.95, "variant": "calm", "title": "⚠️ DHYAN RAHE", "items": [...]}
+    //   "variant": "calm" on card/list = yellow card with dark text (safety notes that shouldn't look alarming)
   ],
   // every overlay: "zone": "auto" | "top" | "lower" | "body" | "center" | [y0, y1]  (auto keeps it off the face)
   //                "sfx": "<name>" | "none"      (each type has a sensible default)

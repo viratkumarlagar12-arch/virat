@@ -7,6 +7,7 @@ build.py on top of this "assembled" video, so keep shots clean here.
 edl.json:
 { "audio": "tight/voice48k.wav", "fps": 30,
   "shots": [ {"src": "../short1/fixed.mp4", "in": 42.6, "dur": 1.0, "speed": 1.0, "blur": 0, "dim": 0, "note": "hook"} ] }
+  optional per shot: "x"/"y" = crop centre (0-1) when a landscape clip is cut to 9:16 (default: the middle)
 usage: python assemble.py <project_dir>/edl.json <out.mp4>
 """
 import json
@@ -46,6 +47,14 @@ def check_cuts(shots, base, fps=30):
                   f"possible cut(s) at {', '.join(f'{c:.2f}' for c in hits)}")
 
 
+def crop(s):
+    """cover-fit crop; "x"/"y" (0-1) move the crop window's centre across the source, e.g. x 0.55 on a 16:9 clip"""
+    if "x" not in s and "y" not in s:
+        return f"crop={W}:{H}"
+    cx, cy = s.get("x", 0.5), s.get("y", 0.5)
+    return f"crop={W}:{H}:x='max(0,min(iw-ow,iw*{cx}-ow/2))':y='max(0,min(ih-oh,ih*{cy}-oh/2))'"
+
+
 def main():
     edl_path, out = Path(sys.argv[1]), Path(sys.argv[2])
     edl = json.loads(edl_path.read_text())
@@ -61,7 +70,7 @@ def main():
         span = s["dur"] * speed + 0.5  # read a little extra; trimmed to exact frames below
         inputs += ["-ss", f"{s.get('in', 0):.3f}", "-t", f"{span:.3f}", "-i", str(src)]
         f = [f"setpts=(PTS-STARTPTS)/{speed}", f"fps={fps}",
-             f"scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos", f"crop={W}:{H}", "setsar=1",
+             f"scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos", crop(s), "setsar=1",
              f"tpad=stop_mode=clone:stop_duration={s['dur'] + 1:.2f}", f"trim=end_frame={frames}", "setpts=PTS-STARTPTS"]
         if s.get("blur"):
             f.append(f"boxblur={int(s['blur'])}:2")

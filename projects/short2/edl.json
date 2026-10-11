@@ -1,0 +1,110 @@
+{
+ "audio": "tight/voice48k.wav",
+ "fps": 30,
+ "shots": [
+  {
+   "src": "download/reexport.mp4",
+   "in": 0.0,
+   "dur": 8.95,
+   "note": "Ruko! saans roko / ghutan kyun... A ya B / jawab end mein (man inhales, holds; lungs fade in)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 8.95,
+   "dur": 2.9,
+   "speed": 0.675,
+   "note": "Halki bechaini? Body CO2 banati rehti hai (cells puff CO2 into the vessel)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 16.5,
+   "dur": 1.8,
+   "speed": 0.833,
+   "note": "par bahar ka raasta band! (windpipe + lungs)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 18.5,
+   "dur": 3.4,
+   "note": "CO2 paani se milkar blood ko thoda acidic (vessel filling with CO2)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 25.95,
+   "dur": 1.45,
+   "note": "Par ise pakadta kaun? (tunnel -> vessel network zoom-out)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 27.4,
+   "dur": 4.65,
+   "speed": 0.86,
+   "note": "Tumhara brainstem! sensors acid check (brain, brainstem glows)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 31.4,
+   "dur": 3.8,
+   "speed": 1.42,
+   "note": "Phir signal breathing centre... diaphragm ko order, saans lo! (signal down to diaphragm)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 2.6,
+   "dur": 2.3,
+   "note": "Isiliye saans rokna mushkil laga (callback: man holding breath)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 11.3,
+   "dur": 2.65,
+   "note": "yahi thi woh bechaini! Jawab, B! (vessel full of CO2)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 38.1,
+   "dur": 3.0,
+   "note": "Matlab main trigger oxygen ki kami nahi (O2/CO2 in the lungs)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 22.1,
+   "dur": 1.95,
+   "note": "balki badhta hua CO2 hai (CO2 tunnel)"
+  },
+  {
+   "src": "media/pixabay_61292.mp4",
+   "in": 4.0,
+   "dur": 2.15,
+   "speed": 1.5,
+   "x": 0.55,
+   "note": "Dhyan rahe, tez saansein lekar (Pixabay 61292, sped up)"
+  },
+  {
+   "src": "media/pixabay_34283.mp4",
+   "in": 0.95,
+   "dur": 2.95,
+   "note": "ya paani mein... practice kabhi nahi (Pixabay 34283, dips underwater on 'paani')"
+  },
+  {
+   "src": "media/pixabay_37712.mp4",
+   "in": 4.0,
+   "dur": 2.0,
+   "dim": 0.12,
+   "note": "Behoshi bina warning (Pixabay 37712, deep water)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 43.42,
+   "dur": 2.55,
+   "note": "Tumne A socha ya B? Comment karo! (brainstem fires -> lungs breathe)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 46.1,
+   "dur": 2.0,
+   "speed": 0.3,
+   "note": "channel end card (Science Unseen Hindi logo, a still)"
+  }
+ ]
+}
