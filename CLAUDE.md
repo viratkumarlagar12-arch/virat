@@ -41,6 +41,13 @@ Then remind the user to delete the release (the repo is public). Split uploads: 
 `assemble.py edl.json assembled.mp4` (it warns when a shot runs across a source cut; check those frames) →
 `analyze.py assembled.mp4 work` → plan with `"cuts": {"auto": false}` → build. Shots after the voice ends get silence.
 
+## AI voiceover ("you give new voice over")
+`tts.py <voice> script.txt out.wav --speed 1.34 --pauses '[...]' --json timings.json` — free offline Hindi voices
+(Kokoro v1.0 `hm_omega`/`hm_psi` male, `hf_alpha` female; Piper `rohan`/`pratham`/`priyamvada` are flatter). Write the
+script in Devanagari with English words transliterated (CO2 → सीओटू), keep a Roman copy for captions, and check the
+result with an ASR round trip (Omnilingual CTC). vidIQ's voiceover tool (ElevenLabs) sounds more natural but spends
+the user's vidIQ credits — ask first. Example: `projects/short2/vo/`.
+
 ## Channel end card
 The user's channel is "Science Unseen Hindi". Their CapCut exports end with a ~1.5 s still logo card (black,
 "SCIENCE / UNSEEN HINDI" over the Earth; in the Konark upload it starts at 44.467 s, 480×854). When they ask for

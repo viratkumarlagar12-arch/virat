@@ -1,0 +1,86 @@
+[
+ {
+  "dev": "रुको! अभी साँस रोको... सिर्फ़ दस सेकंड।",
+  "roman": "Ruko! Abhi saans roko... sirf 10 second.",
+  "on_screen": "Black flash, then a huge 'RUKO!' slams in with a punch-in, and 'SAANS ROKO' appears under it. A 10-second countdown ring pops in at the top corner (off the face) on '10 second' and starts at 10. SFX: whoosh, then a soft clock tick under the countdown.",
+  "pause_after": 0.35
+ },
+ {
+  "dev": "घुटन क्यों होगी... ए, ऑक्सीजन कम, या बी, सीओटू ज़्यादा?",
+  "roman": "Ghutan kyun hogi... A, oxygen kam, ya B, CO2 zyada?",
+  "on_screen": "Two option cards pop in on their own words: 'A: Oxygen kam' (blue) and 'B: CO2 zyada' (orange). The countdown keeps ticking in the corner.",
+  "pause_after": 0.25
+ },
+ {
+  "dev": "जवाब एंड में।",
+  "roman": "Jawab end mein.",
+  "on_screen": "A lock icon snaps over both cards with the tag 'JAWAB END MEIN'. Countdown is at about 7.",
+  "pause_after": 0.2
+ },
+ {
+  "dev": "हल्की बेचैनी? बॉडी सीओटू बनाती रहती है... पर बाहर का रास्ता बंद!",
+  "roman": "Halki bechaini? Body CO2 banati rehti hai... par bahar ka raasta band!",
+  "on_screen": "Body silhouette: cells keep puffing out grey CO2 bubbles. A gate slams shut on the windpipe, labelled 'BAND'. The countdown hits 0 on 'band' with a soft buzzer. Small text at 0: 'ab saans le lo', plus an exhale whoosh (on screen only).",
+  "pause_after": 0.4
+ },
+ {
+  "dev": "सीओटू पानी से मिलकर ब्लड को थोड़ा एसिडिक बनाता है।",
+  "roman": "CO2 paani se milkar blood ko thoda acidic banata hai.",
+  "on_screen": "Close-up of a blood vessel filling with CO2 dots and a 'Blood CO2' meter climbing. An equation card pops in: 'CO2 + H2O -> carbonic acid' (optional soda-fizz icon and SFX). A pH needle moves only slightly down from 7.4, labelled 'thoda acidic'.",
+  "pause_after": 0.2
+ },
+ {
+  "dev": "पर इसे पकड़ता कौन?",
+  "roman": "Par ise pakadta kaun?",
+  "on_screen": "Mid-video re-hook: the frame freezes and a giant 'KAUN?' hits with a zoom punch-in and a riser SFX.",
+  "pause_after": 0.4
+ },
+ {
+  "dev": "तुम्हारा ब्रेनस्टेम! इसके सेंसर्स ब्रेन के आसपास एसिड चेक करते हैं।",
+  "roman": "Tumhara brainstem! Iske sensors brain ke aaspaas acid check karte hain.",
+  "on_screen": "Brain cutaway with the brainstem (medulla) glowing. Label: 'Brainstem sensors (central chemoreceptors)'. Small sensor pings in the fluid around the brain, with a ping SFX.",
+  "pause_after": 0.2
+ },
+ {
+  "dev": "फिर सिग्नल ब्रीदिंग सेंटर को... डायफ्राम को ऑर्डर, साँस लो!",
+  "roman": "Phir signal breathing centre ko... diaphragm ko order, saans lo!",
+  "on_screen": "Arrow chain animates: Sensors -> Breathing centre -> Diaphragm (a dome muscle under the lungs that pulses and contracts). SFX: electric zap. 'SAANS LO!' slams in with a punch-in.",
+  "pause_after": 0.3
+ },
+ {
+  "dev": "इसीलिए साँस रोकना मुश्किल लगा... यही थी वो बेचैनी!",
+  "roman": "Isiliye saans rokna mushkil laga... yahi thi woh bechaini!",
+  "on_screen": "Quick replay of the opening countdown ring next to a rising bar: 'CO2 badha -> urge badha'. Text: 'YAHI THI WOH BECHAINI'.",
+  "pause_after": 0.35
+ },
+ {
+  "dev": "जवाब, बी!",
+  "roman": "Jawab, B!",
+  "on_screen": "The A/B cards return. Card B lights up green with a tick and scales up; card A dims but is not crossed out. SFX: correct-answer ding.",
+  "pause_after": 0.2
+ },
+ {
+  "dev": "मतलब घुटन का मेन ट्रिगर ऑक्सीजन की कमी नहीं, बल्कि बढ़ता हुआ सीओटू है।",
+  "roman": "Matlab ghutan ka main trigger oxygen ki kami nahi, balki badhta hua CO2 hai.",
+  "on_screen": "Big headline: 'MAIN TRIGGER = BADHTA CO2'. Small footnote under it: 'Oxygen ka bhi role hai (carotid body), par main trigger CO2'.",
+  "pause_after": 0.45
+ },
+ {
+  "dev": "ध्यान रहे, तेज़ साँसें लेकर, या पानी में, साँस रोकने की प्रैक्टिस कभी नहीं।",
+  "roman": "Dhyan rahe, tez saansein lekar, ya paani mein, saans rokne ki practice kabhi nahi.",
+  "on_screen": "Calm yellow safety card (not alarming red) with two crossed-out icons: 'Pehle tez/gehri saansein (hyperventilation) + breath-hold: NAHI' and 'Paani mein breath-hold practice: NAHI'. The music dips slightly.",
+  "pause_after": 0.2
+ },
+ {
+  "dev": "बेहोशी बिना वॉर्निंग आ सकती है।",
+  "roman": "Behoshi bina warning aa sakti hai.",
+  "on_screen": "Short, gentle dim and blur of the picture, with the text 'Blackout bina warning ke'.",
+  "pause_after": 0.35
+ },
+ {
+  "dev": "तुमने ए सोचा या बी? कमेंट करो!",
+  "roman": "Tumne A socha ya B? Comment karo!",
+  "on_screen": "Both A/B cards with a comment box typing 'A ya B?'. Captions stop here. Then dip to black into the Science Unseen Hindi logo end card (fade-in, slow push-in) while the music fades out.",
+  "pause_after": 0.15
+ }
+]

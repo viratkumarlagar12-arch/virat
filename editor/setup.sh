@@ -9,6 +9,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ED="$ROOT/editor"
 MODELS="$ED/models"
 REL="https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models"
+TTS_REL="https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models"
 ZOO="https://media.githubusercontent.com/media/opencv/opencv_zoo/main/models"
 CTC="sherpa-onnx-omnilingual-asr-1600-languages-300M-ctc-v2-int8-2026-02-05"
 fetch() { curl -fL --retry 4 --retry-delay 2 "$@"; }
@@ -31,6 +32,13 @@ mkdir -p "$MODELS"
   "$ZOO/face_detection_yunet/face_detection_yunet_2023mar.onnx"
 [ -f "$MODELS/face_recognition_sface_2021dec.onnx" ] || fetch -o "$MODELS/face_recognition_sface_2021dec.onnx" \
   "$ZOO/face_recognition_sface/face_recognition_sface_2021dec.onnx"
+# text-to-speech voices for tts.py: 3 Hindi Piper voices + Kokoro v1.0 (hf_alpha/hf_beta/hm_omega/hm_psi).
+# Not Kokoro v1.1 (Chinese/English voices only) and not the int8 v1.0 build (steady 4.8/9.6 kHz whine, 3x slower).
+mkdir -p "$MODELS/tts"
+for m in vits-piper-hi_IN-rohan-medium vits-piper-hi_IN-pratham-medium vits-piper-hi_IN-priyamvada-medium \
+         kokoro-multi-lang-v1_0; do
+  [ -d "$MODELS/tts/$m" ] || fetch "$TTS_REL/$m.tar.bz2" | tar -xj -C "$MODELS/tts"
+done
 
 echo "==> Fonts (Latin + Devanagari TTFs), sound-effect library"
 "$ROOT/.venv/bin/python" "$ED/scripts/fonts.py" "$ED/node_modules/@fontsource" "$ED/assets/fonts"
