@@ -27,4 +27,3 @@ projects/**/media/
 projects/**/sheets_src/
 projects/**/assemble_graph.txt
 projects/**/*.log
-projects/**/vo/vo_*.json
