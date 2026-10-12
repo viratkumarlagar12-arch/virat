@@ -44,7 +44,7 @@ Then remind the user to delete the release (the repo is public). Split uploads: 
 ## Open projects (read the project's NOTES.md first)
 - `projects/short2` (breath-hold / CO2): waiting for the creator's re-export (the first export was black) + voice choice.
   Thumbnail, YouTube/Facebook/Instagram text are done (`thumb/`, `youtube.md`, `facebook.md`, `instagram.md`).
-- `projects/short3` (Leh dal Short): the creator's own storyboard (`storyboard.md`) is the plan. They will send their real voiceover
+- `projects/short3` (Leh dal Short): the creator's own storyboard (`storyboard.md`, their own words; my notes are in `storyboard_notes.md`) is the plan. They will send their real voiceover
   and real footage; until then only learn, don't build. Verified science + numbers are in `NOTES.md`.
 
 ## AI voiceover ("you give new voice over")
