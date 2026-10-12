@@ -12,7 +12,12 @@ the script/voice samples in `vo/` below are research and reference only.**
   (hook question, quiz, answer, CTA).
 - The VO says "Leh Ladakh" in the hook (not just "Leh"). The ASR garbles the quiz options and numbers; the cards/captions use
   the storyboard wording ("A: Oxygen kam? B: Thand? Ya C: Hawa ka pressure kam?", "3,500", "100 nahi", "88").
-- Ask the creator for: a 3 s phone clip of real dal boiling (hook), and notes on v1.
+- v2 (after a 4-reviewer check): clip B is Dhankar/Spiti (HP road sign) -> replaced by Ladakh stock 200297; clip H is a
+  plain lidded pot -> drawn pressure-cooker cut-away on top (+ synthesized whistle at 30.25); CTA readable ~1 s (dip to
+  black moved after "karo"); natural boiling sound high-passed 180 Hz and ~+8 dB; captions max 14 chars (Shorts buttons);
+  hook clip has 34 px side bars -> camera starts at 1.09; voice chain high-pass now 4th order (mic pops).
+  Whistle recipe: 1 s, tone 2350->2730 Hz (+7 Hz wobble, 23 Hz flutter) + 1.8-7.5 kHz hiss, 70 ms attack, 280 ms release.
+- Ask the creator for: a 3 s phone clip of real dal boiling (hook), a 4 s clip of a closed whistle cooker, notes on v2.
 
 ## Decisions to remember
 - Title wording: the creator's own title says "nahi galti", but dal DOES soften at ~88 C, only several times slower in an open pot

@@ -80,7 +80,8 @@ DEFAULT_SFX = {"hook": "impact", "card": "whoosh", "stat": "whoosh", "bars": "wh
                "compare": "whoosh", "emoji": "bubble", "image": "whoosh", "video": "whoosh",
                "lower_third": "swoosh", "countdown": None, "cta": "pop", "text_slam": "impact", "flash": "camera",
                "sundial": "whoosh", "ring": "pop", "stamp": "impact", "hand": None, "flare": None, "note10": None,
-               "fade": None, "quiz": None, "thermo": "whoosh", "gauge": "whoosh", "altimeter": "whoosh", "chips": None}
+               "fade": None, "quiz": None, "thermo": "whoosh", "gauge": "whoosh", "altimeter": "whoosh", "chips": None,
+               "cooker": "whoosh"}
 OVERLAY_ONLY = {"emoji", "flash", "hand", "ring", "flare", "note10", "fade"}  # drawn on the footage; don't take a layout zone
 
 
@@ -286,7 +287,7 @@ def make_layout(face, origin, max_zoom, cap_size, plan):
 
 # natural height (px) each graphic needs to render without shrinking
 NEED = {"bars": 420, "list": 360, "compare": 220, "image": 420, "video": 420, "card": 210, "stat": 300,
-        "sundial": 540, "stamp": 280, "quiz": 560, "thermo": 520, "gauge": 480, "altimeter": 520, "chips": 300,
+        "sundial": 540, "stamp": 280, "quiz": 560, "thermo": 520, "gauge": 480, "altimeter": 520, "chips": 300, "cooker": 900,
         "hook": 240, "cta": 230, "countdown": 400, "lower_third": 140, "text_slam": 300}
 
 
@@ -493,8 +494,8 @@ def compile_overlays(plan, words, tm, layout, media_dir, verbose=False):
         if typ == "cta" and o.get("click", True):
             sfx.append({"t": o["t"] + 1.0, "name": "click"})
             sfx.append({"t": o["t"] + 1.1, "name": "success", "gain_db": -3})
-        if typ in ("quiz", "chips"):  # options / chips pop in one by one (own "w"/"t_out", else staggered)
-            for k, it in enumerate(o["options" if typ == "quiz" else "items"]):
+        if typ in ("quiz", "chips", "cooker"):  # options / chips pop in one by one (own "w"/"t_out", else staggered)
+            for k, it in enumerate(o["options"] if typ == "quiz" else o.get("items", [])):
                 it["t"] = round(anchor(it, words, tm) if ("w" in it or "t_out" in it) else t0 + 0.25 * k, 3)
                 sfx.append({"t": it["t"], "name": "tick" if typ == "quiz" else "pop", "gain_db": -1})
         if typ == "quiz" and "t_answer" in o:
@@ -503,7 +504,7 @@ def compile_overlays(plan, words, tm, layout, media_dir, verbose=False):
         if typ == "quiz" and "t_footer" in o:
             sfx.append({"t": o["t_footer"], "name": "pop", "gain_db": -2})
         if typ in ("thermo", "gauge") and "t_drop" in o:
-            sfx.append({"t": o["t_drop"], "name": "whoosh_down", "gain_db": -2})
+            sfx.append({"t": o["t_drop"], "name": "whoosh_down", "gain_db": -6})
         if typ == "thermo" and "t_cross" in o:
             sfx.append({"t": o["t_cross"], "name": "glitch", "gain_db": -6})
         if typ == "altimeter":
@@ -770,12 +771,12 @@ def main():
     print(f"DONE -> {final}")
     if final.stat().st_size > 29 * 2 ** 20:  # chat/file delivery caps at 30 MiB: make a 2-pass copy that fits
         upload = final.with_name(final.stem + "_upload.mp4")
-        vbit = int((27.5 * 2 ** 20 * 8 / tm.duration - 192_000) / 1000)
+        vbit = int((27.5 * 2 ** 20 * 8 / tm.duration - 330_000) / 1000)  # the 320k audio is copied as-is
         common = ["-c:v", "libx264", "-preset", "slow", "-b:v", f"{vbit}k", "-maxrate", f"{int(vbit * 1.4)}k",
                   "-bufsize", f"{vbit * 2}k", "-passlogfile", str(work / "x264pass")]
         run(["ffmpeg", "-v", "error", "-y", "-i", final, *common, "-pass", "1", "-an", "-f", "mp4", "/dev/null"])
         run(["ffmpeg", "-v", "error", "-y", "-i", final, *common, "-pass", "2", "-pix_fmt", "yuv420p",
-             "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", upload])
+             "-c:a", "copy", "-movflags", "+faststart", upload])
         print(f"upload copy ({upload.stat().st_size / 2 ** 20:.1f} MiB) -> {upload}")
 
 

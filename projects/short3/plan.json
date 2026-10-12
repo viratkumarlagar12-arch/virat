@@ -28,6 +28,7 @@
     "until": 35.16,
     "size": 80,
     "max_words": 3,
+    "max_chars": 14,
     "uppercase": true,
     "keywords": ["leh", "ladakh", "dal", "pressure", "cooker", "galti", "temperature", "garam", "celsius"],
     "hide_words": [87, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 68, 69, 70, 71, 72, 73, 93, 94, 95, 96, 97, 98, 99, 100, 101],
@@ -38,7 +39,7 @@
     "drift": false,
     "alternate": false,
     "keyframes": [
-      {"t_out": 0.0, "from": 1.0, "scale": 1.1, "dur": 3.5, "ease": "none", "origin": [480, 1250]},
+      {"t_out": 0.0, "from": 1.09, "scale": 1.16, "dur": 3.5, "ease": "none", "origin": [480, 1250]},
       {"t_out": 3.56, "scale": 1.2, "dur": 0.18, "ease": "power3.out"},
       {"t_out": 4.05, "from": 1.0, "scale": 1.06, "dur": 2.9, "ease": "none", "origin": [540, 960]},
       {"t_out": 6.95, "from": 1.0, "scale": 1.05, "dur": 1.8, "ease": "none"},
@@ -47,7 +48,7 @@
       {"t_out": 12.1, "from": 1.0, "scale": 1.05, "dur": 2.0, "ease": "none", "origin": [540, 1100]},
       {"t_out": 14.1, "from": 1.0, "scale": 1.12, "dur": 4.85, "ease": "none", "origin": [540, 1150]},
       {"t_out": 18.95, "from": 1.0, "scale": 1.18, "dur": 1.1, "ease": "power1.in", "origin": [540, 900]},
-      {"t_out": 20.05, "from": 1.0, "scale": 1.08, "dur": 4.27, "ease": "none", "origin": [540, 960]},
+      {"t_out": 20.05, "from": 1.2, "scale": 1.25, "dur": 4.27, "ease": "none", "origin": [540, 560]},
       {"t_out": 24.32, "from": 1.0},
       {"t_out": 26.85, "from": 1.0, "scale": 1.08, "dur": 3.77, "ease": "none", "origin": [430, 1300]},
       {"t_out": 30.62, "from": 1.0, "scale": 1.12, "dur": 4.54, "ease": "none", "origin": [540, 560]},
@@ -57,7 +58,7 @@
   },
 
   "overlays": [
-    {"type": "hook", "t_out": 0.0, "until": 4.0, "text": "DAL JALDI KYUN *NAHI GALTI?*", "sub": "📍 Leh, Ladakh", "boxed": true,
+    {"type": "hook", "t_out": 0.0, "until": 4.0, "text": "DAL JALDI KYUN *NAHI GALTI?*", "sub": "Leh, Ladakh mein 🏔️", "boxed": true,
      "zone": "top", "size": 104, "stagger": 0.06, "sfx": "none"},
 
     {"type": "quiz", "t_out": 4.05, "until": 8.72, "zone": [230, 1000],
@@ -67,46 +68,47 @@
      "footer": "SOCHO… 🤔", "times": {"footer": {"t_out": 8.0}}},
 
     {"type": "altimeter", "t_out": 8.85, "until": 12.05, "zone": [160, 600], "len": 330, "to": 3500, "tag": "📍 LEH, LADAKH",
-     "label": "SAMUNDAR SE UPAR", "times": {"end": {"t_out": 11.25}}},
+     "label": "SAMUNDAR SE UPAR", "sfx": "none", "times": {"end": {"t_out": 11.25}}},
 
     {"type": "gauge", "t_out": 12.12, "until": 14.05, "zone": [170, 760], "title": "Hawa ka pressure", "from": 100, "to": 65,
      "from_label": "SAMUNDAR TAL", "to_label": "LEH (~3,500 m)", "times": {"drop": {"t_out": 13.1}}},
 
-    {"type": "thermo", "t_out": 14.15, "until": 24.28, "zone": [165, 745], "from": 100, "to": 88, "tag": "LEH · KHULA BARTAN",
+    {"type": "thermo", "t_out": 14.15, "until": 24.28, "zone": [165, 745], "from": 100, "to": 88, "tag": "LEH · KHULA BARTAN", "sfx": "none",
      "times": {"cross": {"t_out": 15.85}, "drop": {"t_out": 16.9}, "steady": {"t_out": 19.1}}},
 
     {"type": "hook", "t_out": 19.3, "until": 24.25, "text": "MORE HEAT ≠ *MUCH HIGHER TEMP*", "boxed": true, "zone": [780, 1200],
-     "size": 92, "stagger": 0.36, "sfx": "whoosh"},
+     "size": 92, "stagger": 0.36, "sfx": "none"},
 
     {"type": "quiz", "style": "row", "t_out": 24.36, "until": 26.85, "zone": [165, 455], "answer": "C",
      "options": [{"key": "A", "t_out": 24.4}, {"key": "B", "t_out": 24.52}, {"key": "C", "t_out": 24.64}],
      "label": "C — LOW AIR PRESSURE", "times": {"answer": {"t_out": 25.12}, "label": {"t_out": 25.62}}},
 
-    {"type": "chips", "t_out": 28.2, "until": 30.6, "zone": [200, 640],
-     "items": [{"text": "PRESSURE", "dir": "up", "t_out": 28.25}, {"text": "COOKING TEMP", "dir": "up", "t_out": 29.75}]},
+    {"type": "cooker", "t_out": 26.9, "until": 30.6, "zone": [170, 1240], "title": "Pressure cooker",
+     "items": [{"text": "PRESSURE", "t_out": 28.25}, {"text": "COOKING TEMP", "t_out": 29.75}], "times": {"whistle": {"t_out": 30.25}}},
 
     {"type": "image", "t_out": 32.2, "until": 35.12, "src": "media/logo_small.png", "width": 300, "height": 163,
      "zone": [175, 345], "side": "right", "sfx": "none"},
     {"type": "quiz", "style": "row", "t_out": 32.2, "until": 35.12, "zone": [1000, 1400], "title": "A, B YA C?",
      "options": [{"key": "A", "t_out": 33.02}, {"key": "B", "t_out": 33.4}, {"key": "C", "t_out": 33.85}]},
-    {"type": "cta", "t_out": 34.45, "until": 35.12, "zone": [1420, 1580], "button": "COMMENT KARO!", "icon": "💬",
+    {"type": "cta", "t_out": 34.1, "until": 35.12, "zone": [1420, 1580], "button": "COMMENT KARO!", "icon": "💬",
      "click": false, "sfx": "pop"},
 
-    {"type": "fade", "t_out": 34.86, "in": 0.3, "out": 0.5},
+    {"type": "fade", "t_out": 35.0, "in": 0.16, "out": 0.5},
     {"type": "fade", "t_out": 36.66, "in": 0.5, "out": 0}
   ],
 
   "sfx": [
-    {"t_out": 0.0, "name": "nat_boil", "path": "media/nat/boil_hook.wav", "gain_db": -3},
+    {"t_out": 0.0, "name": "nat_boil", "path": "media/nat/boil_hook_hp.wav", "gain_db": 5},
     {"t_out": 0.02, "name": "impact", "gain_db": -6},
     {"t_out": 4.05, "name": "whoosh", "gain_db": -7},
     {"t_out": 8.75, "name": "whoosh", "gain_db": -5},
-    {"t_out": 14.1, "name": "nat_boil", "path": "media/nat/boil_beaker.wav", "gain_db": -5},
+    {"t_out": 14.1, "name": "nat_boil", "path": "media/nat/boil_beaker_hp.wav", "gain_db": 3},
     {"t_out": 14.1, "name": "swoosh", "gain_db": -5},
     {"t_out": 18.95, "name": "whoosh", "gain_db": -2},
-    {"t_out": 20.05, "name": "nat_boil", "path": "media/nat/boil_pot.wav", "gain_db": -4},
+    {"t_out": 20.05, "name": "nat_boil", "path": "media/nat/boil_pot_hp.wav", "gain_db": 4},
     {"t_out": 24.32, "name": "swoosh", "gain_db": -5},
     {"t_out": 26.85, "name": "swoosh", "gain_db": -5},
+    {"t_out": 30.25, "name": "cooker_whistle", "path": "media/sfx/cooker_whistle.wav", "gain_db": -6},
     {"t_out": 30.62, "name": "swoosh", "gain_db": -6},
     {"t_out": 35.16, "name": "impact", "gain_db": -7},
     {"t_out": 35.18, "name": "ding", "gain_db": -3}

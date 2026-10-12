@@ -3,7 +3,7 @@
  "fps": 30,
  "shots": [
   {"src": "fixed.mp4", "in": 0.0, "dur": 4.05, "note": "1 hook: steaming pot (creator clip A) - Leh Ladakh mein dal ubal toh rahi hai... phir bhi jaldi galti kyun nahi?"},
-  {"src": "fixed.mp4", "in": 4.12, "dur": 2.9, "note": "2 quiz: Leh road sign + mountains (clip B) - A: Oxygen kam? B: Thand?"},
+  {"src": "media/stock/200297.mp4", "in": 6.0, "dur": 2.9, "note": "2 quiz: Ladakh plain drone (Hanle, Pixabay 200297; creator's clip B is Dhankar/Spiti, HP) - A: Oxygen kam? B: Thand?"},
   {"src": "fixed.mp4", "in": 7.45, "dur": 1.8, "note": "2 quiz: Leh town (clip C) - Ya C: hawa ka pressure kam? Socho"},
   {"src": "media/stock/266966.mp4", "in": 1.0, "dur": 1.45, "note": "3 Leh (Shanti Stupa, Pixabay 266966) - Leh, samundar se"},
   {"src": "media/stock/186391.mp4", "in": 3.0, "dur": 1.9, "note": "3 Ladakh peaks drone (Pixabay 186391) - lagbhag 3,500 metre upar hai"},

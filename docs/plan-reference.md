@@ -83,6 +83,10 @@ Use `"t_out"` for an exact time in the finished video.
     {"type": "altimeter", "w": 21, "until": 12.0, "to": 3500, "max": 4000, "tag": "📍 LEH", "label": "SAMUNDAR SE UPAR", "times": {"end": {"w": 26}}},
     // pills with a bouncing arrow
     {"type": "chips", "w": 79, "until_w": 87, "items": [{"text": "PRESSURE", "dir": "up", "w": 79}, {"text": "COOKING TEMP", "w": 84}]},
+    // drawn pressure-cooker cut-away (sealed lid, whistle, dal in water): pressure arrows build from the first item,
+    // whistle puff at times.whistle (pair it with an sfx "path" whistle); items = arrow chips under the drawing
+    {"type": "cooker", "t_out": 26.9, "until": 30.6, "zone": [170, 1240], "title": "Pressure cooker",
+     "items": [{"text": "PRESSURE", "w": 79}, {"text": "COOKING TEMP", "w": 84}], "times": {"whistle": {"t_out": 30.25}}},
     // image pip: "width" makes it a small centred badge (e.g. a channel logo)
     {"type": "image", "t_out": 32.2, "dur": 2.9, "src": "media/logo_small.png", "width": 300, "height": 163, "zone": [175, 345]}
   ],

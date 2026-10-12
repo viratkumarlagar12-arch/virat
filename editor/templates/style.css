@@ -259,3 +259,13 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; 
 .chip .ca { display: inline-flex; align-items: center; justify-content: center; width: 92px; height: 92px; border-radius: 50%;
   background: var(--good); color: #fff; font-family: var(--ui-font); font-weight: 900; font-size: 62px; }
 .chip .ca.down { background: var(--hot); }
+
+/* ---------- pressure-cooker cut-away ---------- */
+.cooker { position: absolute; left: 90px; right: 90px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 24px 20px 28px; border-radius: 40px; background: var(--card-bg); box-shadow: 0 24px 70px rgba(0,0,0,.45); opacity: 0; }
+.cooker .ck-title { font-family: var(--head-font); font-weight: var(--head-weight); font-size: 56px; color: #fff; text-transform: uppercase; }
+.cooker .ck-art { width: 800px; height: 700px; margin: -30px 0 -40px; }
+.cooker .ck-chips { display: flex; flex-direction: column; align-items: center; gap: 18px; margin-top: 4px; }
+.hook .neq { position: relative; display: inline-block; }
+.hook .neq::after { content: ""; position: absolute; left: 50%; top: 14%; bottom: 14%; width: .13em; margin-left: -.065em; border-radius: .05em;
+  background: currentColor; box-shadow: 0 0 0 5px #000; transform: rotate(28deg); }

@@ -30,7 +30,7 @@ SFX_GAIN_DB = {
     "glitch": -12, "typing": -14, "camera": -9,
 }
 VOICE_CHAIN = (
-    "highpass=f=80,afftdn=nf=-28:tn=1,"
+    "highpass=f=80,highpass=f=80,afftdn=nf=-28:tn=1,"
     "equalizer=f=280:t=q:w=1.2:g=-2.5,equalizer=f=3800:t=q:w=1.0:g=2.5,equalizer=f=11000:t=q:w=0.8:g=1.5,"
     "acompressor=threshold=-20dB:ratio=3:attack=6:release=90:makeup=2"
 )

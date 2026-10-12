@@ -136,7 +136,8 @@
         const words = o.words.map((w) => {
           const s = mk("span", "w" + (w.acc ? " acc" : ""), el);
           if (w.acc && o.boxed) mk("span", "hlbox", s); // first child, so the text paints above it
-          mk("span", "tx", s, esc(w.w));
+          // the theme fonts have no "≠": draw it as "=" with a slash so it stays as heavy as the words
+          mk("span", "tx", s, w.w === "≠" ? '<span class="neq">=</span>' : esc(w.w));
           return s;
         });
         if (o.size) el.style.fontSize = o.size + "px";
@@ -704,6 +705,82 @@
         }
         tl.to(el, { opacity: 0, y: -24, duration: 0.25, ease: "power2.in" }, o.t + o.dur - 0.25);
         gsap.set(el, { opacity: 0 });
+      },
+
+      // pressure-cooker cut-away (drawn, not footage): sealed lid + gasket, whistle, water with dal inside. Pressure
+      // arrows build from the first item's time, the whistle blows at o.t_whistle; o.items = chips under the drawing
+      cooker(o) {
+        const el = mk("div", "cooker", overlays);
+        if (o.title) mk("div", "ck-title", el, markup(o.title));
+        const petals = Array.from({ length: 9 }, (_, k) => {
+          const x = 200 + k * 30;
+          return `<path d="M ${x - 11} 540 Q ${x} 496 ${x + 11} 540 Z" fill="#3D8BFF" opacity=".9"/><path d="M ${x - 5} 540 Q ${x} 516 ${x + 5} 540 Z" fill="#BFE0FF"/>`;
+        }).join("");
+        const dal = Array.from({ length: 26 }, (_, k) => {
+          const x = 168 + ((k * 53) % 300), y = 392 + ((k * 37) % 70);
+          return `<circle cx="${x}" cy="${y}" r="${7 + (k % 3)}" fill="#F2B632" stroke="#C98A12" stroke-width="2"/>`;
+        }).join("");
+        const arrow = (x, y, rot) => `<g transform="translate(${x} ${y}) rotate(${rot})"><rect x="-7" y="-34" width="14" height="40" rx="5" fill="#FF9F0A"/>
+          <polygon points="-20,4 20,4 0,30" fill="#FF9F0A"/></g>`;
+        const arrows = [arrow(210, 280, 0), arrow(275, 270, 0), arrow(340, 266, 0), arrow(405, 270, 0), arrow(470, 280, 0),
+          arrow(182, 340, 90), arrow(498, 340, -90)].join("");
+        const steam = [200, 300, 400].map((x) => `<path d="M ${x} 330 q -12 -18 0 -34 q 12 -18 0 -34" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="7" stroke-linecap="round"/>`).join("");
+        const art = mk("div", "ck-art", el);
+        art.innerHTML = `<svg viewBox="0 0 640 560" width="800" height="700">
+          <defs>
+            <linearGradient id="ckMetal" x1="0" x2="1"><stop offset="0" stop-color="#7C838C"/><stop offset=".3" stop-color="#E9EDF1"/>
+              <stop offset=".65" stop-color="#B9C0C8"/><stop offset="1" stop-color="#6E757E"/></linearGradient>
+            <clipPath id="ckIn"><rect x="150" y="222" width="340" height="248" rx="24"/></clipPath>
+          </defs>
+          <g class="ck-flame">${petals}</g>
+          <rect x="130" y="200" width="380" height="296" rx="42" fill="url(#ckMetal)" stroke="#4B535C" stroke-width="5"/>
+          <rect x="150" y="222" width="340" height="248" rx="24" fill="#16202B"/>
+          <g clip-path="url(#ckIn)">
+            <rect x="150" y="372" width="340" height="110" fill="#2E8FD6"/>
+            <rect x="150" y="372" width="340" height="8" fill="#7CC4F5"/>
+            ${dal}
+            <g class="ck-steam">${steam}</g>
+            <g class="ck-arrows">${arrows}</g>
+          </g>
+          <rect x="520" y="300" width="96" height="30" rx="15" fill="#3A3F47" stroke="#8A929C" stroke-width="4"/>
+          <rect x="112" y="176" width="416" height="30" rx="13" fill="#D3D9DF" stroke="#4B535C" stroke-width="5"/>
+          <rect x="132" y="204" width="376" height="8" rx="4" fill="#E0463A"/>
+          <rect x="520" y="182" width="104" height="24" rx="12" fill="#3A3F47" stroke="#8A929C" stroke-width="4"/>
+          <rect x="307" y="146" width="26" height="34" fill="#4B535C"/>
+          <g class="ck-whistle"><rect x="290" y="104" width="60" height="48" rx="14" fill="#2B2F36" stroke="#111" stroke-width="3"/>
+            <rect x="302" y="88" width="36" height="20" rx="8" fill="#3A3F47"/></g>
+          <g class="ck-puff"><circle cx="300" cy="70" r="22" fill="#fff"/><circle cx="330" cy="54" r="28" fill="#fff"/><circle cx="362" cy="70" r="20" fill="#fff"/>
+            <circle cx="335" cy="22" r="18" fill="rgba(255,255,255,.8)"/></g>
+        </svg>`;
+        const chips = mk("div", "ck-chips", el);
+        const rows = (o.items || []).map((it) => {
+          const c = mk("div", "chip", chips);
+          mk("span", "ct", c, markup(it.text));
+          const a = mk("span", "ca", c, "↑");
+          return { c, a, it };
+        });
+        place(el, o.zone);
+        const arrowsG = $(".ck-arrows", el), puff = $(".ck-puff", el), wh = $(".ck-whistle", el);
+        tl.fromTo(el, { opacity: 0, y: 50, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "expo.out" }, o.t);
+        const end = o.t + o.dur - 0.3;
+        tl.fromTo($(".ck-flame", el), { opacity: 0.75 }, { opacity: 1, duration: 0.12, yoyo: true, repeat: 2 * Math.max(1, Math.floor((end - o.t) / 0.24)) - 1, ease: "sine.inOut" }, o.t);
+        tl.fromTo($(".ck-steam", el), { y: 0, opacity: 0.3 }, { y: -14, opacity: 0.9, duration: 0.3, yoyo: true, repeat: 2 * Math.max(1, Math.floor((end - o.t) / 0.6)) - 1, ease: "sine.inOut" }, o.t);
+        const tp = rows.length ? rows[0].it.t : o.t + 0.6;
+        gsap.set(arrowsG, { opacity: 0 });
+        tl.to(arrowsG, { opacity: 1, duration: 0.3 }, tp);
+        tl.fromTo(arrowsG, { scale: 0.75, svgOrigin: "340 330" }, { scale: 1.12, svgOrigin: "340 330", duration: Math.max(0.6, end - tp - 0.2), ease: "power1.in" }, tp);
+        for (const { c, a, it } of rows) {
+          tl.fromTo(c, { opacity: 0, scale: 0.4, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: "back.out(2.6)" }, it.t);
+          const n = Math.max(1, Math.floor((end - it.t - 0.4) / 0.3));
+          tl.fromTo(a, { y: 0 }, { y: -10, duration: 0.15, yoyo: true, repeat: n * 2 - 1, ease: "sine.inOut" }, it.t + 0.35);
+        }
+        gsap.set(puff, { opacity: 0 });
+        if (o.t_whistle != null) {
+          tl.to(wh, { y: -7, duration: 0.06, yoyo: true, repeat: 7, ease: "sine.inOut" }, o.t_whistle);
+          tl.fromTo(puff, { opacity: 0, y: 20, scale: 0.6, svgOrigin: "330 60" }, { opacity: 1, y: -10, scale: 1.2, svgOrigin: "330 60", duration: 0.45, ease: "power2.out" }, o.t_whistle);
+          tl.to(puff, { opacity: 0, y: -40, duration: 0.4, ease: "power1.in" }, o.t_whistle + 0.45);
+        }
+        tl.to(el, { opacity: 0, y: -24, duration: 0.25, ease: "power2.in" }, o.t + o.dur - 0.25);
       },
 
       flash(o) {
