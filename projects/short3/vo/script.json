@@ -1,0 +1,140 @@
+{
+ "angle": "Myth-vs-truth quiz (A oxygen kam hona / B thand / C pressure kam, \"jawab end mein\") on the Leh dal puzzle: dal boils in Leh but softens slowly in an open pot. Chain: Leh about 3,500 m, so air pressure about two-thirds, so water boils at about 88 C and stays stuck there. More flame only makes more steam, so dal does soften but takes much longer. Answer C is the main cause; oxygen and cold do not set the boiling point. Fix: pressure cooker in Leh (about 115 C), a bit more time, open only when the pressure is fully out. Then the A/B/C comment prompt and the channel end card.",
+ "sentences": [
+  {
+   "dev": "लेह में दाल उबलती है...",
+   "roman": "Leh mein dal ubalti hai...",
+   "on_screen": "0-2 s hook: dark-space sky, snowy Leh peak; steel pot of dal boils hard on a flame, corner timer spins fast; big text 'LEH MEIN DAL...' slams in on the first word with an impact SFX + bubbling loop; no numbers yet.",
+   "pause_after": 0.25
+  },
+  {
+   "dev": "फिर भी कच्ची क्यों?",
+   "roman": "Phir bhi kachchi kyun?",
+   "on_screen": "Spoon lifts one still-hard lentil; 'KACHCHI KYUN?' completes the hook text with a red '?' on the lentil; small tick SFX; 'KACHCHI' is only a question hook here, nothing is claimed.",
+   "pause_after": 0.4
+  },
+  {
+   "dev": "ए, ऑक्सीजन कम?",
+   "roman": "A, oxygen kam?",
+   "on_screen": "Quiz card A 'OXYGEN KAM HONA' (O2 bubble) pops in on 'oxygen'; tick SFX; card stays in the safe zone; no numbers.",
+   "pause_after": 0.15
+  },
+  {
+   "dev": "बी, ठंड?",
+   "roman": "B, thand?",
+   "on_screen": "Quiz card B 'THAND' (snowflake) pops in next to A; tick SFX.",
+   "pause_after": 0.15
+  },
+  {
+   "dev": "सी, प्रेशर कम?",
+   "roman": "C, pressure kam?",
+   "on_screen": "Quiz card C 'PRESSURE KAM' (gauge) pops in; all three cards now sit in a row; tick SFX.",
+   "pause_after": 0.3
+  },
+  {
+   "dev": "जवाब एंड में।",
+   "roman": "Jawab end mein.",
+   "on_screen": "'JAWAB END MEIN' stamp lands on the three cards, they dim and a lock icon snaps on; whoosh + stamp SFX; thin progress bar at the top starts filling until the answer.",
+   "pause_after": 0.5
+  },
+  {
+   "dev": "लेह समुद्र से साढ़े तीन हज़ार मीटर ऊपर है।",
+   "roman": "Leh samudra se saadhe teen hazaar meter upar hai.",
+   "on_screen": "Mountain with an altitude meter climbing from 0 to 'about 3,500 m' and a LEH pin (Leh town, not the airport) landing on 'upar hai'; rising-meter SFX; no pressure numbers yet.",
+   "pause_after": 0.25
+  },
+  {
+   "dev": "वहाँ हवा का प्रेशर बस दो तिहाई।",
+   "roman": "Wahan hawa ka pressure bas do tihaai.",
+   "on_screen": "Two bars: 'SEA LEVEL 100%' and 'LEH about 65% (~2/3)'; the Leh bar shrinks on 'do tihaai' with a punch-in; short thunk SFX.",
+   "pause_after": 0.3
+  },
+  {
+   "dev": "पानी उबलता है, जब भाप हवा जितना ज़ोर लगाए।",
+   "roman": "Paani ubalta hai, jab bhaap hawa jitna zor lagaye.",
+   "on_screen": "Pot cutaway: steam arrows push up, air arrows push down; the two sets grow until equal, then bubbles start; chip 'BHAAP KA ZOR = HAWA KA ZOR -> UBAAL'; soft bubble-pop SFX; no numbers.",
+   "pause_after": 0.2
+  },
+  {
+   "dev": "वहाँ पानी सौ नहीं, लगभग अट्ठासी डिग्री पर उबलता है।",
+   "roman": "Wahan paani sau nahi, lagbhag atthaasi degree par ubalta hai.",
+   "on_screen": "Big thermometer: left 'SEA LEVEL 100 C' (tiny 'normal pressure par'), right 'LEH about 88 C'; mercury rises and stops dead at 88, the 100 is slashed in red, gap tag '~12 C kam'; whole numbers only; punch-in + ding on 'atthaasi' (88 appears exactly then).",
+   "pause_after": 0.3
+  },
+  {
+   "dev": "तेज़ आग से भाप बढ़ती है, तापमान नहीं।",
+   "roman": "Tez aag se bhaap badhti hai, taapmaan nahi.",
+   "on_screen": "Flame under the pot grows and steam clouds swell, but the thermometer needle stays glued at about 88 C; chips 'KHULI DEG MEIN' and 'AAG TEZ = BHAAP ZYADA, TAPMAAN SAME'; flame whoosh + growing steam hiss.",
+   "pause_after": 0.2
+  },
+  {
+   "dev": "इसीलिए दाल गलती है, पर बहुत देर में।",
+   "roman": "Isiliye dal galti hai, par bahut der mein.",
+   "on_screen": "Two lentil bowls with running clocks, chip 'KHULI DEG MEIN' kept on: 'SEA LEVEL: jaldi' (lentils soften fast) vs 'LEH: DHEERE DHEERE GALTI HAI' (lentils go from hard to half-soft while the clock keeps running); no time multiple and no minutes on screen; slow tick SFX.",
+   "pause_after": 0.35
+  },
+  {
+   "dev": "जवाब सी!",
+   "roman": "Jawab C!",
+   "on_screen": "The quiz cards return, A and B grey out, C gets a green tick; win SFX + short flash (the one answer beat); punch-in on 'C'.",
+   "pause_after": 0.2
+  },
+  {
+   "dev": "मुख्य वजह कम प्रेशर।",
+   "roman": "Mukhya wajah kam pressure.",
+   "on_screen": "Label 'MUKHYA WAJAH: KAM PRESSURE' under the green C card; calm settle, no extra SFX.",
+   "pause_after": 0.3
+  },
+  {
+   "dev": "ऑक्सीजन से उबाल तय नहीं होता, ठंड से भी नहीं।",
+   "roman": "Oxygen se ubaal tay nahi hota, thand se bhi nahi.",
+   "on_screen": "Left: air pie chart labelled 'HAWA MEIN O2 KA HISSA about 21%' with the small note '(saans mein kam, par ubaal ka O2 se lena-dena nahi)', cross over A with the text 'UBAAL MEIN OXYGEN KA ROL NAHI'; right: two air thermometers (5 C and 30 C) while the pot water reads about 88 C in both, cross over B; chip 'UBAAL PRESSURE SE TAY HOTA HAI'; two soft thunk SFX; the pie appears on 'oxygen', the crosses land on 'nahi hota' and 'bhi nahi'.",
+   "pause_after": 0.35
+  },
+  {
+   "dev": "इसका हल, प्रेशर कुकर।",
+   "roman": "Iska hal, pressure cooker.",
+   "on_screen": "Pivot beat: a pressure cooker slides in with the tag 'ISKA HAL: PRESSURE COOKER'; the cards fade out; small whoosh.",
+   "pause_after": 0.2
+  },
+  {
+   "dev": "लेह में कुकर के अंदर पानी लगभग एक सौ पंद्रह डिग्री तक पहुँचता है।",
+   "roman": "Leh mein cooker ke andar paani lagbhag ek sau pandrah degree tak pahunchta hai.",
+   "on_screen": "Pressure cooker cutaway: lid sealed, steam trapped, gauge needle rises, inner thermometer climbs from 88 to 'about 115 C' on 'pandrah'; chips 'LEH: KHULI DEG about 88 C' vs 'LEH: COOKER about 115 C', a small 'sea level par about 120 C' chip and the line 'cooker ke hisaab se about 110-115 C'; never show 120 or 121 as the Leh number; whistle SFX.",
+   "pause_after": 0.2
+  },
+  {
+   "dev": "समय कुछ बढ़ाओ, प्रेशर पूरा निकलने पर ही खोलो।",
+   "roman": "Samay kuch badhao, pressure poora nikalne par hi kholo.",
+   "on_screen": "Calm beat: timer icon with '+ KUCH EXTRA TIME (cooker/dal ke hisaab se)' (no percentage); then the gauge needle falls to zero, a lock opens, green tick 'PRESSURE POORA NIKLE, TAB KHOLO'; music dips slightly; no hands on the valve.",
+   "pause_after": 0.3
+  },
+  {
+   "dev": "ए, बी या सी?",
+   "roman": "A, B ya C?",
+   "on_screen": "A / B / C buttons in a row pop in one by one on the three letters; comment bubble 'A, B ya C? Comment karo'.",
+   "pause_after": 0.15
+  },
+  {
+   "dev": "कमेंट करो!",
+   "roman": "Comment karo!",
+   "on_screen": "Comment bubble pulses; hold 0.5 s, dip to black, then the Science Unseen Hindi end card (~2 s: logo fade-in, slow push-in, fade-out); captions.until before the card, music fades out under it.",
+   "pause_after": 0
+  }
+ ],
+ "word_count": 120,
+ "est_seconds": 41,
+ "titles": [
+  "Leh mein dal itni der se kyun galti hai? A, B ya C? #shorts",
+  "Leh mein dal itni der se kyun galti hai? Oxygen, thand ya pressure? #shorts",
+  "Leh mein paani 100°C nahi, lagbhag 88°C par ubalta hai! Kyun?",
+  "Ladakh mein dal itni der se kyun galti hai? Cooker ka raaz",
+  "Leh mein dal ubalti hai, phir bhi der se kyun galti hai?"
+ ],
+ "thumbnail_ideas": [
+  "Steel pot of dal bubbling hard in front of a snowy Ladakh peak on the dark-space background. A thermometer in the pot reads 88 C and a red-slashed 100 sits behind it. Text: 'DAL KYUN DER SE GALTI?' with a small '88 C' tag. No face.",
+  "Leh mountain at dusk with three round icons in a row: oxygen bubble 'A', snowflake 'B', pressure gauge 'C'. A big yellow '?' sits over them. Text: 'A, B ya C?'. Icons stay in the safe zone.",
+  "Split screen with the same red clock on both sides (text 'SAME TIME PAR'). Left: pot with soft cooked dal on green grass, label 'SEA LEVEL 100 C'. Right: 'KHULI DEG' pot with still-firm dal on a snowy peak, label 'LEH 88 C' (no word 'raw'). Both temperature labels in the same neutral white, only the clock is red. Text between: '12 C KA FARAK'."
+ ],
+ "notes": "CHECKED WITH PYTHON (files in /tmp/claude-0/-home-user-virat/4580fc96-01cf-54e2-84ec-8e939f1e92f1/scratchpad/leh/: script.json, check.py): 20 sentence objects, 120 words (Devanagari tokens and whitespace tokens agree; the 13-line original counts 117 the same way), longest 14 (sentence 17). dev has only Devanagari plus , . ? ! and one '...' at the end of sentence 1; no digits, Latin letters or other symbols. Roman has the same word count in every sentence and one roman word per dev word (no mapping conflicts). I extracted the committed split_sentences() from editor/scripts/tts.py and ran it on the dev text (joined by newline and by space): it gives exactly these 20 segments. So sentences[] ARE the TTS segments (hook, quiz and CTA are split at '?', '!' and '...' on purpose) and pause_after maps 1:1 to --pauses. Do not merge them back into lines. On-screen numbers checked against an allowed list; 120 appears only as the 'sea level par about 120 C' chip (121 only inside the 'never show' instruction); no 'x guna', no minutes, no 'kabhi nahi', no 'raw', no percentage for extra time.\n\nFIXES: all 11 applied except for the points below.\n(1) CONFLICT, Fix 1 vs the 2nd Fix 8 (the 'ऑक्सीजन वहाँ भी इक्कीस प्रतिशत' line): both rewrite the same spoken sentence, so only one wording can be spoken. I used the Fix 8 wording 'ऑक्सीजन से उबाल तय नहीं होता, ठंड से भी नहीं।'. It makes no claim at all about the oxygen amount in the audio (which is what the must-fix is about), gives cold a reason, and is 1 word shorter than the Fix 1 wording. Everything else from Fix 1 is applied: 'OXYGEN KAM HONA' card, pie label 'HAWA MEIN O2 KA HISSA about 21%' plus the saans/ubaal note, cross over A reads 'UBAAL MEIN OXYGEN KA ROL NAHI'. Because 21% is no longer spoken, drop the word_text for 'ikkis pratishat' and the 'इक्कीस' ASR check; 21% is on screen only.\n(2) Fix 2 and Fix 10 touch the same line: merged as 'इसका हल, प्रेशर कुकर।' then 'लेह में कुकर के अंदर पानी लगभग एक सौ पंद्रह डिग्री तक पहुँचता है।'. Chips as in Fix 2. I wrote the range chip as 'about 110-115 C' (fix wording); a 10 psi cooker is about 108 C, so say 'about 108-115 C' if the creator wants the exact low end.\n(3) Fix 6 (extra time): used the 'keep the line' option but with 'कुछ' instead of 'थोड़ा' and the chip '+ KUCH EXTRA TIME (cooker/dal ke hisaab se)'. I did not add 'एक-दो सीटी ज़्यादा' (+6 words would break the 120 limit, and it is cooker-specific). I dropped 'कुकर' before 'प्रेशर' in this line to save a word; the cooker is named in the two lines before and is on screen.\n(4) Fix 7 (pauses): the list changed because the sentences changed. New list, 20 values for 20 segments: --pauses '[0.25,0.4,0.15,0.15,0.3,0.5,0.25,0.3,0.2,0.3,0.2,0.35,0.2,0.3,0.35,0.2,0.2,0.3,0.15,0.0]'. Same shape as the tested 19-value list: 0.5 s beat after 'जवाब एंड में', 0.2 s of air after 'जवाब सी!'.\n(5) Fix 9 ('एंड'): dev keeps 'एंड'; at TTS time use tts_text 'जवाब एण्ड में।' (same respell as short2). I tested it: hm_omega decodes 'जवाब एंड में' in 2 of 2 passes (plain 'एंड' gives 'इनमें'); hm_psi still gives 'इंड', so with psi use the fallback 'जवाब आख़िर में।' (clean on both voices, same 3 words; the 'JAWAB END MEIN' stamp can stay).\nTitles (Fix 3): 'nahi galti' removed everywhere; title 3 now says 'lagbhag 88°C'. Thumbnail 3 (Fix 4): same clock, no 'raw', 'KHULI DEG', neutral temperature colours, '12 C KA FARAK'.\n\nWORD BUDGET: the fixes add 11 words (117 to 128), so I cut 8 filler words from lines no fix specifies: 'या' (option C), 'तब' and 'उसकी' (line 9), 'तो' (line 10), 'बस' (line 11), 'कुकर' (line 18), 'तुमने' and 'चुना' (CTA, now 'ए, बी या सी? कमेंट करो!'). All fix-specified wording is kept. If it must be shorter, cut in this order: 'बस' in sentence 8, then 'होता' in sentence 15. Never cut 'लेह में' (sentence 17) or 'पूरा'/'ही' (sentence 18, safety). If the creator wants the fuller CTA 'तुमने ए, बी या सी चुना? कमेंट करो!' it decodes more cleanly (+2 words, needs two more cuts).\n\nTTS, run for real (sherpa-onnx installed in the scratchpad only, not in the repo): kokoro hm_omega speed 1.34 gives 38.39 s for all 20 segments with the pause list above; hm_psi 36.65 s. So about 41 s with the 0.5 s hold and ~2 s end card. hm_omega start times (s): hook 0.00 and 1.50 (hook done by 2.6), quiz cards 2.98 / 4.22 / 5.09, 'jawab end mein' 6.34, Leh height 7.77, 'do tihaai' 10.76, '88' line 15.37, 'jawab C' 23.23, oxygen/cold 25.84, cooker pivot 28.69, '115' line 30.20, extra time 33.95, CTA 36.61, end 38.36. Prefer hm_omega: hm_psi says 'साढ़े' as 'सारे' (a listener may hear 3,000). ASR round trip on omega: 'अट्ठासी' is heard as 88 ('8ठ8सी'), 'साढ़े तीन हज़ार' OK, 'पंद्रह' OK (CTC only garbles digits; Whisper on psi gave 115), 'ज़ोर', 'तापमान', 'भाप' OK. Listen once to: sentence 14 'कम प्रेशर' (ASR hears 'कंप्रेशर' on both voices; if it sounds like 'compressor', use tts_text 'कम, प्रेशर') and the bare letters line 19 (CTC hears Latin letters on both voices). Whisper is useless on single short segments, ignore its output.\n\nNUMBERS vs RESEARCH: ~3,500 m = Leh town (not airport); ~65% = ~2/3 (measured 66%, standard atmosphere 64.7%); 100 C vs about 88 C (sources 87-89), gap about 12 C; 21% = share of air (20.9%), shown as a share only; 5 C and 30 C are just air-temperature examples; about 115 C = Leh, 1 kgf/cm2 cooker (114-115), about 120 C only as the small sea-level chip. Not claimed anywhere: any 'x times slower', minutes, the +45-50% time extension, oxygen/cold/gravity/hard water as causes.\n\nPLAN HINTS: \"layout\": {\"face\": \"none\"}. word_text for captions: अट्ठासी as 88, 'saadhe teen hazaar' as 3,500, 'ek sau pandrah' as 115, 'sau' as 100 (not 'ikkis pratishat' any more). captions.until before the end card; documentary music mood, volume 9; SFX on every graphic event; punch-ins on 88, 'do tihaai', 'sau nahi' and 'jawab C'. Quiz cards stay from sentence 3 to 6 and return at 13-15. Last pause is 0 because the end card follows.\n\nDESCRIPTION / PINNED COMMENT: this is a feed-curiosity video; use the Ladakh, Leh and 'pressure cooker kaise kaam karta hai' angles in tags and description. Put in the description: low oxygen matters for people and stove flames, not for the temperature of boiling water; do not tamper with the valve; let the pressure fall on its own and do not push or lift the vent weight (dal foams and can spit); never force the lid; follow the cooker manual. The fix text says fill no more than 1/3 for tuvar and moong and 1/2 for lentils; I could not verify that, so tell the creator to check his own cooker manual (many manuals say at most half for dal). No correction comment is needed now that the title says 'der se galti hai'; if he insists on 'nahi galti', pin: 'Galti hai, bas bahut der mein. Cooker use karo, aur pressure poora nikalne ke baad hi kholo.' The syringe demo stays out and is a good Part 2."
+}

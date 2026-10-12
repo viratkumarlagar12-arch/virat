@@ -29,3 +29,4 @@ projects/**/assemble_graph.txt
 projects/**/*.log
 projects/**/vo/*_verify.json
 projects/**/thumb/assets/
+projects/**/work_*/
