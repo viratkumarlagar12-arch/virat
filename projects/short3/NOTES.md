@@ -17,7 +17,9 @@ the script/voice samples in `vo/` below are research and reference only.**
   black moved after "karo"); natural boiling sound high-passed 180 Hz and ~+8 dB; captions max 14 chars (Shorts buttons);
   hook clip has 34 px side bars -> camera starts at 1.09; voice chain high-pass now 4th order (mic pops).
   Whistle recipe: 1 s, tone 2350->2730 Hz (+7 Hz wobble, 23 Hz flutter) + 1.8-7.5 kHz hiss, 70 ms attack, 280 ms release.
-- Ask the creator for: a 3 s phone clip of real dal boiling (hook), a 4 s clip of a closed whistle cooker, notes on v2.
+- v3: the creator sent two AI clips (Google Veo, 360x640): dal boiling -> hook, whistle cooker -> scene 7, both 4x
+  upscaled (Real-ESRGAN, `editor/scripts/upscale.py`) with their own sound; "AI visual" corner tags; the drawn cut-away
+  and the synthetic whistle are out. Tell the creator: tick YouTube's "altered or synthetic content" box when uploading.
 
 ## Decisions to remember
 - Title wording: the creator's own title says "nahi galti", but dal DOES soften at ~88 C, only several times slower in an open pot

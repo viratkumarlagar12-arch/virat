@@ -50,7 +50,7 @@
       {"t_out": 18.95, "from": 1.0, "scale": 1.18, "dur": 1.1, "ease": "power1.in", "origin": [540, 900]},
       {"t_out": 20.05, "from": 1.2, "scale": 1.25, "dur": 4.27, "ease": "none", "origin": [540, 560]},
       {"t_out": 24.32, "from": 1.0},
-      {"t_out": 26.85, "from": 1.0, "scale": 1.08, "dur": 3.77, "ease": "none", "origin": [430, 1300]},
+      {"t_out": 26.85, "from": 1.0, "scale": 1.08, "dur": 3.77, "ease": "none", "origin": [540, 380]},
       {"t_out": 30.62, "from": 1.0, "scale": 1.12, "dur": 4.54, "ease": "none", "origin": [540, 560]},
       {"t_out": 35.16, "from": 1.0, "scale": 1.05, "dur": 2.0, "ease": "power1.out", "origin": [540, 900]}
     ],
@@ -83,8 +83,10 @@
      "options": [{"key": "A", "t_out": 24.4}, {"key": "B", "t_out": 24.52}, {"key": "C", "t_out": 24.64}],
      "label": "C — LOW AIR PRESSURE", "times": {"answer": {"t_out": 25.12}, "label": {"t_out": 25.62}}},
 
-    {"type": "cooker", "t_out": 26.9, "until": 30.6, "zone": [170, 1240], "title": "Pressure cooker",
-     "items": [{"text": "PRESSURE", "t_out": 28.25}, {"text": "COOKING TEMP", "t_out": 29.75}], "times": {"whistle": {"t_out": 30.25}}},
+    {"type": "chips", "t_out": 28.2, "until": 30.6, "zone": [880, 1200],
+     "items": [{"text": "PRESSURE", "dir": "up", "t_out": 28.25}, {"text": "COOKING TEMP", "dir": "up", "t_out": 29.75}]},
+    {"type": "tag", "t_out": 0.0, "until": 4.0, "text": "AI visual", "x": 40, "y": 1500},
+    {"type": "tag", "t_out": 26.9, "until": 30.55, "text": "AI visual", "x": 40, "y": 1500},
 
     {"type": "image", "t_out": 32.2, "until": 35.12, "src": "media/logo_small.png", "width": 300, "height": 163,
      "zone": [175, 345], "side": "right", "sfx": "none"},

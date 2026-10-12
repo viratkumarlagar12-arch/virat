@@ -41,13 +41,16 @@ Then remind the user to delete the release (the repo is public). Split uploads: 
 `assemble.py edl.json assembled.mp4` (it warns when a shot runs across a source cut; check those frames;
 `"fx"` 0..1 moves the 9:16 crop in a landscape stock clip) →
 `analyze.py assembled.mp4 work` → plan with `"cuts": {"auto": false}` → build. Shots after the voice ends get silence.
+Low-res clips (AI clips come as 360x640): `upscale.py in.mp4 out.mp4` (Real-ESRGAN 4x, ~5 s per frame, keeps the audio)
+before assembling. AI-generated shots: small `tag` overlay "AI visual" and tell the creator to tick YouTube's
+"altered or synthetic content" box; don't crop out a generator's watermark.
 
 ## Open projects (read the project's NOTES.md first)
 - `projects/short2` (breath-hold / CO2): waiting for the creator's re-export (the first export was black) + voice choice.
   Thumbnail, YouTube/Facebook/Instagram text are done (`thumb/`, `youtube.md`, `facebook.md`, `instagram.md`).
 - `projects/short3` (Leh dal Short): built from the creator's own VO + clips following their storyboard (`storyboard.md`,
   their words; my notes in `storyboard_notes.md`). Shots + stock credits: `sources.md`; cut: `edl.json`; edit: `plan.json`.
-  Verified science + numbers are in `NOTES.md`. Wanted from the creator: a 3 s phone clip of real dal boiling for the hook.
+  Verified science + numbers are in `NOTES.md`. v3 uses the creator's AI clips (dal hook, whistle cooker) with "AI visual" tags.
 
 ## AI voiceover ("you give new voice over")
 `tts.py <voice> script.txt out.wav --speed 1.34 --pauses '[...]' --json timings.json` — free offline Hindi voices
