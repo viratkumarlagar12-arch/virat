@@ -180,3 +180,82 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; 
 #progress { position: absolute; left: 0; top: 0; height: 10px; width: 1080px; background: var(--accent); transform-origin: 0 50%; }
 .flash { position: absolute; inset: 0; background: #fff; opacity: 0; }
 .fade { position: absolute; inset: 0; background: #000; opacity: 0; z-index: 2; } /* above captions + progress bar */
+
+/* ---------- quiz (A/B/C) ---------- */
+.quiz { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 22px; opacity: 0; }
+.quiz .qz-title { font-family: var(--head-font); font-weight: var(--head-weight); font-size: 58px; color: #fff; text-align: center;
+  -webkit-text-stroke: 10px #000; paint-order: stroke fill; padding: 0 60px; }
+.quiz .qz-opts { display: flex; flex-direction: column; gap: 22px; width: 920px; }
+.quiz.row .qz-opts { flex-direction: row; justify-content: center; width: auto; gap: 30px; }
+.qz-opt { position: relative; display: flex; align-items: center; gap: 28px; padding: 20px 36px 20px 20px; border-radius: 32px;
+  background: var(--card-bg); border: 5px solid rgba(255,255,255,.14); box-shadow: 0 18px 46px rgba(0,0,0,.45); opacity: 0; }
+.quiz.row .qz-opt { padding: 16px; border-radius: 30px; }
+.qz-key { flex: none; width: 108px; height: 108px; border-radius: 50%; background: var(--accent); color: #111;
+  display: flex; align-items: center; justify-content: center; font-family: var(--head-font); font-weight: 900; font-size: 66px; }
+.quiz.row .qz-key { width: 128px; height: 128px; border-radius: 22px; font-size: 86px; }
+.qz-txt { font-family: var(--head-font); font-weight: var(--head-weight); font-size: 58px; line-height: 1.04; color: #fff;
+  text-transform: uppercase; letter-spacing: -0.01em; }
+.qz-opt.win { background: var(--good); border-color: #fff; box-shadow: 0 0 0 6px rgba(48,209,88,.35), 0 18px 46px rgba(0,0,0,.45); }
+.qz-opt.win .qz-key { background: #fff; color: var(--good); }
+.qz-mark { position: absolute; right: -20px; top: -20px; width: 66px; height: 66px; border-radius: 50%; border: 5px solid #fff;
+  display: flex; align-items: center; justify-content: center; font-family: var(--ui-font); font-weight: 900; font-size: 38px;
+  color: #fff; opacity: 0; }
+.qz-mark.ok { background: var(--good); }
+.qz-mark.no { background: var(--hot); }
+.qz-label { padding: 14px 36px; border-radius: 24px; background: var(--good); color: #fff; font-family: var(--head-font);
+  font-weight: var(--head-weight); font-size: 60px; text-transform: uppercase; box-shadow: 0 14px 40px rgba(0,0,0,.45); opacity: 0; }
+.qz-foot { padding: 12px 38px; border-radius: 999px; background: var(--accent); color: #111; font-family: var(--head-font);
+  font-weight: 900; font-size: 54px; box-shadow: 0 14px 40px rgba(0,0,0,.45); opacity: 0; }
+
+/* ---------- thermometer ---------- */
+.thermo { position: absolute; left: 90px; right: 90px; display: flex; align-items: center; gap: 10px; padding: 26px 40px 26px 20px;
+  border-radius: 40px; background: var(--card-bg); box-shadow: 0 24px 70px rgba(0,0,0,.45); opacity: 0; }
+.thermo .th-art { flex: none; width: 270px; height: 560px; }
+.thermo .th-tk { font-family: var(--ui-font); font-weight: 700; font-size: 30px; fill: rgba(255,255,255,.8); }
+.thermo .th-heat { position: absolute; left: 118px; top: 548px; width: 70px; height: 70px; font-size: 58px; line-height: 70px; text-align: center;
+  font-family: "Noto Color Emoji", sans-serif; opacity: 0; }
+.thermo .th-side { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; min-width: 0; }
+.thermo .th-tag { padding: 10px 24px; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; font-family: var(--ui-font);
+  font-weight: 800; font-size: 34px; letter-spacing: .02em; white-space: nowrap; }
+.thermo .th-old { position: relative; font-family: var(--head-font); font-weight: 900; font-size: 120px; line-height: 1; color: #fff;
+  letter-spacing: -0.03em; }
+.thermo .th-strike { position: absolute; left: -8px; right: -8px; top: 46%; height: 14px; border-radius: 7px; background: var(--hot); }
+.thermo .th-new { font-family: var(--head-font); font-weight: 900; font-size: 150px; line-height: 1; color: var(--accent);
+  letter-spacing: -0.04em; }
+.thermo .th-steady { padding: 10px 26px; border-radius: 20px; background: var(--hot); color: #fff; font-family: var(--head-font);
+  font-weight: 900; font-size: 40px; text-transform: uppercase; white-space: nowrap; }
+
+/* ---------- pressure gauge ---------- */
+.gauge { position: absolute; left: 140px; right: 140px; display: flex; flex-direction: column; align-items: center; padding: 26px 20px 30px;
+  border-radius: 40px; background: var(--card-bg); box-shadow: 0 24px 70px rgba(0,0,0,.45); opacity: 0; }
+.gauge .gg-title { font-family: var(--head-font); font-weight: var(--head-weight); font-size: 50px; color: #fff; text-transform: uppercase; }
+.gauge .gg-art { width: 600px; height: 420px; margin-top: 4px; }
+.gauge .gg-tk { font-family: var(--ui-font); font-weight: 700; font-size: 28px; fill: rgba(255,255,255,.75); }
+.gauge .gg-read { display: flex; flex-direction: column; align-items: center; margin-top: -36px; }
+.gauge .gg-val { font-family: var(--head-font); font-weight: 900; font-size: 104px; line-height: 1; color: #30D158; letter-spacing: -0.03em; }
+.gauge .gg-val.low { color: #FF453A; }
+.gauge .gg-sub { margin-top: 8px; padding: 8px 24px; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff;
+  font-family: var(--ui-font); font-weight: 800; font-size: 36px; white-space: nowrap; }
+
+/* ---------- altitude meter ---------- */
+.altimeter { position: absolute; left: 70px; right: 70px; display: flex; align-items: center; gap: 6px; padding: 26px 34px 26px 14px;
+  border-radius: 40px; background: var(--card-bg); box-shadow: 0 24px 70px rgba(0,0,0,.45); opacity: 0; }
+.altimeter .al-art { flex: none; width: 260px; height: 500px; }
+.altimeter .al-tk { font-family: var(--ui-font); font-weight: 700; font-size: 30px; fill: rgba(255,255,255,.8); }
+.altimeter .al-side { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; min-width: 0; }
+.altimeter .al-tag { padding: 10px 24px; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; font-family: var(--ui-font);
+  font-weight: 800; font-size: 36px; white-space: nowrap; }
+.altimeter .al-num { font-family: var(--head-font); font-weight: 900; font-size: 128px; line-height: 1; color: #fff; letter-spacing: -0.04em;
+  white-space: nowrap; }
+.altimeter .al-num .unit { color: var(--accent); font-size: 96px; }
+.altimeter .al-lbl { padding: 10px 26px; border-radius: 999px; background: var(--accent); color: #111; font-family: var(--ui-font);
+  font-weight: 800; font-size: 38px; white-space: nowrap; }
+
+/* ---------- arrow chips ---------- */
+.chips { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 24px; opacity: 0; }
+.chip { display: flex; align-items: center; gap: 22px; padding: 16px 20px 16px 40px; border-radius: 999px; background: var(--card-bg);
+  border: 5px solid rgba(255,255,255,.14); box-shadow: 0 18px 46px rgba(0,0,0,.45); opacity: 0; }
+.chip .ct { font-family: var(--head-font); font-weight: var(--head-weight); font-size: 64px; color: #fff; text-transform: uppercase; white-space: nowrap; }
+.chip .ca { display: inline-flex; align-items: center; justify-content: center; width: 92px; height: 92px; border-radius: 50%;
+  background: var(--good); color: #fff; font-family: var(--ui-font); font-weight: 900; font-size: 62px; }
+.chip .ca.down { background: var(--hot); }

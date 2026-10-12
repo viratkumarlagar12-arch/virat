@@ -276,6 +276,7 @@
           return;
         }
         el.style.height = (o.height || Math.min(640, o.zone[1] - o.zone[0])) + "px";
+        if (o.width) Object.assign(el.style, { left: (1080 - o.width) / 2 + "px", right: "auto", width: o.width + "px" });  // small badge, centred
         place(el, o.zone);
         const x0 = enterX(o.side || "right");
         tl.fromTo(el, { opacity: 0, x: x0, rotation: x0 > 0 ? 4 : -4 }, { opacity: 1, x: 0, rotation: 0, duration: 0.55, ease: "expo.out" }, o.t);
@@ -316,13 +317,19 @@
       cta(o) {
         const el = mk("div", "cta", overlays);
         if (o.text) mk("div", "line", el, markup(o.text));
-        const btn = mk("div", "btn", el, `<span>🔔</span><span class="lbl">${esc(o.button || "SUBSCRIBE")}</span>`);
+        const btn = mk("div", "btn", el, `<span>${esc(o.icon || "🔔")}</span><span class="lbl">${esc(o.button || "SUBSCRIBE")}</span>`);
+        if (o.color) btn.style.background = o.color;
         const lbl = $(".lbl", btn);
-        const cur = mk("div", "cursor", el, "👆");
         place(el, o.zone);
+        tl.fromTo(el, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.45, ease: "back.out(2)" }, o.t);
+        if (o.click === false) {  // no cursor/click: the button just pulses (e.g. "COMMENT KARO")
+          tl.to(btn, { scale: 1.07, duration: 0.35, yoyo: true, repeat: Math.max(1, Math.floor((o.dur - 0.9) / 0.35)), ease: "sine.inOut" }, o.t + 0.45);
+          tl.to(el, { opacity: 0, duration: 0.3 }, o.t + o.dur - 0.3);
+          return;
+        }
+        const cur = mk("div", "cursor", el, "👆");
         const bx = btn.offsetLeft + btn.offsetWidth * 0.62, by = btn.offsetTop + btn.offsetHeight * 0.55;
         Object.assign(cur.style, { left: bx + "px", top: by + "px" });
-        tl.fromTo(el, { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.45, ease: "back.out(2)" }, o.t);
         tl.fromTo(cur, { opacity: 0, x: 160, y: 180 }, { opacity: 1, x: 0, y: 0, duration: 0.45, ease: "power3.out" }, o.t + 0.5);
         tl.to(btn, { scale: 0.9, duration: 0.08 }, o.t + 1.0);
         tl.set(btn, { className: "btn done" }, o.t + 1.08);
@@ -498,6 +505,204 @@
         tl.to(label, { opacity: 0, duration: 0.2 }, tz);
         tl.to(card, { scale: 6.5, duration: o.t + o.dur - tz, ease: "power3.in" }, tz);
         tl.to(el, { opacity: 0, duration: 0.15 }, o.t + o.dur - 0.15);
+        gsap.set(el, { opacity: 0 });
+      },
+
+      // A/B/C quiz. o.options[k] = {key, text, t}: each pops in at its own time. Optional answer reveal at o.t_answer
+      // (o.answer turns green with a tick, the others dim with a cross), o.label after it (o.t_label), o.footer pill
+      // at o.t_footer. o.style "stack" (one big card per option) | "row" (letter tiles side by side)
+      quiz(o) {
+        const row = o.style === "row";
+        const el = mk("div", "quiz" + (row ? " row" : ""), overlays);
+        if (o.title) mk("div", "qz-title", el, markup(o.title));
+        const wrap = mk("div", "qz-opts", el);
+        const opts = o.options.map((op) => {
+          const c = mk("div", "qz-opt", wrap);
+          mk("div", "qz-key", c, esc(op.key));
+          if (!row && op.text) mk("div", "qz-txt", c, markup(op.text));
+          const win = o.answer != null && op.key === o.answer;
+          const mark = o.t_answer != null ? mk("div", "qz-mark " + (win ? "ok" : "no"), c, win ? "✓" : "✕") : null;
+          return { c, mark, win, op };
+        });
+        const lab = o.label ? mk("div", "qz-label", el, markup(o.label)) : null;
+        const foot = o.footer ? mk("div", "qz-foot", el, markup(o.footer)) : null;
+        place(el, o.zone);
+        tl.set(el, { opacity: 1 }, o.t);
+        for (const { c, op } of opts) {
+          if (row) tl.fromTo(c, { opacity: 0, y: 50, scale: 0.5 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "back.out(2.6)" }, op.t);
+          else tl.fromTo(c, { opacity: 0, x: 320, scale: 0.92 }, { opacity: 1, x: 0, scale: 1, duration: 0.34, ease: "back.out(1.8)" }, op.t);
+        }
+        if (o.t_answer != null) {
+          for (const { c, mark, win } of opts) {
+            if (win) {
+              tl.set(c, { className: "qz-opt win" }, o.t_answer);
+              tl.fromTo(c, { scale: 1 }, { scale: 1.1, duration: 0.14, yoyo: true, repeat: 1, ease: "power2.out" }, o.t_answer);
+            } else {
+              tl.to(c, { opacity: 0.38, duration: 0.2 }, o.t_answer);
+            }
+            tl.fromTo(mark, { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(3)" }, o.t_answer + (win ? 0.05 : 0.12));
+          }
+        }
+        if (lab) tl.fromTo(lab, { opacity: 0, y: 24, scale: 0.85 }, { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: "back.out(2)" },
+          o.t_label ?? (o.t_answer ?? o.t) + 0.35);
+        if (foot) tl.fromTo(foot, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(3)" }, o.t_footer ?? o.t + 1);
+        tl.to(el, { opacity: 0, y: -24, duration: 0.25, ease: "power2.in" }, o.t + o.dur - 0.25);
+        gsap.set(el, { opacity: 0 });
+      },
+
+      // thermometer card: the column sits at o.from (°C), the reading o.from is crossed out at o.t_cross, the column
+      // drops to o.to at o.t_drop while the readout counts down. From o.t_steady a flame under the bulb grows
+      // ("more heat") but the column only trembles, and o.steady_text shows.
+      thermo(o) {
+        const el = mk("div", "thermo", overlays);
+        const lo = o.min ?? 60, hi = o.max ?? 110, top = 34, len = 400, base = top + len + 26;
+        const y = (v) => top + len * (1 - (v - lo) / (hi - lo));
+        let ticks = "";
+        for (let v = lo; v <= hi; v += 10) {
+          const yy = y(v), mark = v === o.from;
+          ticks += `<line x1="150" y1="${yy}" x2="${mark ? 182 : 172}" y2="${yy}" stroke="rgba(255,255,255,.75)" stroke-width="5" stroke-linecap="round"/>
+            <text x="194" y="${yy + 11}" class="th-tk">${v}°</text>`;
+        }
+        const art = mk("div", "th-art", el);
+        art.innerHTML = `<svg viewBox="0 0 270 560" width="270" height="560">
+          <rect x="88" y="${top - 22}" width="60" height="${len + 70}" rx="30" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-width="6"/>
+          <rect class="th-hg" x="104" y="${y(o.from)}" width="28" height="${base - y(o.from)}" rx="14" fill="#FF3B30"/>
+          <circle cx="118" cy="${base + 40}" r="54" fill="#FF3B30" stroke="#fff" stroke-width="6"/>
+          <circle cx="102" cy="${base + 26}" r="14" fill="rgba(255,255,255,.45)"/>
+          ${ticks}
+        </svg>`;
+        const heat = mk("div", "th-heat", el, "🔥");
+        const side = mk("div", "th-side", el);
+        if (o.tag) mk("div", "th-tag", side, markup(o.tag));
+        const old = mk("div", "th-old", side, `${esc(o.from)}°C<span class="th-strike"></span>`);
+        const cur = mk("div", "th-new", side);
+        const fmt = (v) => `${o.prefix ?? "~"}${Math.round(v)}°C`;
+        cur.textContent = fmt(o.to);
+        const steady = o.steady_text ? mk("div", "th-steady", side, markup(o.steady_text)) : null;
+        place(el, o.zone);
+        cur.textContent = fmt(o.from);
+        const hg = $(".th-hg", el), strike = $(".th-strike", old);
+        tl.fromTo(el, { opacity: 0, y: 40, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "expo.out" }, o.t);
+        gsap.set(cur, { opacity: 0 });
+        const tc = o.t_cross ?? o.t_drop - 0.4;
+        tl.fromTo(strike, { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.22, ease: "power3.out" }, tc);
+        tl.to(old, { opacity: 0.55, scale: 0.72, transformOrigin: "0% 50%", duration: 0.3, ease: "power2.out" }, tc + 0.15);
+        const p = { v: o.from };
+        tl.fromTo(cur, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.25, ease: "power3.out" }, o.t_drop);
+        tl.to(p, { v: o.to, duration: 0.9, ease: "power2.inOut", onUpdate: () => (cur.textContent = fmt(p.v)) }, o.t_drop);
+        tl.to(hg, { attr: { y: y(o.to), height: base - y(o.to) }, duration: 0.9, ease: "power2.inOut" }, o.t_drop);
+        tl.fromTo(cur, { scale: 1 }, { scale: 1.12, duration: 0.12, yoyo: true, repeat: 1, ease: "power1.inOut" }, o.t_drop + 0.9);
+        gsap.set(heat, { opacity: 0 });
+        if (o.t_steady != null) {
+          const end = o.t + o.dur - 0.3, n = Math.max(1, Math.floor((end - o.t_steady) / 0.16));
+          tl.fromTo(heat, { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1.7, duration: 0.6, ease: "back.out(2)" }, o.t_steady);
+          tl.to(hg, { attr: { y: y(o.to) - 5, height: base - y(o.to) + 5 }, duration: 0.08, yoyo: true, repeat: n * 2 - 1, ease: "sine.inOut" }, o.t_steady + 0.2);
+          if (steady) tl.fromTo(steady, { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2.5)" }, o.t_steady_text ?? o.t_steady + 0.5);
+        }
+        if (steady) gsap.set(steady, { opacity: 0 });
+        tl.to(el, { opacity: 0, y: -24, duration: 0.25, ease: "power2.in" }, o.t + o.dur - 0.25);
+      },
+
+      // pressure dial: the needle swings in to o.from, then down to o.to at o.t_drop; the readout counts along and
+      // the caption under it switches from o.from_label to o.to_label
+      gauge(o) {
+        const el = mk("div", "gauge", overlays);
+        if (o.title) mk("div", "gg-title", el, markup(o.title));
+        const lo = o.min ?? 40, hi = o.max ?? 110, cx = 300, cy = 290, r = 230;
+        const ang = (v) => -120 + (240 * (v - lo)) / (hi - lo);
+        const pt = (a, rr) => [cx + rr * Math.sin((a * Math.PI) / 180), cy - rr * Math.cos((a * Math.PI) / 180)];
+        const arc = (v0, v1, col) => {
+          const [x0, y0] = pt(ang(v0), r), [x1, y1] = pt(ang(v1), r), big = ang(v1) - ang(v0) > 180 ? 1 : 0;
+          return `<path d="M ${x0} ${y0} A ${r} ${r} 0 ${big} 1 ${x1} ${y1}" fill="none" stroke="${col}" stroke-width="34"/>`;
+        };
+        let ticks = "";
+        for (let v = lo; v <= hi; v += 10) {
+          const [x0, y0] = pt(ang(v), r - 30), [x1, y1] = pt(ang(v), r - 56), [tx, ty] = pt(ang(v), r - 92);
+          ticks += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+            <text x="${tx}" y="${ty + 12}" text-anchor="middle" class="gg-tk">${v}</text>`;
+        }
+        const art = mk("div", "gg-art", el);
+        art.innerHTML = `<svg viewBox="0 0 600 420" width="600" height="420">
+          ${arc(lo, 70, "#FF453A")}${arc(70, 90, "#FFD60A")}${arc(90, hi, "#30D158")}
+          ${ticks}
+          <g class="gg-needle"><polygon points="${cx - 13},${cy} ${cx + 13},${cy} ${cx},${cy - r + 22}" fill="#fff"/></g>
+          <circle cx="${cx}" cy="${cy}" r="26" fill="#111" stroke="#fff" stroke-width="7"/>
+        </svg>`;
+        const read = mk("div", "gg-read", el);
+        const val = mk("div", "gg-val", read);
+        const sub = mk("div", "gg-sub", read, markup(o.from_label || ""));
+        const fmt = (v, pre) => `${pre}${Math.round(v)}${o.unit ?? "%"}`;
+        val.textContent = fmt(o.to, o.prefix ?? "~");
+        place(el, o.zone);
+        val.textContent = fmt(o.from, "");
+        const nd = $(".gg-needle", el), org = `${cx} ${cy}`;
+        tl.fromTo(el, { opacity: 0, y: 40, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "expo.out" }, o.t);
+        tl.fromTo(nd, { rotation: ang(lo), svgOrigin: org }, { rotation: ang(o.from), svgOrigin: org, duration: 0.7, ease: "back.out(1.6)" }, o.t + 0.1);
+        const p = { v: o.from };
+        tl.to(nd, { rotation: ang(o.to), svgOrigin: org, duration: 0.9, ease: "back.out(1.3)" }, o.t_drop);
+        tl.to(p, { v: o.to, duration: 0.9, ease: "power2.out", onUpdate: () => (val.textContent = fmt(p.v, o.prefix ?? "~")) }, o.t_drop);
+        tl.set(sub, { innerHTML: markup(o.to_label || "") }, o.t_drop);
+        tl.set(val, { className: "gg-val low" }, o.t_drop);
+        tl.fromTo(read, { scale: 1 }, { scale: 1.1, duration: 0.12, yoyo: true, repeat: 1 }, o.t_drop + 0.9);
+        tl.to(el, { opacity: 0, y: -24, duration: 0.25, ease: "power2.in" }, o.t + o.dur - 0.25);
+      },
+
+      // altitude meter: a marker climbs a 0..o.max ruler while the number counts to o.to (o.t .. o.t_end)
+      altimeter(o) {
+        const el = mk("div", "altimeter", overlays);
+        const mx = o.max ?? 4000, top = 30, len = o.len ?? 440, step = o.step ?? 1000;
+        const y = (v) => top + len * (1 - v / mx);
+        let ticks = "";
+        for (let v = 0; v <= mx; v += step / 2) {
+          const major = v % step === 0;
+          ticks += `<line x1="70" y1="${y(v)}" x2="${major ? 110 : 94}" y2="${y(v)}" stroke="rgba(255,255,255,.8)" stroke-width="${major ? 6 : 4}" stroke-linecap="round"/>`;
+          if (major) ticks += `<text x="122" y="${y(v) + 11}" class="al-tk">${v.toLocaleString("en-IN")}</text>`;
+        }
+        const art = mk("div", "al-art", el);
+        art.style.height = len + 60 + "px";
+        art.innerHTML = `<svg viewBox="0 0 260 ${len + 60}" width="260" height="${len + 60}">
+          <line x1="70" y1="${top - 10}" x2="70" y2="${top + len + 6}" stroke="rgba(255,255,255,.35)" stroke-width="8" stroke-linecap="round"/>
+          <line class="al-fill" x1="70" y1="${y(0)}" x2="70" y2="${y(0)}" stroke="#FFD60A" stroke-width="8" stroke-linecap="round"/>
+          ${ticks}
+          <g class="al-mark"><polygon points="20,${y(0) - 22} 20,${y(0) + 22} 58,${y(0)}" fill="#FFD60A"/></g>
+        </svg>`;
+        const side = mk("div", "al-side", el);
+        if (o.tag) mk("div", "al-tag", side, markup(o.tag));
+        const num = mk("div", "al-num", side);
+        const v = mk("span", null, num);
+        mk("span", "unit", num, esc(o.suffix ?? " m"));
+        if (o.label) mk("div", "al-lbl", side, markup(o.label));
+        const fmt = (x) => (o.prefix ?? "~") + Math.round(x).toLocaleString("en-IN");
+        v.textContent = fmt(o.to);
+        place(el, o.zone);
+        v.textContent = fmt(0);
+        const t1 = o.t_end ?? o.t + 1.2, p = { v: 0 };
+        tl.fromTo(el, { opacity: 0, x: -200 }, { opacity: 1, x: 0, duration: 0.45, ease: "expo.out" }, o.t);
+        tl.to(p, { v: o.to, duration: t1 - o.t - 0.2, ease: "power2.out", onUpdate: () => (v.textContent = fmt(p.v)) }, o.t + 0.2);
+        tl.to($(".al-mark", el), { y: y(o.to) - y(0), duration: t1 - o.t - 0.2, ease: "power2.out" }, o.t + 0.2);
+        tl.to($(".al-fill", el), { attr: { y2: y(o.to) }, duration: t1 - o.t - 0.2, ease: "power2.out" }, o.t + 0.2);
+        tl.fromTo(num, { scale: 1 }, { scale: 1.1, duration: 0.12, yoyo: true, repeat: 1 }, t1);
+        tl.to(el, { opacity: 0, x: -120, duration: 0.3, ease: "power2.in" }, o.t + o.dur - 0.3);
+      },
+
+      // pills with a bouncing arrow, e.g. "PRESSURE ↑": o.items[k] = {text, dir: "up"|"down", t}
+      chips(o) {
+        const el = mk("div", "chips", overlays);
+        const rows = o.items.map((it) => {
+          const c = mk("div", "chip", el);
+          mk("span", "ct", c, markup(it.text));
+          const a = mk("span", "ca" + (it.dir === "down" ? " down" : ""), c, it.dir === "down" ? "↓" : "↑");
+          return { c, a, it };
+        });
+        place(el, o.zone);
+        tl.set(el, { opacity: 1 }, o.t);
+        for (const { c, a, it } of rows) {
+          tl.fromTo(c, { opacity: 0, scale: 0.4, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: "back.out(2.6)" }, it.t);
+          const n = Math.max(1, Math.floor((o.t + o.dur - it.t - 0.7) / 0.3));
+          const d = it.dir === "down" ? 10 : -10;
+          tl.fromTo(a, { y: 0 }, { y: d, duration: 0.15, yoyo: true, repeat: n * 2 - 1, ease: "sine.inOut" }, it.t + 0.35);
+        }
+        tl.to(el, { opacity: 0, y: -24, duration: 0.25, ease: "power2.in" }, o.t + o.dur - 0.25);
         gsap.set(el, { opacity: 0 });
       },
 

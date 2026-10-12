@@ -30,3 +30,4 @@ projects/**/*.log
 projects/**/vo/*_verify.json
 projects/**/thumb/assets/
 projects/**/work_*/
+projects/**/media/stock/*.json

@@ -38,14 +38,16 @@ Then remind the user to delete the release (the repo is public). Split uploads: 
 
 ## New voiceover over existing footage (example: `projects/konark_v3`)
 `tighten_vo.py` shortens the pauses in the VO → transcribe it → write `edl.json` (one shot per line of the script) →
-`assemble.py edl.json assembled.mp4` (it warns when a shot runs across a source cut; check those frames) →
+`assemble.py edl.json assembled.mp4` (it warns when a shot runs across a source cut; check those frames;
+`"fx"` 0..1 moves the 9:16 crop in a landscape stock clip) →
 `analyze.py assembled.mp4 work` → plan with `"cuts": {"auto": false}` → build. Shots after the voice ends get silence.
 
 ## Open projects (read the project's NOTES.md first)
 - `projects/short2` (breath-hold / CO2): waiting for the creator's re-export (the first export was black) + voice choice.
   Thumbnail, YouTube/Facebook/Instagram text are done (`thumb/`, `youtube.md`, `facebook.md`, `instagram.md`).
-- `projects/short3` (Leh dal Short): the creator's own storyboard (`storyboard.md`, their own words; my notes are in `storyboard_notes.md`) is the plan. They will send their real voiceover
-  and real footage; until then only learn, don't build. Verified science + numbers are in `NOTES.md`.
+- `projects/short3` (Leh dal Short): built from the creator's own VO + clips following their storyboard (`storyboard.md`,
+  their words; my notes in `storyboard_notes.md`). Shots + stock credits: `sources.md`; cut: `edl.json`; edit: `plan.json`.
+  Verified science + numbers are in `NOTES.md`. Wanted from the creator: a 3 s phone clip of real dal boiling for the hook.
 
 ## AI voiceover ("you give new voice over")
 `tts.py <voice> script.txt out.wav --speed 1.34 --pauses '[...]' --json timings.json` — free offline Hindi voices

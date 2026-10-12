@@ -80,7 +80,7 @@ DEFAULT_SFX = {"hook": "impact", "card": "whoosh", "stat": "whoosh", "bars": "wh
                "compare": "whoosh", "emoji": "bubble", "image": "whoosh", "video": "whoosh",
                "lower_third": "swoosh", "countdown": None, "cta": "pop", "text_slam": "impact", "flash": "camera",
                "sundial": "whoosh", "ring": "pop", "stamp": "impact", "hand": None, "flare": None, "note10": None,
-               "fade": None}
+               "fade": None, "quiz": None, "thermo": "whoosh", "gauge": "whoosh", "altimeter": "whoosh", "chips": None}
 OVERLAY_ONLY = {"emoji", "flash", "hand", "ring", "flare", "note10", "fade"}  # drawn on the footage; don't take a layout zone
 
 
@@ -286,7 +286,7 @@ def make_layout(face, origin, max_zoom, cap_size, plan):
 
 # natural height (px) each graphic needs to render without shrinking
 NEED = {"bars": 420, "list": 360, "compare": 220, "image": 420, "video": 420, "card": 210, "stat": 300,
-        "sundial": 540, "stamp": 280,
+        "sundial": 540, "stamp": 280, "quiz": 560, "thermo": 520, "gauge": 480, "altimeter": 520, "chips": 300,
         "hook": 240, "cta": 230, "countdown": 400, "lower_third": 140, "text_slam": 300}
 
 
@@ -490,9 +490,24 @@ def compile_overlays(plan, words, tm, layout, media_dir, verbose=False):
                                  ("t_flip", "swoosh", 0), ("t_zoom", "whoosh", -1)):
                 if key in o:
                     sfx.append({"t": o[key], "name": name, "gain_db": g})
-        if typ == "cta":
+        if typ == "cta" and o.get("click", True):
             sfx.append({"t": o["t"] + 1.0, "name": "click"})
             sfx.append({"t": o["t"] + 1.1, "name": "success", "gain_db": -3})
+        if typ in ("quiz", "chips"):  # options / chips pop in one by one (own "w"/"t_out", else staggered)
+            for k, it in enumerate(o["options" if typ == "quiz" else "items"]):
+                it["t"] = round(anchor(it, words, tm) if ("w" in it or "t_out" in it) else t0 + 0.25 * k, 3)
+                sfx.append({"t": it["t"], "name": "tick" if typ == "quiz" else "pop", "gain_db": -1})
+        if typ == "quiz" and "t_answer" in o:
+            sfx.append({"t": o["t_answer"], "name": "impact", "gain_db": -6})
+            sfx.append({"t": o["t_answer"] + 0.02, "name": "success", "gain_db": -2})
+        if typ == "quiz" and "t_footer" in o:
+            sfx.append({"t": o["t_footer"], "name": "pop", "gain_db": -2})
+        if typ in ("thermo", "gauge") and "t_drop" in o:
+            sfx.append({"t": o["t_drop"], "name": "whoosh_down", "gain_db": -2})
+        if typ == "thermo" and "t_cross" in o:
+            sfx.append({"t": o["t_cross"], "name": "glitch", "gain_db": -6})
+        if typ == "altimeter":
+            sfx.append({"t": o.get("t_end", o["t"] + 1.2), "name": "ding", "gain_db": -3})
         if typ == "hook":
             o["words"], acc = [], False
             for tok in o["text"].split():
@@ -676,7 +691,10 @@ def main():
     chunks = caption_chunks(words, tm, plan, layout, overlays_c)
 
     for s in plan.get("sfx", []):
-        sfx.append({"t": anchor(s, words, tm), "name": s["name"], "gain_db": s.get("gain_db", 0)})
+        ev = {"t": anchor(s, words, tm), "name": s["name"], "gain_db": s.get("gain_db", 0)}
+        if s.get("path"):  # own sound file (e.g. natural sound from a clip), relative to the project
+            ev["path"] = str((proj / s["path"]).resolve())
+        sfx.append(ev)
     if plan.get("camera", {}).get("punch_sfx"):
         for e in cam_events:
             if e.get("dur") and e.get("ease") == "power3.out":

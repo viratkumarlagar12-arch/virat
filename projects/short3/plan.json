@@ -1,0 +1,117 @@
+{
+  "name": "short3",
+  "source_note": "creator's VO (download/vo.mp3) tightened to tight/voice48k.wav; creator's clips (download/clips.mp4, bars filled -> fixed.mp4) + Pixabay stock (media/stock, see sources.md) cut with assemble.py from edl.json -> assembled.mp4; last shot = channel end card from 35.16",
+  "theme": "bold",
+  "grade": "natural",
+  "layout": {"face": "none"},
+  "cuts": {"auto": false},
+
+  "word_text": {
+    "0": "Leh", "1": "Ladakh", "2": "mein", "3": "dal", "4": "ubal toh", "5": "rahi", "6": "hai...",
+    "7": "phir", "8": "bhi", "9": "jaldi", "10": "galti", "11": "kyun", "12": "nahi?",
+    "13": "A: Oxygen", "14": "kam?", "15": "B: Thand?", "16": "Ya C:", "17": "hawa", "18": "ka", "19": "pressure", "20": "kam? Socho!",
+    "21": "Leh,", "22": "samundar", "23": "se", "24": "lagbhag", "25": "3,500", "26": "metre", "27": "upar", "28": "hai.",
+    "29": "Wahan", "30": "hawa", "31": "ka", "32": "pressure", "33": "kaafi", "34": "kam", "35": "hota", "36": "hai.",
+    "37": "Isiliye", "38": "khule", "39": "bartan", "40": "mein", "41": "paani", "42": "100 nahi,", "43": "lagbhag", "44": "88",
+    "45": "degree", "46": "Celsius", "47": "par", "48": "ubalne", "49": "lagta", "50": "hai.",
+    "51": "Aag", "52": "tez", "53": "karne", "54": "se", "55": "paani", "56": "zyada", "57": "tezi", "58": "se", "59": "ubalega,",
+    "60": "aur", "61": "uska", "62": "temperature", "63": "lagbhag", "64": "88", "65": "degree", "66": "hi", "67": "rahega.",
+    "68": "Sahi", "69": "jawab", "70": "hai C:", "71": "kam", "72": "atmospheric", "73": "pressure!",
+    "74": "Pressure", "75": "cooker", "76": "andar", "77": "ka", "78": "pressure", "79": "badhata", "80": "hai,",
+    "81": "jisse", "82": "paani", "83": "aur", "84": "garam", "85": "ho", "86": "sakta hai", "87": "",
+    "88": "aur", "89": "dal", "90": "jaldi", "91": "galti", "92": "hai.",
+    "93": "Tumhara", "94": "jawab", "95": "A,", "96": "B", "97": "ya", "98": "C", "99": "tha?", "100": "Comment", "101": "karo!"
+  },
+
+  "captions": {
+    "style": "pop",
+    "until": 35.16,
+    "size": 80,
+    "max_words": 3,
+    "uppercase": true,
+    "keywords": ["leh", "ladakh", "dal", "pressure", "cooker", "galti", "temperature", "garam", "celsius"],
+    "hide_words": [87, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 68, 69, 70, 71, 72, 73, 93, 94, 95, 96, 97, 98, 99, 100, 101],
+    "breaks": [29, 37, 51, 60, 74, 81]
+  },
+
+  "camera": {
+    "drift": false,
+    "alternate": false,
+    "keyframes": [
+      {"t_out": 0.0, "from": 1.0, "scale": 1.1, "dur": 3.5, "ease": "none", "origin": [480, 1250]},
+      {"t_out": 3.56, "scale": 1.2, "dur": 0.18, "ease": "power3.out"},
+      {"t_out": 4.05, "from": 1.0, "scale": 1.06, "dur": 2.9, "ease": "none", "origin": [540, 960]},
+      {"t_out": 6.95, "from": 1.0, "scale": 1.05, "dur": 1.8, "ease": "none"},
+      {"t_out": 8.75, "from": 1.0, "scale": 1.08, "dur": 1.45, "ease": "none", "origin": [540, 700]},
+      {"t_out": 10.2, "from": 1.0, "scale": 1.06, "dur": 1.9, "ease": "none", "origin": [540, 960]},
+      {"t_out": 12.1, "from": 1.0, "scale": 1.05, "dur": 2.0, "ease": "none", "origin": [540, 1100]},
+      {"t_out": 14.1, "from": 1.0, "scale": 1.12, "dur": 4.85, "ease": "none", "origin": [540, 1150]},
+      {"t_out": 18.95, "from": 1.0, "scale": 1.18, "dur": 1.1, "ease": "power1.in", "origin": [540, 900]},
+      {"t_out": 20.05, "from": 1.0, "scale": 1.08, "dur": 4.27, "ease": "none", "origin": [540, 960]},
+      {"t_out": 24.32, "from": 1.0},
+      {"t_out": 26.85, "from": 1.0, "scale": 1.08, "dur": 3.77, "ease": "none", "origin": [430, 1300]},
+      {"t_out": 30.62, "from": 1.0, "scale": 1.12, "dur": 4.54, "ease": "none", "origin": [540, 560]},
+      {"t_out": 35.16, "from": 1.0, "scale": 1.05, "dur": 2.0, "ease": "power1.out", "origin": [540, 900]}
+    ],
+    "shakes": []
+  },
+
+  "overlays": [
+    {"type": "hook", "t_out": 0.0, "until": 4.0, "text": "DAL JALDI KYUN *NAHI GALTI?*", "sub": "📍 Leh, Ladakh", "boxed": true,
+     "zone": "top", "size": 104, "stagger": 0.06, "sfx": "none"},
+
+    {"type": "quiz", "t_out": 4.05, "until": 8.72, "zone": [230, 1000],
+     "options": [{"key": "A", "text": "Oxygen kam?", "t_out": 4.11},
+                 {"key": "B", "text": "Thand?", "t_out": 5.16},
+                 {"key": "C", "text": "Hawa ka *pressure* kam?", "t_out": 6.24}],
+     "footer": "SOCHO… 🤔", "times": {"footer": {"t_out": 8.0}}},
+
+    {"type": "altimeter", "t_out": 8.85, "until": 12.05, "zone": [160, 600], "len": 330, "to": 3500, "tag": "📍 LEH, LADAKH",
+     "label": "SAMUNDAR SE UPAR", "times": {"end": {"t_out": 11.25}}},
+
+    {"type": "gauge", "t_out": 12.12, "until": 14.05, "zone": [170, 760], "title": "Hawa ka pressure", "from": 100, "to": 65,
+     "from_label": "SAMUNDAR TAL", "to_label": "LEH (~3,500 m)", "times": {"drop": {"t_out": 13.1}}},
+
+    {"type": "thermo", "t_out": 14.15, "until": 24.28, "zone": [165, 745], "from": 100, "to": 88, "tag": "LEH · KHULA BARTAN",
+     "times": {"cross": {"t_out": 15.85}, "drop": {"t_out": 16.9}, "steady": {"t_out": 19.1}}},
+
+    {"type": "hook", "t_out": 19.3, "until": 24.25, "text": "MORE HEAT ≠ *MUCH HIGHER TEMP*", "boxed": true, "zone": [780, 1200],
+     "size": 92, "stagger": 0.36, "sfx": "whoosh"},
+
+    {"type": "quiz", "style": "row", "t_out": 24.36, "until": 26.85, "zone": [165, 455], "answer": "C",
+     "options": [{"key": "A", "t_out": 24.4}, {"key": "B", "t_out": 24.52}, {"key": "C", "t_out": 24.64}],
+     "label": "C — LOW AIR PRESSURE", "times": {"answer": {"t_out": 25.12}, "label": {"t_out": 25.62}}},
+
+    {"type": "chips", "t_out": 28.2, "until": 30.6, "zone": [200, 640],
+     "items": [{"text": "PRESSURE", "dir": "up", "t_out": 28.25}, {"text": "COOKING TEMP", "dir": "up", "t_out": 29.75}]},
+
+    {"type": "image", "t_out": 32.2, "until": 35.12, "src": "media/logo_small.png", "width": 300, "height": 163,
+     "zone": [175, 345], "side": "right", "sfx": "none"},
+    {"type": "quiz", "style": "row", "t_out": 32.2, "until": 35.12, "zone": [1000, 1400], "title": "A, B YA C?",
+     "options": [{"key": "A", "t_out": 33.02}, {"key": "B", "t_out": 33.4}, {"key": "C", "t_out": 33.85}]},
+    {"type": "cta", "t_out": 34.45, "until": 35.12, "zone": [1420, 1580], "button": "COMMENT KARO!", "icon": "💬",
+     "click": false, "sfx": "pop"},
+
+    {"type": "fade", "t_out": 34.86, "in": 0.3, "out": 0.5},
+    {"type": "fade", "t_out": 36.66, "in": 0.5, "out": 0}
+  ],
+
+  "sfx": [
+    {"t_out": 0.0, "name": "nat_boil", "path": "media/nat/boil_hook.wav", "gain_db": -3},
+    {"t_out": 0.02, "name": "impact", "gain_db": -6},
+    {"t_out": 4.05, "name": "whoosh", "gain_db": -7},
+    {"t_out": 8.75, "name": "whoosh", "gain_db": -5},
+    {"t_out": 14.1, "name": "nat_boil", "path": "media/nat/boil_beaker.wav", "gain_db": -5},
+    {"t_out": 14.1, "name": "swoosh", "gain_db": -5},
+    {"t_out": 18.95, "name": "whoosh", "gain_db": -2},
+    {"t_out": 20.05, "name": "nat_boil", "path": "media/nat/boil_pot.wav", "gain_db": -4},
+    {"t_out": 24.32, "name": "swoosh", "gain_db": -5},
+    {"t_out": 26.85, "name": "swoosh", "gain_db": -5},
+    {"t_out": 30.62, "name": "swoosh", "gain_db": -6},
+    {"t_out": 35.16, "name": "impact", "gain_db": -7},
+    {"t_out": 35.18, "name": "ding", "gain_db": -3}
+  ],
+
+  "music": {"mood": "documentary", "seed": 5, "volume": 9},
+  "progress_bar": true
+}

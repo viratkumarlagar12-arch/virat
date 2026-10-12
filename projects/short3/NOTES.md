@@ -1,7 +1,18 @@
 # short3 — "Leh mein dal kyun nahi galti?" (why dal is slow to cook in Leh)
 
 Idea from the creator (2026-10-12). **UPDATE: the creator sent their own 8-scene storyboard (`storyboard.md`). That is now the plan;
-the script/voice samples in `vo/` below are research and reference only.** Waiting for the creator's real voiceover and footage.
+the script/voice samples in `vo/` below are research and reference only.**
+
+## Where we are (2026-10-12): v1 built from the creator's VO + clips
+- Inputs: `download/vo.mp3` (creator's voice, 37.6 s) and `download/clips.mp4` (their 9 clips A-I, 34.8 s; only clip E has sound).
+  `fill_bars.py` -> `fixed.mp4`. VO pauses tightened -> `tight/voice48k.wav` (35.16 s, keeps a beat after "Socho").
+- Cut: `edl.json` (one or two shots per storyboard scene; Pixabay stock for Leh/Ladakh + gas flame, see `sources.md`),
+  channel end card from 35.16. Edit: `plan.json` (quiz cards, altimeter, gauge, thermometer, answer reveal, chips, CTA + logo,
+  nat boiling sound from clip E, documentary music at volume 9). Captions are hidden where a graphic shows the same words
+  (hook question, quiz, answer, CTA).
+- The VO says "Leh Ladakh" in the hook (not just "Leh"). The ASR garbles the quiz options and numbers; the cards/captions use
+  the storyboard wording ("A: Oxygen kam? B: Thand? Ya C: Hawa ka pressure kam?", "3,500", "100 nahi", "88").
+- Ask the creator for: a 3 s phone clip of real dal boiling (hook), and notes on v1.
 
 ## Decisions to remember
 - Title wording: the creator's own title says "nahi galti", but dal DOES soften at ~88 C, only several times slower in an open pot

@@ -66,14 +66,33 @@ Use `"t_out"` for an exact time in the finished video.
     {"type": "fade", "t_out": 41.6, "in": 0.5, "out": 0},               // ...or finish the video on black
     {"type": "sundial", "w": 45, "until_w": 71, "title": "Sooraj + Shadow = *Time*",   // wheel-as-sundial explainer
      "times": {"shadow": {"w": 55}, "move0": {"w": 59}, "move1": {"w": 71}}},          // named moments -> t_shadow, ...
-    {"type": "cta", "w": 78, "dur": 2.4, "text": "Follow for *Part 2*", "button": "SUBSCRIBE"}
+    {"type": "cta", "w": 78, "dur": 2.4, "text": "Follow for *Part 2*", "button": "SUBSCRIBE"},
+    {"type": "cta", "t_out": 34.4, "until": 35.1, "button": "COMMENT KARO!", "icon": "💬", "click": false},  // no cursor, button pulses
+    // A/B/C quiz: options pop in on their own words (tick each). "answer" + times.answer = reveal (green tick, others
+    // dim + cross, impact + success sound); "label" under it; "footer" pill. "style": "row" = letter tiles only
+    {"type": "quiz", "t_out": 4.05, "until": 8.7, "options": [{"key": "A", "text": "Oxygen kam?", "w": 13}, {"key": "B", "text": "Thand?", "w": 15}],
+     "answer": "C", "label": "C — LOW AIR PRESSURE", "footer": "SOCHO… 🤔", "times": {"answer": {"w": 70}, "footer": {"w": 20}}},
+    // thermometer card: column at "from" °C, old reading crossed out (times.cross), drops to "to" (times.drop);
+    // times.steady = flame under the bulb grows but the column only trembles (optional "steady_text")
+    {"type": "thermo", "t_out": 14.1, "until": 24.3, "from": 100, "to": 88, "tag": "LEH · KHULA BARTAN",
+     "times": {"cross": {"w": 42}, "drop": {"w": 44}, "steady": {"w": 51}}},
+    // pressure dial: needle to "from", then down to "to" at times.drop; caption switches from_label -> to_label
+    {"type": "gauge", "w": 29, "until_w": 36, "title": "Hawa ka pressure", "from": 100, "to": 65, "unit": "%",
+     "from_label": "SAMUNDAR TAL", "to_label": "LEH", "times": {"drop": {"w": 33}}},
+    // altitude meter: marker climbs a 0..max ruler ("len" px tall) while the number counts to "to" by times.end
+    {"type": "altimeter", "w": 21, "until": 12.0, "to": 3500, "max": 4000, "tag": "📍 LEH", "label": "SAMUNDAR SE UPAR", "times": {"end": {"w": 26}}},
+    // pills with a bouncing arrow
+    {"type": "chips", "w": 79, "until_w": 87, "items": [{"text": "PRESSURE", "dir": "up", "w": 79}, {"text": "COOKING TEMP", "w": 84}]},
+    // image pip: "width" makes it a small centred badge (e.g. a channel logo)
+    {"type": "image", "t_out": 32.2, "dur": 2.9, "src": "media/logo_small.png", "width": 300, "height": 163, "zone": [175, 345]}
   ],
   // every overlay: "zone": "auto" | "top" | "lower" | "body" | "center" | [y0, y1]  (auto keeps it off the face)
   //                "sfx": "<name>" | "none"      (each type has a sensible default)
   //                "until_w": <word> | "until": <src sec> instead of "dur"
   // *word* in any text = accent colour
 
-  "sfx": [{"w": 30, "name": "ding", "gain_db": -2}],
+  "sfx": [{"w": 30, "name": "ding", "gain_db": -2},
+          {"t_out": 0.0, "name": "nat_boil", "path": "media/nat/boil_hook.wav", "gain_db": -3}],   // own file (e.g. a clip's natural sound), -10 dB re voice + gain_db
   // library: whoosh swoosh whoosh_down pop bubble click tick ding cash success riser impact glitch typing camera
 
   "music": {"mood": "upbeat", "seed": 3, "under_voice_db": 19, "gap_db": 11},

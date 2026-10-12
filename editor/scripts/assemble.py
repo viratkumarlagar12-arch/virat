@@ -7,6 +7,7 @@ build.py on top of this "assembled" video, so keep shots clean here.
 edl.json:
 { "audio": "tight/voice48k.wav", "fps": 30,
   "shots": [ {"src": "../short1/fixed.mp4", "in": 42.6, "dur": 1.0, "speed": 1.0, "blur": 0, "dim": 0, "note": "hook"} ] }
+  optional per shot: "fx"/"fy" (0..1, default 0.5) = where the 9:16 crop sits in a landscape (or taller) source
 usage: python assemble.py <project_dir>/edl.json <out.mp4>
 """
 import json
@@ -60,8 +61,10 @@ def main():
         frames = round((t + s["dur"]) * fps) - round(t * fps)  # round against the running total: no drift
         span = s["dur"] * speed + 0.5  # read a little extra; trimmed to exact frames below
         inputs += ["-ss", f"{s.get('in', 0):.3f}", "-t", f"{span:.3f}", "-i", str(src)]
+        fx, fy = s.get("fx", 0.5), s.get("fy", 0.5)  # where the 9:16 window sits in a wider/taller source (0..1)
         f = [f"setpts=(PTS-STARTPTS)/{speed}", f"fps={fps}",
-             f"scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos", f"crop={W}:{H}", "setsar=1",
+             f"scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos",
+             f"crop={W}:{H}:(iw-{W})*{fx}:(ih-{H})*{fy}", "setsar=1",
              f"tpad=stop_mode=clone:stop_duration={s['dur'] + 1:.2f}", f"trim=end_frame={frames}", "setpts=PTS-STARTPTS"]
         if s.get("blur"):
             f.append(f"boxblur={int(s['blur'])}:2")

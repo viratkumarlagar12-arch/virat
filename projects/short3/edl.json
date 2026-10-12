@@ -1,0 +1,19 @@
+{
+ "audio": "tight/voice48k.wav",
+ "fps": 30,
+ "shots": [
+  {"src": "fixed.mp4", "in": 0.0, "dur": 4.05, "note": "1 hook: steaming pot (creator clip A) - Leh Ladakh mein dal ubal toh rahi hai... phir bhi jaldi galti kyun nahi?"},
+  {"src": "fixed.mp4", "in": 4.12, "dur": 2.9, "note": "2 quiz: Leh road sign + mountains (clip B) - A: Oxygen kam? B: Thand?"},
+  {"src": "fixed.mp4", "in": 7.45, "dur": 1.8, "note": "2 quiz: Leh town (clip C) - Ya C: hawa ka pressure kam? Socho"},
+  {"src": "media/stock/266966.mp4", "in": 1.0, "dur": 1.45, "note": "3 Leh (Shanti Stupa, Pixabay 266966) - Leh, samundar se"},
+  {"src": "media/stock/186391.mp4", "in": 3.0, "dur": 1.9, "note": "3 Ladakh peaks drone (Pixabay 186391) - lagbhag 3,500 metre upar hai"},
+  {"src": "media/stock/186390.mp4", "in": 2.0, "dur": 2.0, "fx": 0.42, "note": "3 peak + blue sky (Pixabay 186390) - wahan hawa ka pressure kaafi kam"},
+  {"src": "fixed.mp4", "in": 15.5, "dur": 4.85, "note": "4 beaker boiling macro (clip E) - 100 nahi, lagbhag 88 degree"},
+  {"src": "media/stock/12496.mp4", "in": 4.0, "dur": 1.1, "fx": 0.3, "note": "5 gas flame close-up (Pixabay 12496) - aag tez karne se"},
+  {"src": "fixed.mp4", "in": 20.66, "dur": 4.27, "note": "5 pot boiling hard (clip F, bars filled) - zyada tezi se ubalega... 88 hi rahega"},
+  {"src": "media/diagram.mp4", "in": 0.2, "dur": 2.53, "note": "6 answer: creator's pressure diagram (clip G, my 9:16 version) - sahi jawab hai C"},
+  {"src": "fixed.mp4", "in": 29.1, "dur": 3.77, "speed": 0.81, "note": "7 pressure cooker on the flame (clip H) - andar ka pressure badhata hai"},
+  {"src": "fixed.mp4", "in": 32.22, "dur": 4.54, "speed": 0.6, "note": "7+8 cooked dal (clip I) - dal jaldi galti hai / A, B ya C? comment karo"},
+  {"src": "../short1/fixed.mp4", "in": 44.5, "dur": 2.0, "note": "channel end card (Science Unseen Hindi logo)"}
+ ]
+}
