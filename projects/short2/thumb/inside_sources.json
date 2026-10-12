@@ -1,0 +1,12 @@
+{
+  "concept": "inside",
+  "downloaded_images": [],
+  "generated_assets": [
+    {
+      "file": "assets/inside_gyri.png",
+      "how": "Procedurally generated brain-fold texture (Gray-Scott reaction-diffusion labyrinth) by assets/inside_gyri.py; no third-party content.",
+      "license": "own work"
+    }
+  ],
+  "note": "No external images. Head/body hologram, brain outline, brainstem alarm glow, lungs, CO2 molecules, siren sticker, starfield and Earth limb are drawn with inline SVG/canvas in inside.html. Fonts: Mukta 800, Anton, Montserrat, Poppins from editor/assets/fonts (OFL)."
+}

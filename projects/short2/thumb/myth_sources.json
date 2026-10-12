@@ -1,0 +1,5 @@
+{
+  "concept": "myth",
+  "downloaded_images": [],
+  "note": "No external images. All graphics (O2/CO2 molecules, faces, VS badge, lightning, starfield, Earth limb) are drawn with inline SVG/CSS/canvas in myth.html. Fonts: Anton, Montserrat, Poppins from editor/assets/fonts (OFL)."
+}

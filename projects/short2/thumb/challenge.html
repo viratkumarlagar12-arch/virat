@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Saans Roko Thumbnail</title>
+<style>
+  @font-face { font-family: "Anton"; src: url("file:///home/user/virat/editor/assets/fonts/Anton-400.ttf"); font-weight: 400; }
+  @font-face { font-family: "Montserrat"; src: url("file:///home/user/virat/editor/assets/fonts/Montserrat-800.ttf"); font-weight: 800; }
+  @font-face { font-family: "Montserrat"; src: url("file:///home/user/virat/editor/assets/fonts/Montserrat-900.ttf"); font-weight: 900; }
+
+  :root {
+    --red: #ff2436;
+    --red-deep: #7a000e;
+    --orange: #ff7a00;
+    --yellow: #ffd21f;
+    --ink: #0b0204;
+  }
+  html, body { margin: 0; padding: 0; width: 1080px; height: 1920px; overflow: hidden; background: var(--ink); }
+  .stage { position: relative; width: 1080px; height: 1920px; overflow: hidden;
+    background:
+      radial-gradient(ellipse 760px 760px at 540px 880px, rgba(255,40,40,.40) 0%, rgba(160,0,20,.22) 45%, rgba(0,0,0,0) 72%),
+      radial-gradient(ellipse 1400px 900px at 540px 300px, rgba(120,0,15,.55) 0%, rgba(0,0,0,0) 70%),
+      linear-gradient(180deg, #1a0306 0%, #0d0103 58%, #030004 100%);
+  }
+  svg.fx { position: absolute; inset: 0; }
+
+  .headline { position: absolute; left: 0; right: 0; top: 204px; text-align: center;
+    font-family: "Anton", sans-serif; font-size: 188px; line-height: 1; letter-spacing: 3px; white-space: nowrap;
+    transform: rotate(-3deg); transform-origin: 50% 50%; }
+  .headline span { display: inline-block; }
+  .headline .w1 { color: #ffffff;
+    text-shadow: 0 10px 0 var(--red-deep), 0 0 30px rgba(255,40,60,.85), 0 0 80px rgba(255,0,30,.5); }
+  .headline .w2 { background: linear-gradient(180deg, #fff27a 0%, #ffd21f 40%, #ff8a00 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 10px 0 var(--red-deep)) drop-shadow(0 0 26px rgba(255,90,0,.75)); }
+
+  .num { position: absolute; left: 0; right: 0; top: 650px; text-align: center;
+    font-family: "Anton", sans-serif; font-size: 364px; line-height: 1; color: #fff; letter-spacing: -4px;
+    text-shadow: 0 0 26px rgba(255,70,60,.95), 0 0 80px rgba(255,0,30,.6), 0 8px 0 #6b000c; }
+  .sec { position: absolute; left: 0; right: 0; top: 1030px; text-align: center; padding-left: 10px;
+    font-family: "Montserrat", sans-serif; font-weight: 900; font-size: 44px; line-height: 1; letter-spacing: 10px;
+    color: var(--yellow); text-shadow: 0 0 16px rgba(255,140,0,.75); }
+
+  .tease { position: absolute; left: 50%; top: 1310px; transform: translateX(-50%);
+    padding: 18px 52px 22px; border-radius: 999px;
+    background: rgba(10,0,2,.85); border: 6px solid var(--yellow);
+    box-shadow: 0 0 40px rgba(255,200,0,.45), inset 0 0 24px rgba(255,200,0,.16);
+    font-family: "Montserrat", sans-serif; font-weight: 900; font-size: 76px; line-height: 1;
+    color: #fff; letter-spacing: 3px; white-space: nowrap; }
+  .tease b { color: var(--yellow); }
+
+  .brand { position: absolute; left: 0; right: 0; top: 1662px; text-align: center;
+    font-family: "Montserrat", sans-serif; font-weight: 900; font-size: 34px; letter-spacing: 8px; line-height: 1; }
+  .brand .s { color: #d9dde3; }
+  .brand .u { color: #f2b632; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <svg class="fx" width="1080" height="1920" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="rays" cx="540" cy="880" r="1100" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#ff2a3a" stop-opacity=".30"/>
+        <stop offset="1" stop-color="#ff2a3a" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="bezel" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#6a707a"/>
+        <stop offset=".35" stop-color="#2a2d33"/>
+        <stop offset="1" stop-color="#0c0d10"/>
+      </linearGradient>
+      <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#3a3d44"/>
+        <stop offset=".5" stop-color="#d4d9e0"/>
+        <stop offset="1" stop-color="#3a3d44"/>
+      </linearGradient>
+      <radialGradient id="dial" cx="540" cy="840" r="330" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#40070f"/>
+        <stop offset=".7" stop-color="#17020a"/>
+        <stop offset="1" stop-color="#070003"/>
+      </radialGradient>
+      <radialGradient id="skin" cx="0" cy="-40" r="150" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#ffd84a"/>
+        <stop offset=".55" stop-color="#ff9a2a"/>
+        <stop offset="1" stop-color="#f0402a"/>
+      </radialGradient>
+      <radialGradient id="cheek" cx="0" cy="0" r="1">
+        <stop offset="0" stop-color="#ff4a5a" stop-opacity=".9"/>
+        <stop offset="1" stop-color="#ff4a5a" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="limb" cx="540" cy="4560" r="2760" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#01040c"/>
+        <stop offset=".955" stop-color="#03102a"/>
+        <stop offset=".985" stop-color="#0d4fae"/>
+        <stop offset="1" stop-color="#7fd4ff"/>
+      </radialGradient>
+      <radialGradient id="flare" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#fffdf0" stop-opacity="1"/>
+        <stop offset=".25" stop-color="#ffe9a0" stop-opacity=".8"/>
+        <stop offset="1" stop-color="#ffc640" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="sun" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#ffe9a0" stop-opacity=".95"/>
+        <stop offset=".3" stop-color="#ffb43a" stop-opacity=".55"/>
+        <stop offset="1" stop-color="#ff8a00" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="12" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="bigglow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="40"/>
+      </filter>
+      <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="10"/>
+      </filter>
+      <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000" flood-opacity=".7"/>
+      </filter>
+    </defs>
+
+    <g id="raysg"></g>
+    <g id="mols" opacity=".2"></g>
+
+    <!-- brand nod: Earth limb + sunrise at the very bottom (under YouTube's title overlay) -->
+    <g>
+      <ellipse cx="540" cy="1806" rx="560" ry="130" fill="url(#sun)"/>
+      <circle cx="540" cy="4560" r="2790" fill="#2a8cff" opacity=".30" filter="url(#bigglow)"/>
+      <circle cx="540" cy="4560" r="2760" fill="url(#limb)"/>
+      <circle cx="540" cy="4560" r="2760" fill="none" stroke="#bfeaff" stroke-width="5" opacity=".9"/>
+      <ellipse cx="540" cy="1801" rx="380" ry="12" fill="url(#flare)"/>
+      <circle cx="540" cy="1799" r="70" fill="url(#flare)"/>
+    </g>
+
+    <!-- stopwatch -->
+    <g id="watch">
+      <rect x="502" y="452" width="76" height="56" rx="8" fill="url(#metal)"/>
+      <rect x="462" y="414" width="156" height="50" rx="16" fill="url(#metal)" stroke="#0b0b0d" stroke-width="4"/>
+      <g transform="rotate(42 540 880)"><rect x="514" y="490" width="52" height="46" rx="8" fill="url(#metal)" stroke="#0b0b0d" stroke-width="4"/></g>
+      <g transform="rotate(-42 540 880)"><rect x="514" y="490" width="52" height="46" rx="8" fill="url(#metal)" stroke="#0b0b0d" stroke-width="4"/></g>
+      <circle cx="540" cy="880" r="350" fill="none" stroke="#ff2a3a" stroke-width="44" opacity=".5" filter="url(#bigglow)"/>
+      <circle cx="540" cy="880" r="358" fill="url(#bezel)" stroke="#000" stroke-width="6"/>
+      <circle cx="540" cy="880" r="336" fill="url(#dial)" stroke="#2b2e34" stroke-width="4"/>
+      <g id="track"></g>
+      <g id="segs" filter="url(#glow)"></g>
+      <circle cx="540" cy="880" r="262" fill="none" stroke="#ff8a6a" stroke-opacity=".28" stroke-width="3"/>
+      <g id="ticks"></g>
+    </g>
+    <g id="ring" filter="url(#glow)"></g>
+
+    <!-- breath-holding emoji face, sticker on the lower right of the watch -->
+    <g transform="translate(872 1138) rotate(8)" filter="url(#shadow)">
+      <path d="M0 -136 C 82 -136, 136 -84, 136 -18 C 158 16, 160 92, 110 124 C 68 150, -68 150, -110 124 C -160 92, -158 16, -136 -18 C -136 -84, -82 -136, 0 -136 Z"
+            fill="url(#skin)" stroke="#3a0a06" stroke-width="8" stroke-linejoin="round"/>
+      <!-- puff lines on the cheeks -->
+      <path d="M-122 40 C -132 62, -126 86, -108 100" fill="none" stroke="#a8281a" stroke-width="6" stroke-linecap="round" opacity=".7"/>
+      <path d="M122 40 C 132 62, 126 86, 108 100" fill="none" stroke="#a8281a" stroke-width="6" stroke-linecap="round" opacity=".7"/>
+      <ellipse cx="-80" cy="52" rx="44" ry="30" fill="url(#cheek)"/>
+      <ellipse cx="80" cy="52" rx="44" ry="30" fill="url(#cheek)"/>
+      <!-- squeezed-shut eyes -->
+      <path d="M-78 -46 L-36 -26 L-78 -6" fill="none" stroke="#3a0a06" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M78 -46 L36 -26 L78 -6" fill="none" stroke="#3a0a06" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- strained brows -->
+      <path d="M-88 -80 L-38 -64" stroke="#3a0a06" stroke-width="11" stroke-linecap="round"/>
+      <path d="M88 -80 L38 -64" stroke="#3a0a06" stroke-width="11" stroke-linecap="round"/>
+      <!-- lips pressed tight -->
+      <path d="M-24 66 Q -12 58 0 66 Q 12 74 24 66" fill="none" stroke="#3a0a06" stroke-width="11" stroke-linecap="round"/>
+      <!-- sweat drop -->
+      <path d="M128 -112 C 113 -86, 108 -70, 121 -59 C 134 -48, 153 -57, 151 -76 C 150 -89, 139 -101, 128 -112 Z" fill="#8fd8ff" stroke="#0e3a5a" stroke-width="5"/>
+    </g>
+  </svg>
+
+  <div class="num">10</div>
+  <div class="sec">SECOND</div>
+  <div class="headline"><span class="w1">SAANS</span> <span class="w2">ROKO!</span></div>
+  <div class="tease"><b>…</b>KYA HOGA<b>?</b></div>
+  <div class="brand"><span class="s">SCIENCE</span> <span class="u">UNSEEN HINDI</span></div>
+</div>
+
+<script>
+(function(){
+  const NS = "http://www.w3.org/2000/svg";
+  const cx = 540, cy = 880;
+  function el(tag, attrs, parent){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; }
+  function pt(r, deg){ const a = (deg - 90) * Math.PI/180; return [cx + r*Math.cos(a), cy + r*Math.sin(a)]; }
+  function arc(r, a0, a1){ const [x0,y0] = pt(r,a0), [x1,y1] = pt(r,a1); const large = (a1-a0) > 180 ? 1 : 0; return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${r} ${r} 0 ${large} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; }
+  function mix(c1, c2, t){ const p = s => [1,3,5].map(i => parseInt(s.substr(i,2),16)); const a = p(c1), b = p(c2); return "rgb(" + a.map((v,i)=>Math.round(v+(b[i]-v)*t)).join(",") + ")"; }
+
+  // siren rays
+  const rays = document.getElementById("raysg");
+  for (let i = 0; i < 16; i++) {
+    const a = i * 22.5 + 6, w = 7;
+    const [x0,y0] = pt(1600, a - w), [x1,y1] = pt(1600, a + w);
+    el("path", { d:`M${cx} ${cy} L${x0} ${y0} L${x1} ${y1} Z`, fill:"url(#rays)" }, rays);
+  }
+
+  // 10 countdown segments, hot yellow at the top, deep red at the bottom
+  const segs = document.getElementById("segs"), track = document.getElementById("track");
+  const R = 300, SW = 50, gap = 5;
+  for (let i = 0; i < 10; i++) {
+    const a0 = i*36 + gap/2, a1 = (i+1)*36 - gap/2, mid = (a0+a1)/2;
+    const d = Math.min(mid, 360-mid) / 180;               // 0 at top .. 1 at bottom
+    const col = d < .5 ? mix("#ffe14a", "#ff7a0a", d/.5) : mix("#ff7a0a", "#ff1f3a", (d-.5)/.5);
+    el("path", { d: arc(R, a0, a1), stroke:"#2a0a10", "stroke-width": SW, fill:"none" }, track);
+    el("path", { d: arc(R, a0, a1), stroke: col, "stroke-width": SW, fill:"none" }, segs);
+  }
+  // 10 small markers on the inner circle, one per second
+  const ticks = document.getElementById("ticks");
+  for (let i = 0; i < 10; i++) {
+    const [x0,y0] = pt(262, i*36), [x1,y1] = pt(246, i*36);
+    el("line", { x1:x0, y1:y0, x2:x1, y2:y1, stroke:"#ffd9c0", "stroke-width":6, "stroke-linecap":"round", opacity:.8 }, ticks);
+  }
+
+  // alarm "ringing" marks beside the crown
+  const ring = document.getElementById("ring");
+  for (const side of [-1, 1]) {
+    for (const [r, w] of [[392, 11], [430, 9]]) {
+      const a0 = side < 0 ? -33 : 17, a1 = side < 0 ? -17 : 33;
+      el("path", { d: arc(r, a0, a1), stroke: r < 400 ? "#ffd21f" : "#ff9a1f", "stroke-width": w, fill:"none", "stroke-linecap":"round" }, ring);
+    }
+  }
+
+  // faint CO2 molecules  O=C=O
+  const mols = document.getElementById("mols");
+  const spots = [[110,600,-20,1],[975,610,25,.9],[95,1200,15,.85],[150,1520,10,.9],[930,1530,-12,.85],[880,175,18,.7],[190,160,-8,.7]];
+  for (const [x,y,rot,s] of spots) {
+    const g = el("g", { transform:`translate(${x} ${y}) rotate(${rot}) scale(${s})` }, mols);
+    el("line", { x1:-62, y1:-6, x2:62, y2:-6, stroke:"#ffb0a0", "stroke-width":5 }, g);
+    el("line", { x1:-62, y1: 6, x2:62, y2: 6, stroke:"#ffb0a0", "stroke-width":5 }, g);
+    el("circle", { cx:0, cy:0, r:30, fill:"#4a4a4a", stroke:"#ffb0a0", "stroke-width":4 }, g);
+    el("circle", { cx:-72, cy:0, r:26, fill:"#c4202e", stroke:"#ffb0a0", "stroke-width":4 }, g);
+    el("circle", { cx: 72, cy:0, r:26, fill:"#c4202e", stroke:"#ffb0a0", "stroke-width":4 }, g);
+  }
+})();
+</script>
+</body>
+</html>

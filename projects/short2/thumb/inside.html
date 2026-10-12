@@ -1,0 +1,355 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Brain Alarm Thumbnail</title>
+<style>
+@font-face{font-family:Anton;src:url("file:///home/user/virat/editor/assets/fonts/Anton-400.ttf");font-weight:400}
+@font-face{font-family:Mukta;src:url("file:///home/user/virat/editor/assets/fonts/Mukta-800.ttf");font-weight:800}
+@font-face{font-family:Montserrat;src:url("file:///home/user/virat/editor/assets/fonts/Montserrat-900.ttf");font-weight:900}
+@font-face{font-family:Montserrat;src:url("file:///home/user/virat/editor/assets/fonts/Montserrat-800.ttf");font-weight:800}
+@font-face{font-family:Poppins;src:url("file:///home/user/virat/editor/assets/fonts/Poppins-800.ttf");font-weight:800}
+@font-face{font-family:Poppins;src:url("file:///home/user/virat/editor/assets/fonts/Poppins-900.ttf");font-weight:900}
+html,body{margin:0;padding:0;width:1080px;height:1920px;overflow:hidden;background:#01030b}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;
+  background:radial-gradient(ellipse 760px 900px at 540px 820px,#0a1d48 0%,#050d26 45%,#01030b 80%)}
+.abs{position:absolute;left:0;top:0}
+</style>
+</head>
+<body>
+<div id="stage">
+<canvas id="stars" class="abs" width="1080" height="1920"></canvas>
+<svg id="art" class="abs" width="1080" height="1920" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <!-- glows -->
+  <filter id="glowC" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="9" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="glowS" x="-30%" y="-30%" width="160%" height="160%">
+    <feGaussianBlur stdDeviation="4" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="glowR" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="14" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="blur6"><feGaussianBlur stdDeviation="6"/></filter>
+  <filter id="blur3"><feGaussianBlur stdDeviation="2.5"/></filter>
+  <filter id="txtShadow" x="-20%" y="-30%" width="140%" height="170%">
+    <feDropShadow dx="0" dy="10" stdDeviation="0" flood-color="#000" flood-opacity="1"/>
+    <feDropShadow dx="0" dy="0" stdDeviation="18" flood-color="#ff2a1a" flood-opacity=".55"/>
+  </filter>
+  <filter id="stickShadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="12" stdDeviation="0" flood-color="#000" flood-opacity=".9"/>
+    <feDropShadow dx="0" dy="0" stdDeviation="22" flood-color="#ff1a1a" flood-opacity=".85"/>
+  </filter>
+
+  <!-- body fill -->
+  <linearGradient id="bodyFill" x1="0" y1="440" x2="0" y2="1800" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#2a7dff" stop-opacity=".30"/>
+    <stop offset=".45" stop-color="#1550c8" stop-opacity=".26"/>
+    <stop offset=".8" stop-color="#0d3590" stop-opacity=".18"/>
+    <stop offset="1" stop-color="#0d3590" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="bodyStroke" x1="0" y1="440" x2="0" y2="1760" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#8fe3ff"/>
+    <stop offset=".6" stop-color="#4cb8ff"/>
+    <stop offset="1" stop-color="#4cb8ff" stop-opacity="0"/>
+  </linearGradient>
+  <radialGradient id="brainFill" cx="540" cy="620" r="300" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#9ad8ff" stop-opacity=".42"/>
+    <stop offset=".7" stop-color="#4b9cff" stop-opacity=".28"/>
+    <stop offset="1" stop-color="#ff4a3a" stop-opacity=".40"/>
+  </radialGradient>
+  <radialGradient id="hot" cx=".5" cy=".5" r=".5">
+    <stop offset="0" stop-color="#ffffff"/>
+    <stop offset=".12" stop-color="#fff2a8"/>
+    <stop offset=".3" stop-color="#ffb02e"/>
+    <stop offset=".55" stop-color="#ff3b1f" stop-opacity=".75"/>
+    <stop offset="1" stop-color="#ff1a1a" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="redHaze" cx=".5" cy=".5" r=".5">
+    <stop offset="0" stop-color="#ff2a1a" stop-opacity=".62"/>
+    <stop offset=".45" stop-color="#c0140c" stop-opacity=".22"/>
+    <stop offset="1" stop-color="#c0140c" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="blueHaze" cx="540" cy="800" r="620" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#2f6cff" stop-opacity=".30"/>
+    <stop offset=".55" stop-color="#1a3fa8" stop-opacity=".12"/>
+    <stop offset="1" stop-color="#0a1a50" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="stemFill" x1="0" y1="790" x2="0" y2="990" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#ff9a3a"/><stop offset="1" stop-color="#e0201c"/>
+  </linearGradient>
+  <linearGradient id="lungFill" x1="0" y1="1290" x2="0" y2="1750" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#ff7a6a" stop-opacity=".55"/>
+    <stop offset=".5" stop-color="#d9364a" stop-opacity=".35"/>
+    <stop offset="1" stop-color="#7a1030" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="lungStroke" x1="0" y1="1290" x2="0" y2="1720" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#ffb3a6"/>
+    <stop offset="1" stop-color="#ff6a5a" stop-opacity="0"/>
+  </linearGradient>
+  <!-- molecule shading -->
+  <radialGradient id="oxy" cx=".36" cy=".32" r=".75">
+    <stop offset="0" stop-color="#ffd0c8"/>
+    <stop offset=".18" stop-color="#ff5a46"/>
+    <stop offset=".65" stop-color="#d0121c"/>
+    <stop offset="1" stop-color="#5a0008"/>
+  </radialGradient>
+  <radialGradient id="carb" cx=".36" cy=".32" r=".75">
+    <stop offset="0" stop-color="#e9eef6"/>
+    <stop offset=".2" stop-color="#8a95a8"/>
+    <stop offset=".7" stop-color="#3a4252"/>
+    <stop offset="1" stop-color="#11151d"/>
+  </radialGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#fff3a0"/>
+    <stop offset=".45" stop-color="#ffd23f"/>
+    <stop offset="1" stop-color="#ff9a00"/>
+  </linearGradient>
+  <linearGradient id="stickFill" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ff4a3a"/>
+    <stop offset=".55" stop-color="#e0121c"/>
+    <stop offset="1" stop-color="#a5000c"/>
+  </linearGradient>
+  <linearGradient id="silver" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#ffffff"/>
+    <stop offset="1" stop-color="#aeb9c6"/>
+  </linearGradient>
+
+  <!-- shapes -->
+  <path id="bodyPath" d="M 510 440
+    C 610 438, 690 470, 735 535
+    C 770 585, 785 640, 790 700
+    C 792 715, 786 725, 782 735
+    C 800 770, 830 800, 852 828
+    C 858 840, 848 852, 822 856
+    C 810 858, 803 860, 802 866
+    C 806 878, 814 888, 810 897
+    C 806 904, 798 908, 797 912
+    C 803 918, 810 928, 804 938
+    C 798 946, 788 950, 788 958
+    C 790 972, 806 985, 800 1002
+    C 793 1022, 770 1030, 740 1032
+    C 700 1036, 665 1040, 645 1052
+    C 638 1100, 640 1160, 652 1210
+    C 680 1260, 780 1290, 900 1320
+    C 980 1340, 1060 1370, 1120 1420
+    L 1120 1960 L -40 1960 L -40 1420
+    C 40 1360, 180 1310, 300 1280
+    C 360 1262, 392 1240, 398 1200
+    C 402 1130, 395 1060, 380 1010
+    C 350 970, 310 920, 296 860
+    C 278 790, 272 700, 290 620
+    C 315 520, 400 445, 510 440 Z"/>
+  <path id="brainPath" d="M 332 765
+    C 305 690, 305 600, 345 545
+    C 395 485, 480 470, 560 475
+    C 650 480, 720 520, 748 590
+    C 765 640, 762 690, 745 735
+    C 735 760, 700 772, 668 764
+    C 650 792, 618 822, 575 824
+    C 545 826, 522 810, 512 796
+    C 470 802, 420 798, 382 792
+    C 358 788, 340 782, 332 765 Z"/>
+  <clipPath id="brainClip"><use href="#brainPath"/></clipPath>
+  <clipPath id="bodyClip"><use href="#bodyPath"/></clipPath>
+  <mask id="bottomFade" maskUnits="userSpaceOnUse" x="0" y="0" width="1080" height="1920">
+    <linearGradient id="bf" x1="0" y1="1420" x2="0" y2="1760" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/>
+    </linearGradient>
+    <rect width="1080" height="1920" fill="url(#bf)"/>
+  </mask>
+
+  <!-- CO2 molecule (unit: carbon r=1) -->
+  <g id="co2">
+    <circle cx="-1.72" cy="0" r="1.12" fill="url(#oxy)"/>
+    <circle cx="1.72" cy="0" r="1.12" fill="url(#oxy)"/>
+    <circle cx="0" cy="0" r="1" fill="url(#carb)"/>
+  </g>
+</defs>
+
+<g id="figure" transform="translate(0 40)">
+<!-- big soft background glows -->
+<rect width="1080" height="1920" fill="url(#blueHaze)"/>
+<circle cx="0" cy="0" r="1" fill="url(#redHaze)" transform="translate(492 935) scale(400)"/>
+
+<g mask="url(#bottomFade)">
+  <!-- body hologram -->
+  <use href="#bodyPath" fill="url(#bodyFill)"/>
+  <!-- inner scanlines -->
+  <g clip-path="url(#bodyClip)" id="scan" opacity=".22"></g>
+
+  <!-- lungs (front view inside chest) -->
+  <g id="lungs" filter="url(#glowS)">
+    <path d="M 506 1318 C 470 1300, 420 1318, 385 1370 C 340 1440, 318 1560, 322 1690 C 360 1720, 440 1726, 500 1700 C 512 1600, 512 1450, 506 1318 Z"
+      fill="url(#lungFill)" stroke="url(#lungStroke)" stroke-width="5"/>
+    <path d="M 574 1318 C 610 1300, 660 1318, 695 1370 C 740 1440, 762 1560, 758 1690 C 720 1720, 640 1726, 580 1700 C 568 1600, 568 1450, 574 1318 Z"
+      fill="url(#lungFill)" stroke="url(#lungStroke)" stroke-width="5"/>
+    <!-- trachea + bronchi -->
+    <path d="M 600 1040 C 596 1120, 560 1200, 540 1300 L 540 1350 M 540 1350 C 520 1370, 490 1390, 462 1430 M 540 1350 C 560 1370, 590 1390, 618 1430
+             M 462 1430 L 430 1490 M 462 1430 L 470 1500 M 618 1430 L 650 1490 M 618 1430 L 610 1500"
+      fill="none" stroke="#ffc7bd" stroke-width="10" stroke-linecap="round" opacity=".85"/>
+  </g>
+
+  <!-- spinal cord signal -->
+  <path d="M 490 960 C 486 1030, 470 1110, 462 1200 C 458 1250, 460 1290, 464 1320" fill="none" stroke="#ff8a4a" stroke-width="12" stroke-linecap="round" opacity=".45" filter="url(#glowS)"/>
+
+  <!-- red alarm light spilling inside the head -->
+  <g clip-path="url(#bodyClip)"><circle cx="0" cy="0" r="1" fill="url(#redHaze)" transform="translate(500 900) scale(330)"/></g>
+  <!-- outline glow -->
+  <use href="#bodyPath" fill="none" stroke="url(#bodyStroke)" stroke-width="6" filter="url(#glowC)"/>
+</g>
+
+<!-- face details: closed squeezed eye + brow -->
+<g fill="none" stroke="#9fe6ff" stroke-linecap="round" filter="url(#glowS)" opacity=".9">
+  <path d="M 712 760 C 728 772, 750 772, 766 758" stroke-width="6"/>
+  <path d="M 724 770 L 718 784 M 740 774 L 738 789 M 756 769 L 760 783" stroke-width="4"/>
+  <path d="M 700 722 C 725 712, 752 716, 778 726" stroke-width="7"/>
+  <!-- sealed lips -->
+  <path d="M 770 912 L 797 912" stroke-width="5"/>
+</g>
+
+<!-- brain -->
+<g id="brain">
+  <use href="#brainPath" fill="url(#brainFill)" stroke="#a6e6ff" stroke-width="5" filter="url(#glowS)"/>
+  <g clip-path="url(#brainClip)" id="gyri"><image href="assets/inside_gyri.png" x="296" y="462" width="480" height="379" preserveAspectRatio="none" opacity=".95"/></g>
+  <!-- lateral (Sylvian) fissure + central sulcus -->
+  <path d="M 668 764 C 620 730, 560 720, 500 700" fill="none" stroke="#dff6ff" stroke-width="6" stroke-linecap="round" opacity=".8"/>
+  
+  <!-- cerebellum -->
+  <path d="M 345 792 C 332 830, 356 872, 408 874 C 452 875, 482 852, 486 812 C 452 806, 392 800, 345 792 Z"
+        fill="#5aa8ff" fill-opacity=".35" stroke="#a6e6ff" stroke-width="5" filter="url(#glowS)"/>
+  <g fill="none" stroke="#c5efff" stroke-width="3" opacity=".6">
+    <path d="M 352 815 C 390 822, 440 826, 480 826"/>
+    <path d="M 358 835 C 395 842, 440 846, 474 842"/>
+    <path d="M 370 853 C 400 860, 435 862, 462 857"/>
+  </g>
+</g>
+
+<!-- alarm: rings + hot core on brainstem -->
+<g id="alarm">
+  <g fill="none" stroke="#ff3a24" stroke-linecap="round">
+    <circle cx="492" cy="905" r="95"  stroke-width="9" opacity=".95" filter="url(#glowS)"/>
+    <circle cx="492" cy="905" r="150" stroke-width="7" opacity=".7" filter="url(#glowS)"/>
+    <circle cx="492" cy="905" r="212" stroke-width="5" opacity=".45"/>
+    <circle cx="492" cy="905" r="280" stroke-width="4" opacity=".25"/>
+  </g>
+  <!-- brainstem (pons + medulla) -->
+  <path d="M 492 790 C 506 788, 530 792, 542 806 C 556 824, 554 852, 538 868 C 528 880, 522 896, 518 918 C 514 940, 510 958, 506 990 L 476 990 C 474 960, 472 935, 474 912 C 476 880, 478 845, 480 815 C 482 800, 486 792, 492 790 Z"
+        fill="url(#stemFill)" stroke="#ffd3a0" stroke-width="5" filter="url(#glowR)"/>
+  <circle cx="0" cy="0" r="1" fill="url(#hot)" transform="translate(502 900) scale(95)"/>
+  <g stroke="#fff6d0" stroke-linecap="round" opacity=".9" filter="url(#blur3)">
+    <path d="M 420 900 L 584 900" stroke-width="5"/><path d="M 502 830 L 502 970" stroke-width="4"/>
+  </g>
+  <!-- zaps -->
+  <g stroke="#ffd36a" stroke-width="7" stroke-linecap="round" filter="url(#glowS)">
+    <path d="M 610 840 L 650 818"/>
+    <path d="M 622 905 L 668 905"/>
+    <path d="M 610 970 L 650 992"/>
+  </g>
+</g>
+
+<!-- CO2 molecules layer (filled by script) -->
+<g id="mols"></g>
+</g>
+
+<!-- headline -->
+<g filter="url(#txtShadow)">
+  <text id="hl" x="546" y="412" text-anchor="middle" font-family="Mukta, Poppins" font-weight="800" font-size="250"
+        stroke="#05070f" stroke-width="22" stroke-linejoin="round" paint-order="stroke"><tspan fill="#ffffff">घुटन </tspan><tspan fill="url(#gold)">क्यों?</tspan></text>
+</g>
+
+<!-- BRAIN ALARM sticker -->
+<g id="sticker" transform="translate(212 1100) rotate(-7)">
+  <g filter="url(#stickShadow)">
+    <rect x="-178" y="-120" width="356" height="250" rx="34" fill="url(#stickFill)" stroke="#fff" stroke-width="8"/>
+  </g>
+  <text x="0" y="-12" text-anchor="middle" font-family="Anton" font-size="112" fill="#fff" letter-spacing="2">BRAIN</text>
+  <text x="0" y="104" text-anchor="middle" font-family="Anton" font-size="112" fill="#ffe14a" letter-spacing="0">ALARM!</text>
+</g>
+<!-- siren on top of sticker -->
+<g id="siren" transform="translate(196 915) rotate(-7)">
+  <g stroke="#ffd36a" stroke-width="8" stroke-linecap="round" filter="url(#glowS)">
+    <path d="M -86 -46 L -116 -66"/><path d="M -92 -6 L -128 -6"/><path d="M 86 -46 L 116 -66"/><path d="M 92 -6 L 128 -6"/><path d="M 0 -96 L 0 -128"/>
+  </g>
+  <path d="M -58 20 L -58 -20 C -58 -60, -30 -80, 0 -80 C 30 -80, 58 -60, 58 -20 L 58 20 Z" fill="#ff2a1a" stroke="#fff" stroke-width="7" filter="url(#glowR)"/>
+  <path d="M -30 -20 C -30 -44, -16 -58, 2 -60" fill="none" stroke="#ffd0c8" stroke-width="10" stroke-linecap="round"/>
+  <rect x="-80" y="16" width="160" height="30" rx="8" fill="#1b2233" stroke="#fff" stroke-width="7"/>
+</g>
+
+<!-- brand footer -->
+<g id="brand">
+  <ellipse cx="540" cy="2560" rx="1000" ry="820" fill="#020a1e" stroke="#58b6ff" stroke-width="5" filter="url(#glowC)"/>
+  <ellipse cx="540" cy="1742" rx="230" ry="26" fill="#ffd27a" opacity=".55" filter="url(#blur6)"/>
+  <ellipse cx="540" cy="1741" rx="110" ry="8" fill="#fff6d8" opacity=".9" filter="url(#blur3)"/>
+  <text x="540" y="1822" text-anchor="middle" font-family="Montserrat" font-weight="900" font-size="46" letter-spacing="14" fill="url(#silver)">SCIENCE</text>
+  <text x="540" y="1866" text-anchor="middle" font-family="Montserrat" font-weight="800" font-size="30" letter-spacing="10" fill="#ffc53d">UNSEEN HINDI</text>
+</g>
+</svg>
+
+<script>
+// deterministic RNG
+let s = 7; const R = () => (s = (s * 16807) % 2147483647) / 2147483647;
+// stars
+const c = document.getElementById('stars').getContext('2d');
+for (let i = 0; i < 260; i++) {
+  const x = R() * 1080, y = R() * 1920, r = R() < .9 ? R() * 1.6 + .4 : R() * 2.4 + 1.4;
+  c.fillStyle = `rgba(${200 + R()*55|0},${215 + R()*40|0},255,${.25 + R() * .6})`;
+  c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+}
+const NS = 'http://www.w3.org/2000/svg';
+// scanlines in body
+const sc = document.getElementById('scan');
+for (let y = 446; y < 1800; y += 14) {
+  const l = document.createElementNS(NS, 'rect');
+  l.setAttribute('x', 0); l.setAttribute('y', y); l.setAttribute('width', 1080); l.setAttribute('height', 3);
+  l.setAttribute('fill', '#9fdcff'); sc.appendChild(l);
+}
+// CO2 molecules: [x, y, scale(carbon r), rotation, blur, label]
+const mols = [
+  // stream rising from the lungs up the neck into the brainstem
+  [540, 1260, 15, 20], [575, 1180, 13, -30], [520, 1125, 14, 60], [585, 1080, 12, 10],
+  [515, 1035, 14, -50], [560, 990, 13, 35], [600, 1240, 12, 80], [470, 1290, 13, -15],
+  [440, 1180, 12, 40], [455, 1080, 11, -70], [610, 1140, 11, 5], [430, 990, 11, 25],
+  [590, 1330, 14, -40], [430, 1370, 13, 70], [660, 1390, 12, 15], [500, 1410, 14, -60],
+  // crowding around the alarm
+  [600, 940, 12, -20], [410, 930, 11, 55], [560, 1050, 11, -80], [350, 960, 10, 30],
+  // a few drifting in the head / around
+  [640, 1000, 10, 45],
+  // big foreground, slightly soft
+  [922, 620, 44, -28, 1, 'CO₂'], [136, 610, 36, 22, 1], [940, 1170, 40, 32, 1, 'CO₂'],
+  [880, 1420, 30, -15, 1], [150, 1420, 28, 40, 1], [985, 860, 22, -60, 1], [330, 1300, 18, 10]
+];
+const ml = document.getElementById('mols');
+for (const [x, y, k, rot, blur, lab] of mols) {
+  const g = document.createElementNS(NS, 'g');
+  const u = document.createElementNS(NS, 'use');
+  u.setAttribute('href', '#co2');
+  u.setAttribute('transform', `translate(${x} ${y}) rotate(${rot}) scale(${k})`);
+  g.appendChild(u);
+  if (k > 20) {
+    const glow = document.createElementNS(NS, 'ellipse');
+    glow.setAttribute('cx', x); glow.setAttribute('cy', y); glow.setAttribute('rx', k * 3.2); glow.setAttribute('ry', k * 1.8);
+    glow.setAttribute('transform', `rotate(${rot} ${x} ${y})`);
+    glow.setAttribute('fill', '#ff3a24'); glow.setAttribute('opacity', '.22'); glow.setAttribute('filter', 'url(#blur6)');
+    ml.appendChild(glow);
+  }
+  ml.appendChild(g);
+  if (lab) {
+    const t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', x); t.setAttribute('y', y + k * 2.2 + 46);
+    t.setAttribute('text-anchor', 'middle'); t.setAttribute('font-family', 'Poppins'); t.setAttribute('font-weight', '800');
+    t.setAttribute('font-size', '58'); t.setAttribute('fill', '#ffe3dc');
+    t.setAttribute('stroke', '#05070f'); t.setAttribute('stroke-width', '10'); t.setAttribute('paint-order', 'stroke');
+    t.textContent = 'CO';
+    const sb = document.createElementNS(NS, 'tspan'); sb.setAttribute('font-size', '38'); sb.setAttribute('dy', '14'); sb.textContent = '2';
+    t.appendChild(sb); ml.appendChild(t);
+  }
+}
+</script>
+</div>
+</body>
+</html>
