@@ -27,7 +27,7 @@ SFX_DIR = ED / "assets" / "sfx"
 SFX_GAIN_DB = {
     "whoosh": -9, "swoosh": -11, "whoosh_down": -10, "pop": -8, "bubble": -11, "click": -10,
     "tick": -9, "ding": -11, "cash": -9, "success": -10, "riser": -11, "impact": -5,
-    "glitch": -12, "typing": -14, "camera": -9,
+    "glitch": -12, "typing": -14, "camera": -9, "slam": -6, "heartbeat": -10, "breath": -10,
 }
 VOICE_CHAIN = (
     "highpass=f=80,afftdn=nf=-28:tn=1,"

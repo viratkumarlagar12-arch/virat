@@ -5,99 +5,179 @@
   {
    "src": "download/reexport.mp4",
    "in": 0.0,
-   "dur": 8.95,
-   "note": "Ruko! saans roko / ghutan kyun... A ya B / jawab end mein (man inhales, holds; lungs fade in)"
+   "dur": 2.1,
+   "note": "Ruko! Abhi saans roko... sirf (man inhales, eyes close)"
+  },
+  {
+   "src": "media/pixabay_31098.mp4",
+   "in": 0.1,
+   "dur": 0.88,
+   "note": "10 second (LED 10, glitches out into the cut)"
   },
   {
    "src": "download/reexport.mp4",
-   "in": 8.95,
-   "dur": 2.9,
-   "speed": 0.675,
-   "note": "Halki bechaini? Body CO2 banati rehti hai (cells puff CO2 into the vessel)"
+   "in": 3.4,
+   "dur": 2.78,
+   "note": "Ghutan kyun hogi... A, oxygen kam, ya (holding breath, lungs start to show)"
   },
   {
    "src": "download/reexport.mp4",
-   "in": 16.5,
-   "dur": 1.8,
-   "speed": 0.833,
-   "note": "par bahar ka raasta band! (windpipe + lungs)"
+   "in": 22.06,
+   "dur": 1.81,
+   "note": "B, CO2 zyada? (CO2-labelled molecules converge)"
   },
   {
    "src": "download/reexport.mp4",
-   "in": 18.5,
-   "dur": 3.4,
-   "note": "CO2 paani se milkar blood ko thoda acidic (vessel filling with CO2)"
+   "in": 23.87,
+   "dur": 1.33,
+   "speed": 1.15,
+   "note": "Jawab end mein (tunnel push, stops before the whip at 25.43)"
   },
   {
    "src": "download/reexport.mp4",
-   "in": 25.95,
-   "dur": 1.45,
-   "note": "Par ise pakadta kaun? (tunnel -> vessel network zoom-out)"
+   "in": 7.3,
+   "dur": 1.08,
+   "note": "Halki bechaini? (lungs in his chest, CO2 specks appear)"
   },
   {
    "src": "download/reexport.mp4",
-   "in": 27.4,
-   "dur": 4.65,
-   "speed": 0.86,
-   "note": "Tumhara brainstem! sensors acid check (brain, brainstem glows)"
+   "in": 9.3,
+   "dur": 1.91,
+   "note": "Body CO2 banati rehti hai (cells puff CO2 into the capillary; after the source dissolve ends at 9.28)",
+   "speed": 0.86
   },
   {
    "src": "download/reexport.mp4",
-   "in": 31.4,
-   "dur": 3.8,
-   "speed": 1.42,
-   "note": "Phir signal breathing centre... diaphragm ko order, saans lo! (signal down to diaphragm)"
+   "in": 16.45,
+   "dur": 1.88,
+   "speed": 0.8,
+   "note": "par bahar ka raasta band! (windpipe, static)"
   },
   {
-   "src": "download/reexport.mp4",
-   "in": 2.6,
-   "dur": 2.3,
-   "note": "Isiliye saans rokna mushkil laga (callback: man holding breath)"
+   "src": "media/pixabay_93316.mp4",
+   "in": 22.0,
+   "dur": 1.38,
+   "x": 0.48,
+   "note": "CO2 paani se milkar (soda water = CO2 + water)"
   },
   {
    "src": "download/reexport.mp4",
    "in": 11.3,
-   "dur": 2.65,
-   "note": "yahi thi woh bechaini! Jawab, B! (vessel full of CO2)"
+   "dur": 2.05,
+   "note": "blood ko thoda acidic banata hai (CO2 joins the blood)"
   },
   {
    "src": "download/reexport.mp4",
-   "in": 38.1,
-   "dur": 3.0,
-   "note": "Matlab main trigger oxygen ki kami nahi (O2/CO2 in the lungs)"
+   "in": 26.45,
+   "dur": 0.85,
+   "note": "Par ise pakadta kaun? (vessel network pulls back, after the whip)"
   },
   {
    "src": "download/reexport.mp4",
-   "in": 22.1,
-   "dur": 1.95,
-   "note": "balki badhta hua CO2 hai (CO2 tunnel)"
+   "in": 27.28,
+   "dur": 0.56,
+   "speed": 0.04,
+   "note": "KAUN? freeze (before the source dissolve into the brain at 27.3)"
   },
   {
-   "src": "media/pixabay_61292.mp4",
-   "in": 4.0,
-   "dur": 2.15,
-   "speed": 1.5,
-   "x": 0.55,
-   "note": "Dhyan rahe, tez saansein lekar (Pixabay 61292, sped up)"
+   "src": "download/reexport.mp4",
+   "in": 41.68,
+   "dur": 1.45,
+   "speed": 0.8,
+   "note": "Tumhara brainstem! (front view, static)"
   },
   {
-   "src": "media/pixabay_34283.mp4",
-   "in": 0.95,
-   "dur": 2.95,
-   "note": "ya paani mein... practice kabhi nahi (Pixabay 34283, dips underwater on 'paani')"
+   "src": "download/reexport.mp4",
+   "in": 29.3,
+   "dur": 1.38,
+   "note": "Iske sensors brain ke (back view, glow starts 30.3)"
   },
   {
-   "src": "media/pixabay_37712.mp4",
-   "in": 4.0,
+   "src": "media/pixabay_352974.mp4",
+   "in": 0.78,
+   "dur": 1.51,
+   "note": "aaspaas acid check karte (neuron bolt; stop before the orange close-up at 2.4)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 30.95,
+   "dur": 3.4,
+   "speed": 1.44,
+   "note": "hain. Phir signal breathing centre ko... diaphragm ko order (signal down the spine)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 36.4,
+   "dur": 0.81,
+   "note": "saans lo! (diaphragm + lungs, nerve glow)"
+  },
+  {
+   "src": "media/pixabay_31098.mp4",
+   "in": 7.2,
+   "dur": 2.16,
+   "note": "Isiliye saans rokna mushkil laga (callback: LED 4-3-2-1)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 20.55,
+   "dur": 1.44,
+   "note": "yahi thi woh bechaini! (vessel, densest CO2)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 21.95,
+   "dur": 1.18,
+   "speed": 0.04,
+   "dim": 0.15,
+   "note": "Jawab, B! (freeze frame)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 38.07,
+   "dur": 2.98,
+   "note": "Matlab main trigger oxygen ki kami nahi (O2 + CO2 in the lungs)"
+  },
+  {
+   "src": "download/reexport.mp4",
+   "in": 14.06,
    "dur": 2.0,
-   "dim": 0.12,
-   "note": "Behoshi bina warning (Pixabay 37712, deep water)"
+   "speed": 0.97,
+   "note": "balki badhta hua CO2 hai (vessel tail, more CO2, push-in)"
+  },
+  {
+   "src": "media/pixabay_99219.mp4",
+   "in": 1.3,
+   "dur": 2.03,
+   "speed": 1.4,
+   "x": 0.33,
+   "note": "Dhyan rahe, tez saansein lekar (breath silhouette, burst on 'tez')"
+  },
+  {
+   "src": "media/pixabay_364928.mp4",
+   "in": 0.3,
+   "dur": 3.0,
+   "speed": 0.9,
+   "x": 0.62,
+   "note": "ya paani mein, saans rokne ki practice kabhi nahi (underwater, sun through the surface)"
+  },
+  {
+   "src": "media/pixabay_366804.mp4",
+   "in": 0.0,
+   "dur": 2.0,
+   "note": "Behoshi bina warning aa sakti hai (bubble column in dark water)"
   },
   {
    "src": "download/reexport.mp4",
-   "in": 43.42,
-   "dur": 2.55,
-   "note": "Tumne A socha ya B? Comment karo! (brainstem fires -> lungs breathe)"
+   "in": 42.85,
+   "dur": 1.65,
+   "note": "Tumne A socha ya B? (brainstem fires, signal down to the lungs)"
+  },
+  {
+   "src": "media/pixabay_129426.mp4",
+   "in": 6.35,
+   "dur": 0.9,
+   "x": 0.555,
+   "note": "Comment karo! (typing on a phone, grin)"
   },
   {
    "src": "download/reexport.mp4",

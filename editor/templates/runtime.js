@@ -143,7 +143,7 @@
         place(el, o.zone);
         tl.set(el, { opacity: 1 }, o.t);
         words.forEach((s, i) => {
-          const at = o.t + i * (o.stagger ?? 0.07);
+          const at = o.wt ? Math.max(o.t, o.wt[Math.min(i, o.wt.length - 1)]) : o.t + i * (o.stagger ?? 0.07);
           tl.fromTo(s, { opacity: 0, scale: 1.9, y: -10 }, { opacity: 1, scale: 1, y: 0, duration: 0.22, ease: "power4.out" }, at);
           const hb = $(".hlbox", s);
           if (hb) tl.fromTo(hb, { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.25, ease: "power3.out" }, at + 0.12);

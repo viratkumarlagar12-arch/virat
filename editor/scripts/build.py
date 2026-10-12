@@ -424,17 +424,27 @@ def camera_events(tm, plan, words, overlays_c):
     for kf in cam.get("keyframes", []):
         t0 = anchor(kf, words, tm)
         if "from" in kf or "origin" in kf:
-            ev = {"t": round(t0, 3), "scale": kf.get("from", kf.get("scale", 1.0)), "dur": 0}
+            # a reset marks a cut: snap it to just before the cut's first frame (assemble.py cuts on round(t*fps)),
+            # otherwise that frame is drawn with the previous shot's zoom and the shot opens with a one-frame twitch
+            t0 = round(t0 * FPS) / FPS - 0.0005
+            ev = {"t": round(t0, 4), "scale": kf.get("from", kf.get("scale", 1.0)), "dur": 0, "reset": True}
             if "origin" in kf:
                 ev["origin"] = kf["origin"]
             events.append(ev)
         if kf.get("dur"):
-            events.append({"t": round(t0 + 0.001, 3), "scale": kf["scale"], "dur": kf["dur"], "ease": kf.get("ease", "none")})
+            events.append({"t": round(t0 + 0.001, 4), "scale": kf["scale"], "dur": kf["dur"], "ease": kf.get("ease", "none")})
     for s in cam.get("shakes", []):
         t0 = anchor(s, words, tm)
         events.append({"t": round(t0, 3), "type": "shake", "dur": s.get("dur", 0.35), "amp": s.get("amp", 14)})
         events.append({"t": round(t0 - 0.001, 3), "scale": 1.1, "dur": 0})  # zoomed so shake shows no edges
     events.sort(key=lambda e: e["t"])
+    # a move must finish before the next reset (cut): a tween still running past it overrides the reset's zoom
+    resets = [e["t"] for e in events if e.get("reset")]
+    for e in events:
+        if e.get("dur") and e.get("type") != "shake":
+            nxt = next((r for r in resets if r > e["t"]), None)
+            if nxt is not None and e["t"] + e["dur"] > nxt:
+                e["dur"] = round(max(0.02, nxt - e["t"] - 0.0005), 4)
     max_zoom = max([1.0] + [e.get("scale", 1.0) for e in events])
     return events, max_zoom
 
@@ -483,7 +493,7 @@ def compile_overlays(plan, words, tm, layout, media_dir, verbose=False):
                 sfx.append({"t": it["t"], "name": it.get("sfx", "pop"), "gain_db": -2})
         if typ == "timer":
             ts = o.get("t_start", o["t"] + 0.5)
-            for k in range(o.get("n", 10)):
+            for k in range(o.get("n", 10) if o.get("ticks", True) else 0):
                 sfx.append({"t": round(ts + k, 3), "name": "tick", "gain_db": o.get("tick_db", -10)})
             if o.get("zero_sfx", "ding") != "none":
                 sfx.append({"t": round(ts + o.get("n", 10), 3), "name": o.get("zero_sfx", "ding")})
@@ -505,6 +515,8 @@ def compile_overlays(plan, words, tm, layout, media_dir, verbose=False):
         if typ == "cta":
             sfx.append({"t": o["t"] + 1.0, "name": "click"})
             sfx.append({"t": o["t"] + 1.1, "name": "success", "gain_db": -3})
+        if typ == "hook" and "ws" in o:  # one word index per token: each token pops on its spoken word
+            o["wt"] = [round(tm.out(words[int(w)]["start"]) + o.get("ws_dt", -0.04), 3) for w in o["ws"]]
         if typ == "hook":
             o["words"], acc = [], False
             for tok in o["text"].split():

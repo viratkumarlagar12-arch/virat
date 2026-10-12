@@ -209,10 +209,39 @@ def camera():
     return stereo(fade(norm(x, -6)))
 
 
+def slam():  # impact with a mid-range crack: still hits on phone speakers, which drop everything under ~200 Hz
+    x = impact()[:, 0]
+    n = len(x)
+    x = x + 0.8 * norm(bp(rng.standard_normal(n), 150, 1200) * env(n, 0.001, 0.15, 20), -2)
+    return stereo(fade(norm(x, -2)), 0.3)
+
+
+def heartbeat():  # one "lub-dub"; place a few in a row (closer together = rising tension)
+    x = np.zeros(int(0.7 * SR))
+    for start, f0, amp in ((0.0, 62, 1.0), (0.24, 74, 0.7)):
+        t = t_(0.22)
+        f = f0 * (1 + 0.6 * np.exp(-t * 40))
+        body = np.sin(2 * np.pi * np.cumsum(f) / SR) + 0.45 * np.sin(2 * np.pi * np.cumsum(2.1 * f) / SR)
+        thud = bp(rng.standard_normal(len(t)), 160, 900) * env(len(t), 0.001, 0.06, 26) * 3.2  # mids so phones hear it
+        knock = np.sin(2 * np.pi * np.cumsum(f * 7.5) / SR) * env(len(t), 0.001, 0.05, 40) * 0.9  # ~500 Hz "knock"
+        b = (body * env(len(t), 0.004, 0.22, 9) + thud + knock) * amp
+        s = int(start * SR)
+        x[s : s + len(b)] += b
+    return stereo(fade(norm(hp(x, 35), -3), 0.001, 0.03))
+
+
+def breath():  # soft exhale/relief — band-passed noise swell
+    t = t_(0.75)
+    x = bp(rng.standard_normal(len(t)), 350, 2600) * np.sin(np.pi * (t / t[-1]) ** 0.6) ** 1.5
+    x += 0.4 * bp(rng.standard_normal(len(t)), 2600, 6000) * np.sin(np.pi * t / t[-1]) ** 3
+    return stereo(fade(norm(x, -8), 0.02, 0.08), 0.5)
+
+
 LIBRARY = {
     "whoosh": whoosh, "swoosh": swoosh, "whoosh_down": whoosh_down, "pop": pop, "bubble": bubble,
     "click": click, "tick": tick, "ding": ding, "cash": cash, "success": success, "riser": riser,
-    "impact": impact, "glitch": glitch, "typing": typing, "camera": camera,
+    "impact": impact, "glitch": glitch, "typing": typing, "camera": camera, "heartbeat": heartbeat, "breath": breath,
+    "slam": slam,
 }
 
 

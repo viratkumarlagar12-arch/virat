@@ -45,11 +45,15 @@ Use `"t_out"` for an exact time in the finished video.
     "drift": true,                   // slow push-in on long takes
     "punches": [{"w": 22, "scale": 1.12, "hold": 1.0}],   // emphasis punch-in
     "shakes": [{"w": 40, "amp": 14, "dur": 0.35}],
-    "punch_sfx": "swoosh"            // optional sound on every punch
+    "punch_sfx": "swoosh",           // optional sound on every punch
+    "keyframes": [{"t_out": 8.9, "from": 1.0, "scale": 1.06, "dur": 1.08, "origin": [540, 900]}]
+    // montage moves: "from" (or "origin") = a reset at a cut — snapped to the cut's first frame; a move is cut short
+    // at the next reset. Without "from" it is a move from the current zoom (punch-ins on a word: "w", "dt").
   },
 
   "overlays": [
     {"type": "hook", "t_out": 0, "dur": 2.6, "text": "₹1.5 *CRORE* salary?", "boxed": true, "sub": "sach ya jhooth? 👀"},
+    //   "ws": [0, 0, 1, 2] = one word index per token: each token pops on its spoken word (else "stagger" seconds)
     {"type": "card", "w": 13, "dur": 2.2, "icon": "💰", "label": "CTC", "value": "*₹12* LPA", "sub": "cost to company", "side": "left"},
     {"type": "stat", "w": 18, "dur": 2.4, "from": 0, "to": 9.6, "decimals": 1, "prefix": "₹", "suffix": "L", "label": "Base pay", "end_sfx": "cash"},
     {"type": "bars", "w": 35, "dur": 3.6, "title": "Mumbai *1BHK*", "items": [{"label": "Thane", "value": 77, "display": "₹65–90L", "w": 37}]},
@@ -63,6 +67,7 @@ Use `"t_out"` for an exact time in the finished video.
     {"type": "countdown", "w": 70, "n": 3, "tag": "Comment your answer!"},
     {"type": "timer", "w": 5, "until_w": 31, "n": 10, "times": {"start": {"w": 7}}, "x": 905, "y": 335, "size": 210,   // small corner
      "tick_db": -12, "zero_sfx": "none", "tag": "Ab saans lo"},     // countdown pinned at x/y; counts from t_start, red at 0
+    //   "ticks": false = silent countdown (e.g. put "heartbeat" SFX on every second instead)
     {"type": "chain", "w": 57, "until": 26.3, "title": "*SIGNAL*",  // cause -> effect: nodes light up one by one, arrows between
      "items": [{"icon": "📡", "text": "Sensors", "w": 58}, {"icon": "🧠", "text": "Breathing centre", "w": 59}]},
     {"type": "text_slam", "w": 76, "dur": 1.2, "text": "*FINALLY*"},
@@ -83,6 +88,7 @@ Use `"t_out"` for an exact time in the finished video.
 
   "sfx": [{"w": 30, "name": "ding", "gain_db": -2}],
   // library: whoosh swoosh whoosh_down pop bubble click tick ding cash success riser impact glitch typing camera
+  //          heartbeat (one lub-dub; 1 s apart = 60 bpm) breath (soft exhale) slam (impact that phones can hear)
 
   "music": {"mood": "upbeat", "seed": 3, "under_voice_db": 19, "gap_db": 11},
   // moods: upbeat lofi cinematic tech suspense documentary (piano + strings; the one that's heard on phone speakers)

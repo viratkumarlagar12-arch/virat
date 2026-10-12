@@ -1,122 +1,1137 @@
 {
-  "name": "short2",
-  "source_note": "ElevenLabs VO (vo/elevenlabs_bunty.mp3) tightened to tight/voice48k.wav (--max-pause 0.12); picture = creator's CapCut re-export (download/reexport.mp4) + 3 Pixabay clips for the safety line, cut with assemble.py from edl.json -> assembled.mp4; last shot = channel end card from 46.5",
-  "theme": "bold",
-  "grade": "natural",
-  "layout": {"face": "none"},
-  "cuts": {"auto": false},
-
-  "word_text": {
-    "0": "Ruko!", "1": "Abhi", "2": "saans", "3": "roko...", "4": "sirf", "5": "10", "6": "second.",
-    "7": "Ghutan", "8": "kyun", "9": "hogi...", "10": "A,", "11": "oxygen", "12": "kam,", "13": "ya", "14": "B,", "15": "CO2", "16": "zyada?",
-    "17": "Jawab", "18": "end", "19": "mein.",
-    "20": "Halki", "21": "bechaini?", "22": "Body", "23": "CO2", "24": "banati", "25": "rehti", "26": "hai...",
-    "27": "par", "28": "bahar", "29": "ka", "30": "raasta", "31": "band!",
-    "32": "CO2", "33": "paani", "34": "se", "35": "milkar", "36": "blood", "37": "ko", "38": "thoda", "39": "acidic", "40": "banata", "41": "hai.",
-    "42": "Par", "43": "ise", "44": "pakadta", "45": "kaun?",
-    "46": "Tumhara", "47": "brainstem!",
-    "48": "Iske", "49": "sensors", "50": "brain", "51": "ke", "52": "aaspaas", "53": "acid", "54": "check", "55": "karte", "56": "hain.",
-    "57": "Phir", "58": "signal", "59": "breathing", "60": "centre", "61": "ko", "62": "diaphragm", "63": "ko", "64": "order,", "65": "saans lo!",
-    "66": "Isiliye", "67": "saans", "68": "rokna", "69": "mushkil", "70": "laga...",
-    "71": "yahi", "72": "thi", "73": "woh", "74": "bechaini!",
-    "75": "Jawab,", "76": "B!",
-    "77": "Matlab", "78": "ghutan", "79": "ka", "80": "main", "81": "trigger", "82": "oxygen", "83": "ki", "84": "kami", "85": "nahi,",
-    "86": "balki", "87": "badhta", "88": "hua", "89": "CO2", "90": "hai.",
-    "91": "Dhyan", "92": "rahe,", "93": "tez", "94": "saansein", "95": "lekar,", "96": "ya", "97": "paani", "98": "mein,",
-    "99": "saans", "100": "rokne", "101": "ki", "102": "practice", "103": "kabhi", "104": "nahi.",
-    "105": "Behoshi", "106": "bina", "107": "warning", "108": "aa", "109": "sakti", "110": "hai.",
-    "111": "Tumne", "112": "A", "113": "socha", "114": "ya", "115": "B?", "116": "Comment", "117": "karo!"
-  },
-
-  "captions": {
-    "style": "pop",
-    "until": 46.45,
-    "size": 80,
-    "max_words": 3,
-    "max_chars": 20,
-    "uppercase": true,
-    "keywords": ["co2", "oxygen", "acidic", "acid", "brainstem", "sensors", "signal", "diaphragm", "bechaini", "band",
-                 "behoshi", "paani", "trigger"],
-    "hide_words": [0, 1, 2, 3, 17, 18, 19, 45, 65, 111, 112, 113, 114, 115, 116, 117],
-    "breaks": [27, 86]
-  },
-
-  "camera": {
-    "drift": false,
-    "alternate": false,
-    "keyframes": [
-      {"t_out": 0.0, "from": 1.16, "scale": 1.0, "dur": 0.3, "ease": "power3.out", "origin": [540, 560]},
-      {"t_out": 0.35, "scale": 1.07, "dur": 2.55, "ease": "none"},
-      {"w": 7, "scale": 1.13, "dur": 0.18, "ease": "power3.out"},
-      {"w": 7, "dt": 0.25, "scale": 1.03, "dur": 5.6, "ease": "sine.inOut"},
-      {"t_out": 8.95, "from": 1.0, "scale": 1.07, "dur": 2.9, "origin": [540, 960]},
-      {"t_out": 11.85, "from": 1.0, "scale": 1.08, "dur": 1.8, "origin": [540, 620]},
-      {"t_out": 13.65, "from": 1.0, "scale": 1.06, "dur": 3.4, "origin": [540, 960]},
-      {"t_out": 17.05, "from": 1.0, "origin": [540, 960]},
-      {"w": 45, "dt": -0.1, "scale": 1.15, "dur": 0.2, "ease": "power3.out"},
-      {"t_out": 18.5, "from": 1.0, "scale": 1.06, "dur": 4.65, "origin": [540, 1000]},
-      {"t_out": 23.15, "from": 1.0, "scale": 1.05, "dur": 3.15, "origin": [540, 960]},
-      {"w": 65, "dt": -0.05, "scale": 1.14, "dur": 0.18, "ease": "power3.out"},
-      {"t_out": 26.95, "from": 1.0, "scale": 1.08, "dur": 2.3, "origin": [540, 520]},
-      {"t_out": 29.25, "from": 1.0, "scale": 1.05, "dur": 2.2, "origin": [540, 960]},
-      {"t_out": 31.9, "from": 1.0, "scale": 1.05, "dur": 3.0, "origin": [540, 800]},
-      {"t_out": 34.9, "from": 1.0, "scale": 1.12, "dur": 1.95, "origin": [540, 960]},
-      {"t_out": 36.85, "from": 1.0, "scale": 1.04, "dur": 2.15, "origin": [540, 700]},
-      {"t_out": 39.0, "from": 1.0, "scale": 1.05, "dur": 2.95, "origin": [540, 960]},
-      {"t_out": 41.95, "from": 1.0, "scale": 1.08, "dur": 2.0, "origin": [540, 960]},
-      {"t_out": 43.95, "from": 1.0, "scale": 1.05, "dur": 2.55, "origin": [540, 900]},
-      {"t_out": 46.5, "from": 1.0, "scale": 1.06, "dur": 2.0, "ease": "power1.out", "origin": [540, 900]}
-    ],
-    "shakes": [{"w": 31, "amp": 12, "dur": 0.3}, {"w": 76, "amp": 10, "dur": 0.3}]
-  },
-
-  "overlays": [
-    {"type": "hook", "t_out": 0.0, "until": 2.95, "text": "*RUKO!* ✋ ABHI SAANS ROKO", "boxed": true, "zone": [820, 1180], "size": 104, "stagger": 0.3},
-    {"type": "timer", "w": 5, "until_w": 31, "n": 10, "times": {"start": {"w": 7, "dt": 0.11}}, "x": 905, "y": 335, "size": 210,
-     "tick_db": -12, "zero_sfx": "none", "tag": "Ab saans lo 😮‍💨"},
-    {"type": "compare", "w": 10, "dt": -0.1, "until": 8.9, "zone": [840, 1160], "value_size": 62,
-     "a": {"title": "OPTION A", "value": "Oxygen *kam*"}, "b": {"title": "OPTION B", "value": "CO2 *zyada*", "w": 14, "dt": -0.1}},
-    {"type": "stamp", "w": 17, "dt": -0.05, "until": 8.9, "text": "JAWAB END MEIN 🔒", "size": 70, "rot": -4, "zone": [1190, 1400], "sfx": "click"},
-    {"type": "emoji", "w": 21, "dur": 1.1, "emoji": "😣", "x": 860, "y": 640},
-    {"type": "card", "w": 22, "dt": -0.1, "until": 11.85, "zone": "lower", "icon": "🫧", "label": "Body ka kachra", "value": "*CO2* banti rehti"},
-    {"type": "ring", "w": 28, "dt": -0.1, "until": 13.65, "x": 540, "y": 580, "r": 170, "label": "BAHAR KA RAASTA", "label_dx": -300},
-    {"type": "stamp", "w": 31, "dt": -0.05, "until": 13.65, "text": "BAND!", "zone": [600, 850]},
-    {"type": "card", "w": 32, "dt": 0.12, "until": 15.15, "icon": "🧪", "label": "CO2 + H2O (paani)", "value": "Carbonic *acid*"},
-    {"type": "card", "w": 36, "dt": -0.05, "until": 17.05, "icon": "🩸", "label": "Blood", "value": "thoda *acidic*", "sub": "pH thoda neeche ⬇"},
-    {"type": "text_slam", "w": 45, "dt": -0.1, "until": 18.55, "text": "*KAUN?* 🤔"},
-    {"type": "card", "w": 47, "dt": -0.1, "until": 23.1, "icon": "📡", "label": "Brainstem ke sensors", "value": "*Acid* check", "sub": "central chemoreceptors"},
-    {"type": "ring", "w": 48, "dt": -0.05, "until": 23.05, "x": 540, "y": 1030, "r": 190, "label": "BRAINSTEM", "label_dx": -150},
-    {"type": "chain", "w": 57, "dt": -0.05, "until": 26.3, "title": "*SIGNAL* ⚡",
-     "items": [{"icon": "📡", "text": "Sensors", "w": 58}, {"icon": "🧠", "text": "Breathing centre", "w": 59},
-               {"icon": "💪", "text": "Diaphragm", "w": 62}]},
-    {"type": "text_slam", "w": 65, "dt": -0.05, "until": 26.95, "text": "*SAANS LO!*"},
-    {"type": "bars", "w": 66, "dt": -0.1, "until": 29.25, "zone": [830, 1200], "title": "*CO2* badha → *urge* badhi",
-     "items": [{"label": "CO2 level", "value": 80, "display": "⬆ badha", "w": 67}, {"label": "Saans ki urge", "value": 95, "display": "⬆⬆", "hot": true, "w": 69}]},
-    {"type": "hook", "w": 71, "dt": -0.1, "until": 30.7, "text": "YAHI THI WOH *BECHAINI* 😣", "boxed": true, "zone": "top", "size": 92},
-    {"type": "compare", "w": 75, "dt": -0.1, "until": 32.55, "zone": "top", "value_size": 62,
-     "a": {"title": "OPTION A", "value": "Oxygen kam", "dim": true}, "b": {"title": "OPTION B ✅", "value": "CO2 *zyada*", "win": true, "w": 76, "dt": -0.08}},
-    {"type": "list", "w": 80, "dt": -0.3, "until": 36.85, "title": "Ghutan ka *MAIN TRIGGER*",
-     "items": [{"text": "Oxygen ki kami", "bad": true, "w": 82}, {"text": "*Badhta CO2*", "w": 87}]},
-    {"type": "list", "w": 91, "dt": -0.05, "until": 41.95, "variant": "calm", "zone": [160, 460], "title": "⚠️ DHYAN RAHE",
-     "items": [{"text": "Tez saansein + saans rokna", "bad": true, "w": 93}, {"text": "Paani mein practice", "bad": true, "w": 97}]},
-    {"type": "card", "w": 105, "dt": -0.1, "until": 43.95, "variant": "calm", "icon": "⚠️", "label": "Khatra", "value": "*Behoshi*", "sub": "bina warning ke"},
-    {"type": "compare", "w": 111, "dt": -0.1, "until": 46.5, "zone": "top", "value_size": 62,
-     "a": {"title": "OPTION A", "value": "Oxygen kam"}, "b": {"title": "OPTION B", "value": "CO2 zyada", "w": 114, "dt": -0.05}},
-    {"type": "cta", "w": 116, "dt": -1.05, "until": 46.5, "zone": "lower", "text": "Tumne *A* socha ya *B*?", "button": "COMMENT KARO", "icon": "💬", "done": false},
-    {"type": "fade", "t_out": 46.2, "in": 0.3, "out": 0.5},
-    {"type": "fade", "t_out": 48.0, "in": 0.5, "out": 0}
+ "name": "short2",
+ "source_note": "v2: ElevenLabs VO (vo/elevenlabs_bunty.mp3) tightened to tight/voice48k.wav (--max-pause 0.12). Picture re-cut from the creator's export (download/reexport.mp4, each source range used once) + Pixabay inserts (31098 LED countdown, 93316 soda water, 352974 neuron, 99219 breath silhouette, 364928 underwater sun, 908 freedivers, 366804 bubble column, 129426 typing) via assemble.py edl.json -> assembled.mp4; logo end card from 46.5",
+ "theme": "bold",
+ "grade": "natural",
+ "layout": {
+  "face": "none"
+ },
+ "cuts": {
+  "auto": false
+ },
+ "word_text": {
+  "0": "Ruko!",
+  "1": "Abhi",
+  "2": "saans",
+  "3": "roko...",
+  "4": "sirf",
+  "5": "10",
+  "6": "second.",
+  "7": "Ghutan",
+  "8": "kyun",
+  "9": "hogi...",
+  "10": "A,",
+  "11": "oxygen",
+  "12": "kam,",
+  "13": "ya",
+  "14": "B,",
+  "15": "CO2",
+  "16": "zyada?",
+  "17": "Jawab",
+  "18": "end",
+  "19": "mein.",
+  "20": "Halki",
+  "21": "bechaini?",
+  "22": "Body",
+  "23": "CO2",
+  "24": "banati",
+  "25": "rehti",
+  "26": "hai...",
+  "27": "par",
+  "28": "bahar",
+  "29": "ka",
+  "30": "raasta",
+  "31": "band!",
+  "32": "CO2",
+  "33": "paani",
+  "34": "se",
+  "35": "milkar",
+  "36": "blood",
+  "37": "ko",
+  "38": "thoda",
+  "39": "acidic",
+  "40": "banata",
+  "41": "hai.",
+  "42": "Par",
+  "43": "ise",
+  "44": "pakadta",
+  "45": "kaun?",
+  "46": "Tumhara",
+  "47": "brainstem!",
+  "48": "Iske",
+  "49": "sensors",
+  "50": "brain",
+  "51": "ke",
+  "52": "aaspaas",
+  "53": "acid",
+  "54": "check",
+  "55": "karte",
+  "56": "hain.",
+  "57": "Phir",
+  "58": "signal",
+  "59": "breathing",
+  "60": "centre",
+  "61": "ko",
+  "62": "diaphragm",
+  "63": "ko",
+  "64": "order,",
+  "65": "saans lo!",
+  "66": "Isiliye",
+  "67": "saans",
+  "68": "rokna",
+  "69": "mushkil",
+  "70": "laga...",
+  "71": "yahi",
+  "72": "thi",
+  "73": "woh",
+  "74": "bechaini!",
+  "75": "Jawab,",
+  "76": "B!",
+  "77": "Matlab",
+  "78": "ghutan",
+  "79": "ka",
+  "80": "main",
+  "81": "trigger",
+  "82": "oxygen",
+  "83": "ki",
+  "84": "kami",
+  "85": "nahi,",
+  "86": "balki",
+  "87": "badhta",
+  "88": "hua",
+  "89": "CO2",
+  "90": "hai.",
+  "91": "Dhyan",
+  "92": "rahe,",
+  "93": "tez",
+  "94": "saansein",
+  "95": "lekar,",
+  "96": "ya",
+  "97": "paani",
+  "98": "mein,",
+  "99": "saans",
+  "100": "rokne",
+  "101": "ki",
+  "102": "practice",
+  "103": "kabhi",
+  "104": "nahi.",
+  "105": "Behoshi",
+  "106": "bina",
+  "107": "warning",
+  "108": "aa",
+  "109": "sakti",
+  "110": "hai.",
+  "111": "Tumne",
+  "112": "A",
+  "113": "socha",
+  "114": "ya",
+  "115": "B?",
+  "116": "Comment",
+  "117": "karo!"
+ },
+ "captions": {
+  "style": "pop",
+  "until": 46.45,
+  "size": 80,
+  "max_words": 3,
+  "max_chars": 16,
+  "uppercase": true,
+  "keywords": [
+   "co2",
+   "oxygen",
+   "acidic",
+   "acid",
+   "brainstem",
+   "sensors",
+   "signal",
+   "diaphragm",
+   "bechaini",
+   "behoshi",
+   "paani",
+   "trigger"
   ],
-
-  "sfx": [
-    {"w": 42, "name": "riser", "gain_db": -3},
-    {"w": 76, "name": "success", "gain_db": -2},
-    {"t_out": 36.85, "name": "whoosh", "gain_db": -4},
-    {"w": 97, "name": "bubble", "gain_db": -2},
-    {"t_out": 41.95, "name": "whoosh_down", "gain_db": -3},
-    {"t_out": 46.5, "name": "impact", "gain_db": -7},
-    {"t_out": 46.52, "name": "ding", "gain_db": -3}
+  "highlight": [
+   76,
+   85,
+   103,
+   104
   ],
-
-  "music": {"mood": "documentary", "seed": 5, "volume": 9},
-  "progress_bar": true
+  "hide_words": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   17,
+   18,
+   19,
+   31,
+   45,
+   61,
+   65,
+   71,
+   72,
+   73,
+   74,
+   90,
+   111,
+   112,
+   113,
+   114,
+   115,
+   116,
+   117
+  ],
+  "breaks": [
+   27,
+   55,
+   67,
+   69,
+   86,
+   87,
+   103,
+   106,
+   108
+  ]
+ },
+ "camera": {
+  "drift": false,
+  "alternate": false,
+  "keyframes": [
+   {
+    "t_out": 0.0,
+    "from": 1.0,
+    "origin": [
+     540,
+     560
+    ]
+   },
+   {
+    "w": 0,
+    "scale": 1.12,
+    "dur": 0.12,
+    "ease": "power3.out"
+   },
+   {
+    "w": 1,
+    "from": 1.38,
+    "origin": [
+     540,
+     470
+    ]
+   },
+   {
+    "w": 1,
+    "dt": 0.01,
+    "scale": 1.44,
+    "dur": 0.95,
+    "ease": "none"
+   },
+   {
+    "w": 4,
+    "from": 1.08,
+    "origin": [
+     540,
+     700
+    ]
+   },
+   {
+    "t_out": 2.1,
+    "from": 1.0,
+    "scale": 1.06,
+    "dur": 0.88,
+    "origin": [
+     540,
+     960
+    ]
+   },
+   {
+    "t_out": 2.98,
+    "from": 1.28,
+    "origin": [
+     540,
+     520
+    ]
+   },
+   {
+    "t_out": 3.0,
+    "scale": 1.0,
+    "dur": 1.6,
+    "ease": "power2.inOut"
+   },
+   {
+    "w": 11,
+    "scale": 1.08,
+    "dur": 0.15,
+    "ease": "power3.out"
+   },
+   {
+    "w": 11,
+    "dt": 0.2,
+    "scale": 1.03,
+    "dur": 0.9,
+    "ease": "sine.inOut"
+   },
+   {
+    "t_out": 5.76,
+    "from": 1.0,
+    "origin": [
+     540,
+     960
+    ]
+   },
+   {
+    "t_out": 7.57,
+    "from": 1.0,
+    "scale": 1.12,
+    "dur": 1.33,
+    "origin": [
+     540,
+     960
+    ]
+   },
+   {
+    "t_out": 8.9,
+    "from": 1.0,
+    "scale": 1.06,
+    "dur": 1.08,
+    "origin": [
+     540,
+     900
+    ]
+   },
+   {
+    "t_out": 9.98,
+    "from": 1.0,
+    "scale": 1.06,
+    "dur": 1.91,
+    "origin": [
+     540,
+     960
+    ]
+   },
+   {
+    "t_out": 11.89,
+    "from": 1.0,
+    "scale": 1.04,
+    "dur": 1.15,
+    "origin": [
+     540,
+     580
+    ]
+   },
+   {
+    "w": 31,
+    "dt": -0.03,
+    "scale": 1.4,
+    "dur": 0.14,
+    "ease": "power3.out"
+   },
+   {
+    "t_out": 13.77,
+    "from": 1.0,
+    "scale": 1.07,
+    "dur": 1.38,
+    "origin": [
+     540,
+     1000
+    ]
+   },
+   {
+    "t_out": 15.15,
+    "from": 1.0,
+    "scale": 1.04,
+    "dur": 0.8,
+    "origin": [
+     540,
+     960
+    ]
+   },
+   {
+    "w": 39,
+    "scale": 1.12,
+    "dur": 0.15,
+    "ease": "power3.out"
+   },
+   {
+    "t_out": 17.2,
+    "from": 1.0,
+    "origin": [
+     540,
+     960
+    ]
+   },
+   {
+    "w": 45,
+    "dt": -0.1,
+    "scale": 1.15,
+    "dur": 0.2,
+    "ease": "power3.out"
+   },
+   {
+    "t_out": 18.61,
+    "from": 1.15,
+    "origin": [
+     540,
+     960
+    ]
+   },
+   {
+    "t_out": 18.62,
+    "scale": 1.0,
+    "dur": 0.4,
+    "ease": "power3.out"
+   },
+   {
+    "w": 47,
+    "scale": 1.22,
+    "dur": 0.15,
+    "ease": "power3.out"
+   },
+   {
+    "w": 47,
+    "dt": 0.5,
+    "scale": 1.12,
+    "dur": 0.45,
+    "ease": "sine.inOut"
+   },
+   {
+    "t_out": 20.06,
+    "from": 1.0,
+    "scale": 1.06,
+    "dur": 1.38,
+    "origin": [
+     540,
+     1040
+    ]
+   },
+   {
+    "t_out": 21.44,
+    "from": 1.0,
+    "scale": 1.08,
+    "dur": 1.51,
+    "origin": [
+     540,
+     960
+    ]
+   },
+   {
+    "t_out": 22.95,
+    "from": 1.0,
+    "scale": 1.04,
+    "dur": 2.1,
+    "origin": [
+     540,
+     1150
+    ]
+   },
+   {
+    "w": 62,
+    "scale": 1.15,
+    "dur": 0.15,
+    "ease": "power3.out"
+   },
+   {
+    "w": 62,
+    "dt": 0.4,
+    "scale": 1.06,
+    "dur": 0.6,
+    "ease": "sine.inOut"
+   },
+   {
+    "t_out": 26.35,
+    "from": 1.12,
+    "origin": [
+     540,
+     1100
+    ]
+   },
+   {
+    "t_out": 26.36,
+    "scale": 1.0,
+    "dur": 0.5,
+    "ease": "power3.out"
+   },
+   {
+    "t_out": 27.16,
+    "from": 1.2,
+    "scale": 1.24,
+    "dur": 2.1,
+    "origin": [
+     540,
+     1900
+    ]
+   },
+   {
+    "t_out": 29.32,
+    "from": 1.0,
+    "origin": [
+     540,
+     960
+    ]
+   },
+   {
+    "w": 74,
+    "scale": 1.15,
+    "dur": 0.15,
+    "ease": "power3.out"
+   },
+   {
+    "t_out": 30.76,
+    "from": 1.0,
+    "origin": [
+     540,
+     960
+    ]
+   },
+   {
+    "w": 76,
+    "dt": -0.03,
+    "scale": 1.2,
+    "dur": 0.15,
+    "ease": "power3.out"
+   },
+   {
+    "t_out": 31.94,
+    "from": 1.0,
+    "scale": 1.03,
+    "dur": 1.5,
+    "origin": [
+     540,
+     1000
+    ]
+   },
+   {
+    "w": 82,
+    "scale": 1.12,
+    "dur": 0.15,
+    "ease": "power3.out"
+   },
+   {
+    "w": 82,
+    "dt": 0.35,
+    "scale": 1.05,
+    "dur": 0.8,
+    "ease": "sine.inOut"
+   },
+   {
+    "t_out": 34.92,
+    "from": 1.0,
+    "scale": 1.08,
+    "dur": 1.0,
+    "origin": [
+     540,
+     960
+    ]
+   },
+   {
+    "w": 89,
+    "scale": 1.16,
+    "dur": 0.15,
+    "ease": "power3.out"
+   },
+   {
+    "t_out": 36.92,
+    "from": 1.0,
+    "scale": 1.05,
+    "dur": 2.03,
+    "origin": [
+     540,
+     1100
+    ]
+   },
+   {
+    "t_out": 38.95,
+    "from": 1.0,
+    "scale": 1.1,
+    "dur": 3.0,
+    "origin": [
+     540,
+     700
+    ]
+   },
+   {
+    "t_out": 41.95,
+    "from": 1.0,
+    "scale": 1.1,
+    "dur": 2.0,
+    "origin": [
+     540,
+     900
+    ]
+   },
+   {
+    "t_out": 43.95,
+    "from": 1.0,
+    "scale": 1.05,
+    "dur": 1.65,
+    "origin": [
+     540,
+     960
+    ]
+   },
+   {
+    "t_out": 45.6,
+    "from": 1.0,
+    "scale": 1.06,
+    "dur": 0.9,
+    "origin": [
+     540,
+     700
+    ]
+   },
+   {
+    "t_out": 46.5,
+    "from": 1.0,
+    "scale": 1.06,
+    "dur": 2.0,
+    "ease": "power1.out",
+    "origin": [
+     540,
+     900
+    ]
+   }
+  ],
+  "shakes": [
+   {
+    "w": 0,
+    "amp": 10,
+    "dur": 0.25
+   },
+   {
+    "w": 31,
+    "amp": 12,
+    "dur": 0.3
+   },
+   {
+    "w": 76,
+    "amp": 10,
+    "dur": 0.3
+   }
+  ]
+ },
+ "overlays": [
+  {
+   "type": "hook",
+   "t_out": 0.0,
+   "until": 2.08,
+   "text": "*RUKO!* ✋ ABHI SAANS ROKO",
+   "boxed": true,
+   "zone": [
+    820,
+    1180
+   ],
+   "size": 112,
+   "stagger": 0.3,
+   "sfx": "slam",
+   "ws": [
+    0,
+    0,
+    1,
+    2,
+    3
+   ]
+  },
+  {
+   "type": "timer",
+   "t_out": 2.98,
+   "until_w": 31,
+   "n": 10,
+   "times": {
+    "start": {
+     "w": 7,
+     "dt": 0.11
+    }
+   },
+   "x": 905,
+   "y": 335,
+   "size": 210,
+   "tick_db": -14,
+   "zero_sfx": "none",
+   "sfx": "swoosh",
+   "ticks": false
+  },
+  {
+   "type": "compare",
+   "w": 10,
+   "dt": -0.1,
+   "until": 8.9,
+   "zone": [
+    840,
+    1160
+   ],
+   "value_size": 62,
+   "a": {
+    "title": "OPTION A",
+    "value": "Oxygen *kam*"
+   },
+   "b": {
+    "title": "OPTION B",
+    "value": "CO2 *zyada*",
+    "w": 14,
+    "dt": -0.1
+   }
+  },
+  {
+   "type": "stamp",
+   "w": 17,
+   "dt": -0.05,
+   "until": 8.9,
+   "text": "JAWAB END MEIN 🔒",
+   "size": 70,
+   "rot": -4,
+   "zone": [
+    1190,
+    1400
+   ],
+   "sfx": "click"
+  },
+  {
+   "type": "emoji",
+   "w": 21,
+   "dur": 0.65,
+   "emoji": "😣",
+   "x": 900,
+   "y": 900
+  },
+  {
+   "type": "card",
+   "w": 22,
+   "dt": -0.1,
+   "until": 11.89,
+   "zone": "lower",
+   "icon": "🫧",
+   "label": "Body ka kachra",
+   "value": "*CO2* banta rehta hai"
+  },
+  {
+   "type": "ring",
+   "w": 28,
+   "dt": -0.1,
+   "until": 13.0,
+   "x": 540,
+   "y": 580,
+   "r": 170,
+   "label": "BAHAR KA RAASTA",
+   "label_dx": -480
+  },
+  {
+   "type": "stamp",
+   "w": 31,
+   "dt": -0.05,
+   "until": 13.77,
+   "text": "BAND!",
+   "zone": [
+    680,
+    920
+   ],
+   "sfx": "slam"
+  },
+  {
+   "type": "card",
+   "w": 32,
+   "dt": -0.05,
+   "until": 15.15,
+   "icon": "🧪",
+   "label": "Paani se milkar (soda jaisa)",
+   "value": "CO2 + H2O ➡️ *Acid*",
+   "value_size": 60
+  },
+  {
+   "type": "card",
+   "w": 36,
+   "dt": -0.05,
+   "until": 17.05,
+   "icon": "🩸",
+   "label": "Blood",
+   "value": "*Acidic* ki taraf",
+   "sub": "pH 7.4 se thoda neeche"
+  },
+  {
+   "type": "text_slam",
+   "w": 45,
+   "dt": -0.1,
+   "until": 18.55,
+   "text": "*KAUN?* 🤔",
+   "sfx": "slam"
+  },
+  {
+   "type": "ring",
+   "w": 47,
+   "dt": -0.05,
+   "until": 20.06,
+   "x": 540,
+   "y": 960,
+   "r": 170,
+   "label": "BRAINSTEM",
+   "label_dx": -150
+  },
+  {
+   "type": "ring",
+   "t_out": 20.06,
+   "until": 21.44,
+   "x": 540,
+   "y": 1040,
+   "r": 190,
+   "label": "BRAINSTEM",
+   "label_dx": -150,
+   "sfx": "none"
+  },
+  {
+   "type": "card",
+   "w": 49,
+   "dt": -0.1,
+   "until": 22.95,
+   "icon": "📡",
+   "label": "Brainstem ke sensors",
+   "value": "*Acid* check",
+   "sub": "central chemoreceptors"
+  },
+  {
+   "type": "chain",
+   "w": 57,
+   "dt": -0.05,
+   "until": 26.3,
+   "title": "*SIGNAL* ⚡",
+   "items": [
+    {
+     "icon": "📡",
+     "text": "Sensors",
+     "w": 58
+    },
+    {
+     "icon": "🧠",
+     "text": "Breathing centre",
+     "w": 59
+    },
+    {
+     "icon": "💪",
+     "text": "Diaphragm",
+     "w": 62
+    }
+   ]
+  },
+  {
+   "type": "text_slam",
+   "w": 65,
+   "dt": -0.05,
+   "until": 26.95,
+   "text": "*SAANS LO!*",
+   "sfx": "slam"
+  },
+  {
+   "type": "hook",
+   "w": 71,
+   "dt": -0.1,
+   "until": 30.7,
+   "text": "YAHI THI WOH *BECHAINI* 😣",
+   "boxed": true,
+   "zone": "top",
+   "size": 92,
+   "sfx": "swoosh",
+   "ws": [
+    71,
+    72,
+    73,
+    74,
+    74
+   ]
+  },
+  {
+   "type": "flash",
+   "w": 75,
+   "in": 0,
+   "dur": 0.2,
+   "strength": 0.7,
+   "sfx": "none"
+  },
+  {
+   "type": "compare",
+   "w": 75,
+   "dt": -0.05,
+   "until": 33.3,
+   "zone": [
+    700,
+    1120
+   ],
+   "value_size": 62,
+   "a": {
+    "title": "OPTION A ❌",
+    "value": "Oxygen kam",
+    "lose": true
+   },
+   "b": {
+    "title": "OPTION B ✅",
+    "value": "CO2 *zyada*",
+    "win": true,
+    "w": 76,
+    "dt": -0.08
+   }
+  },
+  {
+   "type": "card",
+   "w": 82,
+   "dt": -0.1,
+   "until_w": 85,
+   "icon": "❌",
+   "label": "Main trigger?",
+   "value": "Oxygen ki kami *NAHI*",
+   "value_size": 62
+  },
+  {
+   "type": "card",
+   "w": 87,
+   "dt": -0.15,
+   "until": 36.85,
+   "icon": "✅",
+   "label": "Ghutan ka main trigger",
+   "value": "Badhta *CO2*"
+  },
+  {
+   "type": "list",
+   "until": 41.95,
+   "variant": "calm",
+   "zone": [
+    160,
+    470
+   ],
+   "title": "⚠️ DHYAN RAHE",
+   "sfx": "none",
+   "items": [
+    {
+     "text": "Pehle tez saansein, phir rokna",
+     "bad": true,
+     "w": 93
+    },
+    {
+     "text": "Paani mein breath-hold practice",
+     "bad": true,
+     "w": 97
+    }
+   ],
+   "w": 93,
+   "dt": -0.15
+  },
+  {
+   "type": "card",
+   "w": 105,
+   "dt": -0.1,
+   "until": 43.95,
+   "variant": "calm",
+   "icon": "⚠️",
+   "label": "Tez saansein ➡️ CO2 kam ➡️ alarm late",
+   "value": "*Behoshi* bina warning",
+   "value_size": 64,
+   "sfx": "none"
+  },
+  {
+   "type": "fade",
+   "t_out": 43.45,
+   "in": 0.45,
+   "hold": 0,
+   "out": 0.15,
+   "strength": 0.5
+  },
+  {
+   "type": "hook",
+   "w": 111,
+   "dt": -0.1,
+   "until": 45.6,
+   "text": "TUMNE *A* SOCHA YA *B*? 🤔",
+   "boxed": true,
+   "zone": "top",
+   "size": 96,
+   "ws": [
+    111,
+    112,
+    113,
+    114,
+    115,
+    115
+   ],
+   "sfx": "swoosh"
+  },
+  {
+   "type": "cta",
+   "t_out": 45.35,
+   "until": 46.5,
+   "zone": [
+    1000,
+    1300
+   ],
+   "text": "*A* ya *B*? 👇",
+   "button": "COMMENT KARO",
+   "icon": "💬",
+   "done": false
+  },
+  {
+   "type": "fade",
+   "t_out": 46.3,
+   "in": 0.2,
+   "out": 0.5
+  },
+  {
+   "type": "fade",
+   "t_out": 48.0,
+   "in": 0.5,
+   "out": 0
+  }
+ ],
+ "sfx": [
+  {
+   "t_out": 16.42,
+   "name": "riser",
+   "gain_db": -5
+  },
+  {
+   "t_out": 2.0,
+   "name": "swoosh",
+   "gain_db": -3
+  },
+  {
+   "t_out": 5.6,
+   "name": "swoosh",
+   "gain_db": -3
+  },
+  {
+   "t_out": 8.6,
+   "name": "whoosh",
+   "gain_db": -5
+  },
+  {
+   "t_out": 11.65,
+   "name": "swoosh",
+   "gain_db": -3
+  },
+  {
+   "t_out": 13.6,
+   "name": "bubble",
+   "gain_db": -2
+  },
+  {
+   "t_out": 18.4,
+   "name": "swoosh",
+   "gain_db": -3
+  },
+  {
+   "t_out": 21.3,
+   "name": "glitch",
+   "gain_db": -8
+  },
+  {
+   "t_out": 27.0,
+   "name": "swoosh",
+   "gain_db": -3
+  },
+  {
+   "t_out": 34.75,
+   "name": "swoosh",
+   "gain_db": -3
+  },
+  {
+   "t_out": 36.75,
+   "name": "whoosh",
+   "gain_db": -5
+  },
+  {
+   "t_out": 38.85,
+   "name": "bubble",
+   "gain_db": -2
+  },
+  {
+   "w": 76,
+   "name": "success",
+   "gain_db": -2
+  },
+  {
+   "t_out": 41.95,
+   "name": "whoosh_down",
+   "gain_db": -3
+  },
+  {
+   "t_out": 3.094,
+   "name": "heartbeat",
+   "gain_db": -3.0
+  },
+  {
+   "t_out": 4.094,
+   "name": "heartbeat",
+   "gain_db": -2.1
+  },
+  {
+   "t_out": 5.094,
+   "name": "heartbeat",
+   "gain_db": -1.2
+  },
+  {
+   "t_out": 6.094,
+   "name": "heartbeat",
+   "gain_db": -0.3
+  },
+  {
+   "t_out": 7.094,
+   "name": "heartbeat",
+   "gain_db": 0.6
+  },
+  {
+   "t_out": 8.094,
+   "name": "heartbeat",
+   "gain_db": 1.5
+  },
+  {
+   "t_out": 9.094,
+   "name": "heartbeat",
+   "gain_db": 2.4
+  },
+  {
+   "t_out": 10.094,
+   "name": "heartbeat",
+   "gain_db": 3.3
+  },
+  {
+   "t_out": 11.094,
+   "name": "heartbeat",
+   "gain_db": 4.2
+  },
+  {
+   "t_out": 12.094,
+   "name": "heartbeat",
+   "gain_db": 5.1
+  },
+  {
+   "t_out": 13.45,
+   "name": "breath",
+   "gain_db": -8
+  },
+  {
+   "t_out": 37.42,
+   "name": "breath",
+   "gain_db": -2
+  },
+  {
+   "w": 45,
+   "dt": -0.1,
+   "name": "pop",
+   "gain_db": 2
+  },
+  {
+   "t_out": 46.36,
+   "name": "whoosh_down",
+   "gain_db": -4
+  },
+  {
+   "t_out": 46.75,
+   "name": "ding",
+   "gain_db": -1
+  }
+ ],
+ "music": {
+  "mood": "documentary",
+  "seed": 5,
+  "under_voice_db": 15,
+  "gap_db": 10
+ },
+ "progress_bar": true
 }
