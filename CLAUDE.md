@@ -41,6 +41,12 @@ Then remind the user to delete the release (the repo is public). Split uploads: 
 `assemble.py edl.json assembled.mp4` (it warns when a shot runs across a source cut; check those frames) →
 `analyze.py assembled.mp4 work` → plan with `"cuts": {"auto": false}` → build. Shots after the voice ends get silence.
 
+## Open projects (read the project's NOTES.md first)
+- `projects/short2` (breath-hold / CO2): waiting for the creator's re-export (the first export was black) + voice choice.
+  Thumbnail, YouTube/Facebook/Instagram text are done (`thumb/`, `youtube.md`, `facebook.md`, `instagram.md`).
+- `projects/short3` (Leh dal Short): the creator's own storyboard (`storyboard.md`) is the plan. They will send their real voiceover
+  and real footage; until then only learn, don't build. Verified science + numbers are in `NOTES.md`.
+
 ## AI voiceover ("you give new voice over")
 `tts.py <voice> script.txt out.wav --speed 1.34 --pauses '[...]' --json timings.json` — free offline Hindi voices
 (Kokoro v1.0 `hm_omega`/`hm_psi` male, `hf_alpha` female; Piper `rohan`/`pratham`/`priyamvada` are flatter). Write the

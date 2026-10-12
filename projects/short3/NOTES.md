@@ -1,6 +1,7 @@
 # short3 — "Leh mein dal kyun nahi galti?" (why dal is slow to cook in Leh)
 
-Idea from the creator (2026-10-12). Status: script verified + voiceover samples made; waiting for the creator's choices.
+Idea from the creator (2026-10-12). **UPDATE: the creator sent their own 8-scene storyboard (`storyboard.md`). That is now the plan;
+the script/voice samples in `vo/` below are research and reference only.** Waiting for the creator's real voiceover and footage.
 
 ## Decisions to remember
 - Title wording: the creator's own title says "nahi galti", but dal DOES soften at ~88 C, only several times slower in an open pot
