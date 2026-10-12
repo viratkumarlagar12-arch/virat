@@ -39,7 +39,7 @@
     "drift": false,
     "alternate": false,
     "keyframes": [
-      {"t_out": 0.0, "from": 1.09, "scale": 1.16, "dur": 3.5, "ease": "none", "origin": [480, 1250]},
+      {"t_out": 0.0, "from": 1.0, "scale": 1.1, "dur": 3.5, "ease": "none", "origin": [540, 1000]},
       {"t_out": 3.56, "scale": 1.2, "dur": 0.18, "ease": "power3.out"},
       {"t_out": 4.05, "from": 1.0, "scale": 1.06, "dur": 2.9, "ease": "none", "origin": [540, 960]},
       {"t_out": 6.95, "from": 1.0, "scale": 1.05, "dur": 1.8, "ease": "none"},
@@ -98,7 +98,7 @@
   ],
 
   "sfx": [
-    {"t_out": 0.0, "name": "nat_boil", "path": "media/nat/boil_hook_hp.wav", "gain_db": 5},
+    {"t_out": 0.0, "name": "nat_boil", "path": "media/nat/dal_hook.wav", "gain_db": -2},
     {"t_out": 0.02, "name": "impact", "gain_db": -6},
     {"t_out": 4.05, "name": "whoosh", "gain_db": -7},
     {"t_out": 8.75, "name": "whoosh", "gain_db": -5},
@@ -108,7 +108,7 @@
     {"t_out": 20.05, "name": "nat_boil", "path": "media/nat/boil_pot_hp.wav", "gain_db": 4},
     {"t_out": 24.32, "name": "swoosh", "gain_db": -5},
     {"t_out": 26.85, "name": "swoosh", "gain_db": -5},
-    {"t_out": 30.25, "name": "cooker_whistle", "path": "media/sfx/cooker_whistle.wav", "gain_db": -6},
+    {"t_out": 26.85, "name": "nat_cooker", "path": "media/nat/cooker.wav", "gain_db": -2},
     {"t_out": 30.62, "name": "swoosh", "gain_db": -6},
     {"t_out": 35.16, "name": "impact", "gain_db": -7},
     {"t_out": 35.18, "name": "ding", "gain_db": -3}

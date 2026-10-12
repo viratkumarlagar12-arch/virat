@@ -81,8 +81,8 @@ DEFAULT_SFX = {"hook": "impact", "card": "whoosh", "stat": "whoosh", "bars": "wh
                "lower_third": "swoosh", "countdown": None, "cta": "pop", "text_slam": "impact", "flash": "camera",
                "sundial": "whoosh", "ring": "pop", "stamp": "impact", "hand": None, "flare": None, "note10": None,
                "fade": None, "quiz": None, "thermo": "whoosh", "gauge": "whoosh", "altimeter": "whoosh", "chips": None,
-               "cooker": "whoosh"}
-OVERLAY_ONLY = {"emoji", "flash", "hand", "ring", "flare", "note10", "fade"}  # drawn on the footage; don't take a layout zone
+               "cooker": "whoosh", "tag": None}
+OVERLAY_ONLY = {"emoji", "flash", "hand", "ring", "flare", "note10", "fade", "tag"}  # drawn on the footage; don't take a layout zone
 
 
 # ----------------------------------------------------------------------------- helpers

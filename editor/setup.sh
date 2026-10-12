@@ -40,6 +40,14 @@ for m in vits-piper-hi_IN-rohan-medium vits-piper-hi_IN-pratham-medium vits-pipe
   [ -d "$MODELS/tts/$m" ] || fetch "$TTS_REL/$m.tar.bz2" | tar -xj -C "$MODELS/tts"
 done
 
+# 4x AI upscaler for low-res clips (upscale.py): Real-ESRGAN General x4v3, ONNX (Qualcomm AI Hub release, ~5 MB)
+if [ ! -f "$MODELS/realesrgan/real_esrgan_general_x4v3-onnx-float/real_esrgan_general_x4v3.onnx" ]; then
+  mkdir -p "$MODELS/realesrgan"
+  fetch -o "$MODELS/realesrgan/x4v3.zip" \
+    "https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-models/models/real_esrgan_general_x4v3/releases/v0.64.0/real_esrgan_general_x4v3-onnx-float.zip" \
+    && (cd "$MODELS/realesrgan" && unzip -o -q x4v3.zip && rm x4v3.zip) || echo "   (upscaler model not downloaded; upscale.py won't work)"
+fi
+
 echo "==> Fonts (Latin + Devanagari TTFs), sound-effect library"
 "$ROOT/.venv/bin/python" "$ED/scripts/fonts.py" "$ED/node_modules/@fontsource" "$ED/assets/fonts"
 [ -f "$ED/assets/sfx/whoosh.wav" ] || "$ROOT/.venv/bin/python" "$ED/scripts/sfx.py" "$ED/assets/sfx"

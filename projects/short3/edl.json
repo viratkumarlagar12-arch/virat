@@ -2,7 +2,7 @@
  "audio": "tight/voice48k.wav",
  "fps": 30,
  "shots": [
-  {"src": "fixed.mp4", "in": 0.0, "dur": 4.05, "note": "1 hook: steaming pot (creator clip A) - Leh Ladakh mein dal ubal toh rahi hai... phir bhi jaldi galti kyun nahi?"},
+  {"src": "media/ai/dal_boil_4x.mp4", "in": 0.0, "dur": 4.05, "speed": 0.99, "note": "1 hook: dal boiling close-up (creator's AI clip, 4x upscaled) - Leh Ladakh mein dal ubal toh rahi hai... phir bhi jaldi galti kyun nahi?"},
   {"src": "media/stock/200297.mp4", "in": 6.0, "dur": 2.9, "note": "2 quiz: Ladakh plain drone (Hanle, Pixabay 200297; creator's clip B is Dhankar/Spiti, HP) - A: Oxygen kam? B: Thand?"},
   {"src": "fixed.mp4", "in": 7.45, "dur": 1.8, "note": "2 quiz: Leh town (clip C) - Ya C: hawa ka pressure kam? Socho"},
   {"src": "media/stock/266966.mp4", "in": 1.0, "dur": 1.45, "note": "3 Leh (Shanti Stupa, Pixabay 266966) - Leh, samundar se"},
@@ -12,7 +12,7 @@
   {"src": "media/stock/12496.mp4", "in": 4.0, "dur": 1.1, "fx": 0.3, "note": "5 gas flame close-up (Pixabay 12496) - aag tez karne se"},
   {"src": "fixed.mp4", "in": 20.66, "dur": 4.27, "note": "5 pot boiling hard (clip F, bars filled) - zyada tezi se ubalega... 88 hi rahega"},
   {"src": "media/diagram.mp4", "in": 0.2, "dur": 2.53, "note": "6 answer: creator's pressure diagram (clip G, my 9:16 version) - sahi jawab hai C"},
-  {"src": "fixed.mp4", "in": 29.1, "dur": 3.77, "speed": 0.81, "note": "7 pressure cooker on the flame (clip H) - andar ka pressure badhata hai"},
+  {"src": "media/ai/cooker_4x.mp4", "in": 0.2, "dur": 3.77, "note": "7 whistle cooker on the gas (creator's AI clip, 4x upscaled; whistle at 28.65-29.85) - andar ka pressure badhata hai"},
   {"src": "fixed.mp4", "in": 32.22, "dur": 4.54, "speed": 0.6, "note": "7+8 cooked dal (clip I) - dal jaldi galti hai / A, B ya C? comment karo"},
   {"src": "../short1/fixed.mp4", "in": 44.5, "dur": 2.0, "note": "channel end card (Science Unseen Hindi logo)"}
  ]

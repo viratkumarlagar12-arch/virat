@@ -783,6 +783,14 @@
         tl.to(el, { opacity: 0, y: -24, duration: 0.25, ease: "power2.in" }, o.t + o.dur - 0.25);
       },
 
+      // small corner label, e.g. "AI visual" on a generated shot (o.x, o.y px)
+      tag(o) {
+        const el = mk("div", "tag", overlays, markup(o.text));
+        Object.assign(el.style, { left: (o.x ?? 40) + "px", top: (o.y ?? 1500) + "px" });
+        tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.2 }, o.t);
+        tl.to(el, { opacity: 0, duration: 0.2 }, o.t + o.dur - 0.2);
+      },
+
       flash(o) {
         const el = mk("div", "flash", fx);
         const rise = o.in ?? 0.05;  // 0 = full white on the first frame (flash on a hard cut)

@@ -269,3 +269,5 @@ html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; 
 .hook .neq { position: relative; display: inline-block; }
 .hook .neq::after { content: ""; position: absolute; left: 50%; top: 14%; bottom: 14%; width: .13em; margin-left: -.065em; border-radius: .05em;
   background: currentColor; box-shadow: 0 0 0 5px #000; transform: rotate(28deg); }
+.tag { position: absolute; padding: 8px 20px; border-radius: 999px; background: rgba(0,0,0,.55); color: rgba(255,255,255,.92);
+  font-family: var(--ui-font); font-weight: 700; font-size: 28px; letter-spacing: .04em; white-space: nowrap; opacity: 0; }
