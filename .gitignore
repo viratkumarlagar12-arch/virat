@@ -28,3 +28,4 @@ projects/**/sheets_src/
 projects/**/assemble_graph.txt
 projects/**/*.log
 projects/**/vo/*_verify.json
+projects/**/thumb/assets/
