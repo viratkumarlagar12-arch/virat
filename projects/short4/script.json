@@ -1,0 +1,576 @@
+{
+ "lines": [
+  {
+   "devanagari": "सोचो, वीनस पर एक सेकंड!",
+   "roman": "Socho, Venus par ek second!"
+  },
+  {
+   "devanagari": "इंसान तो छोड़ो… मशीन भी कितनी देर टिक पाई?",
+   "roman": "Insaan toh chhodo… machine bhi kitni der tik paayi?"
+  },
+  {
+   "devanagari": "ए — दो मिनट? बी — दो घंटे? या सी — दो दिन?",
+   "roman": "A: 2 minute? B: 2 ghante? Ya C: 2 din?"
+  },
+  {
+   "devanagari": "जवाब एंड में!",
+   "roman": "Jawab end mein!"
+  },
+  {
+   "devanagari": "पहला झटका: प्रेशर! धरती से लगभग बानवे गुना!",
+   "roman": "Pehla jhatka: pressure! Dharti se lagbhag 92 guna!"
+  },
+  {
+   "devanagari": "जैसे समुंदर में क़रीब नौ सौ मीटर नीचे!",
+   "roman": "Jaise samundar mein kareeb 900 metre neeche!"
+  },
+  {
+   "devanagari": "दूसरा झटका: गर्मी! ज़मीन पर लगभग चार सौ पैंसठ डिग्री!",
+   "roman": "Doosra jhatka: garmi! Zameen par lagbhag 465 degree!"
+  },
+  {
+   "devanagari": "सूरज के सबसे पास मर्करी… पर सबसे गरम? वीनस!",
+   "roman": "Suraj ke sabse paas Mercury… par sabse garam? Venus!"
+  },
+  {
+   "devanagari": "क्यों? कार्बन डाइऑक्साइड का घना एटमॉस्फ़ियर!",
+   "roman": "Kyun? Carbon dioxide ka ghana atmosphere!"
+  },
+  {
+   "devanagari": "इसी से भारी प्रेशर… और गर्मी अंदर क़ैद!",
+   "roman": "Isi se bhaari pressure… aur garmi andar qaid!"
+  },
+  {
+   "devanagari": "वहाँ तुम ज़्यादा देर ज़िंदा नहीं रहोगे।",
+   "roman": "Wahan tum zyada der zinda nahi rahoge."
+  },
+  {
+   "devanagari": "सही जवाब है बी! सबसे ज़्यादा टिकी — क़रीब दो घंटे!",
+   "roman": "Sahi jawab hai B! Sabse zyada tiki — kareeb 2 ghante!"
+  },
+  {
+   "devanagari": "वीनस सिर्फ़ गरम नहीं है…",
+   "roman": "Venus sirf garam nahi hai…"
+  },
+  {
+   "devanagari": "पूरे प्लैनेट जितना बड़ा प्रेशर कुकर है!",
+   "roman": "Poore planet jitna bada pressure cooker hai!"
+  },
+  {
+   "devanagari": "तुम्हारा जवाब क्या था? कमेंट करो!",
+   "roman": "Tumhara jawab kya tha? Comment karo!"
+  }
+ ],
+ "judge": {
+  "scores": [
+   {
+    "key": "immersive",
+    "hook": 6.5,
+    "clarity": 7.5,
+    "hindi_naturalness": 6.5,
+    "retention": 7,
+    "fits_footage": 7.5,
+    "notes": "Good extra facts: lead melting is the most physical comparison, and Venera 13 pays off 'you wouldn't survive'. Smart in-point at src 9.0 to skip the astronaut's leg. Weak spots: the hook opens soft ('Socho…') and only lands at 2.4 s. There is no open loop until the closing quiz, so the middle gives viewers no reason to stay. It uses 'aap' with 'ho/paoge', but the creator speaks in 'tum'. 'Shareer' and 'kuchal dene wala pressure' sound translated. Some on-screen strings are too long to read in 2 s ('LEAD (SEESA) PIGHLA: 327°C … VENUS: 465°C', 'CRUSHING PRESSURE + BHAYANAK GARMI'). It is also the heaviest build: 5 different 3D scenes, including a molten-metal effect."
+   },
+   {
+    "key": "quiz",
+    "hook": 8,
+    "clarity": 7.5,
+    "hindi_naturalness": 8,
+    "retention": 9,
+    "fits_footage": 8.5,
+    "notes": "Follows the creator's proven Leh structure: hook, A/B/C quiz, 'Jawab end mein', facts, reveal, then 'Tumhara … Comment karo!'. It uses the 'tum' form with short spoken lines. The ~30 s open loop with a progress bar gives the best retention. One lander model covers the quiz and the reveal. The burned-in English numbers are covered in the same spots. Weak spots: the 'one second' hook is left hanging because nothing ties it to the robot question. The first fact only arrives at 8.8 s. 'Wahan ka record: robot kitni der chala?' is clunky, and 'robot' is loose for a lander."
+   },
+   {
+    "key": "comparison",
+    "hook": 8.5,
+    "clarity": 8,
+    "hindi_naturalness": 8.5,
+    "retention": 7,
+    "fits_footage": 7,
+    "notes": "The most natural desi voice: 'Pehla jhatka / Doosra jhatka', 'Ghar ka oven?', and 'seeti kabhi nahi bajti' is a great punchline. The 'kya hoga?' hook is strong. Problems: it has 4 extras (900 m, the oven, Mercury, plus Mercury's 430 °C on screen), which breaks the 1-3 rule. Oven 250 vs 465 hits less hard than lead or Venera. 'Dabaav' breaks the rule of keeping science words in English. There is no open loop, and the CTA ('agla grah kaun sa') is generic. The cooker-to-globe morph is the hardest 3D shot of all the drafts."
+   }
+  ],
+  "winner": "quiz",
+  "final": {
+   "title_idea": "Venus par sirf 1 second! Machine bhi kitni der tiki? A, B ya C?",
+   "lines": [
+    {
+     "t_start": 0,
+     "t_end": 1.6,
+     "scene": "Original shot A (src 0.0-1.6): astronaut on golden, cloudy Venus",
+     "devanagari": "वीनस पर सिर्फ़ एक सेकंड!",
+     "roman": "Venus par sirf ek second!",
+     "on_screen": "VENUS PAR / SIRF 1 SECOND! (small chip: VENUS = SHUKRA)",
+     "visual_note": "Two-line hook text is on screen from frame 0, in the lower-centre spot of the burned-in 'ONE SECOND / ON VENUS' so it covers it. Impact hit and a slow push-in. Small 'AI visual' tag in a top corner over all AI footage; keep the sparkle watermark at bottom right. Captions off here because the text says the same thing."
+    },
+    {
+     "t_start": 1.7,
+     "t_end": 4.6,
+     "scene": "Original shot A (src 1.6-2.6) for 'Insaan toh chhodo…', then cut on 'machine' (~2.7) to 3D: lander quiz, part 1",
+     "devanagari": "इंसान तो छोड़ो… मशीन भी वहाँ कितनी देर टिकी?",
+     "roman": "Insaan toh chhodo… machine bhi wahan kitni der tiki?",
+     "on_screen": "MACHINE KITNI DER TIKI? (timer ??:??)",
+     "visual_note": "Hold the hook plate on the astronaut for 'Insaan toh chhodo', then hard-cut on 'machine'. 3D: a Venera-style lander (a sphere on a ring base with a disc antenna on top) parachutes down through orange cloud layers and lands on dark rocks in a dust puff, while a timer above it flickers '??:??'. Whoosh on the drop, thud on landing."
+    },
+    {
+     "t_start": 4.7,
+     "t_end": 8,
+     "scene": "3D: lander quiz, part 2 (same scene)",
+     "devanagari": "ए — दो मिनट? बी — दो घंटे? या सी — दो दिन?",
+     "roman": "A: 2 minute? B: 2 ghante? Ya C: 2 din?",
+     "on_screen": "A: 2 MINUTE · B: 2 GHANTE · C: 2 DIN",
+     "visual_note": "Three quiz cards pop in above the lander, one per option, with one tick SFX each (the creator's Leh quiz style). The timer keeps spinning. Captions off because the cards show the words."
+    },
+    {
+     "t_start": 8,
+     "t_end": 8.9,
+     "scene": "3D: lander quiz, part 3 (same scene)",
+     "devanagari": "जवाब एंड में!",
+     "roman": "Jawab end mein!",
+     "on_screen": "JAWAB END MEIN",
+     "visual_note": "A 'JAWAB END MEIN' stamp lands on the cards; they dim and a lock snaps on (stamp + whoosh). A thin progress bar appears at the top and fills until the reveal at 30.8 s."
+    },
+    {
+     "t_start": 9,
+     "t_end": 11.7,
+     "scene": "Original shot A (src 3.3-6.0): astronaut walking closer",
+     "devanagari": "पहला झटका: प्रेशर! धरती से लगभग बानवे गुना।",
+     "roman": "Pehla jhatka: pressure! Dharti se lagbhag 92 guna.",
+     "on_screen": "92× PRESSURE (small: DHARTI = 1×) · label PEHLA JHATKA",
+     "visual_note": "'92×' counts up from 1× and slams in on 'baanve', with a deep thud and a punch-in. The card sits lower centre over the burned-in '92× EARTH'S PRESSURE' (src 3-6.5) to cover it, below the helmet. Optional pressure arrows from the sides, kept off the helmet."
+    },
+    {
+     "t_start": 11.8,
+     "t_end": 14.8,
+     "scene": "3D: ocean depth + crushing can",
+     "devanagari": "यानी समंदर में करीब नौ सौ मीटर नीचे जितना!",
+     "roman": "Yaani samandar mein kareeb 900 metre neeche jitna!",
+     "on_screen": "≈ 900 m SAMANDAR KE NEECHE",
+     "visual_note": "3D: the camera sinks through blue water that gets darker while a side depth meter counts 0 to 900 m. Pressure arrows close in from all sides on a sealed can, which crumples on 'neeche'. Underwater rumble, then a metal crunch."
+    },
+    {
+     "t_start": 14.9,
+     "t_end": 18.2,
+     "scene": "Original shot B (src 8.9-12.2): hot rocky ground, dusty sky (in-point skips the astronaut sliver at the left edge, src 7.4-8.6)",
+     "devanagari": "दूसरा झटका: गर्मी! ज़मीन पर लगभग चार सौ पैंसठ डिग्री!",
+     "roman": "Doosra jhatka: garmi! Zameen par lagbhag 465 degree!",
+     "on_screen": "~465°C · label DOOSRA JHATKA",
+     "visual_note": "Orange heat-shimmer grade and a slow push over the rocks. A big '~465°C' slams in on 'painsath' in the same lower-centre area as the burned-in '465°C' (it drifts between y≈0.70 and 0.85) to cover it. Sizzle / fire-whoosh."
+    },
+    {
+     "t_start": 18.3,
+     "t_end": 21.6,
+     "scene": "3D: Sun, Mercury and Venus on orbits with thermometers",
+     "devanagari": "सूरज के सबसे पास मर्करी है… पर सबसे गरम? वीनस!",
+     "roman": "Sooraj ke sabse paas Mercury hai… par sabse garam? Venus!",
+     "on_screen": "SABSE GARAM PLANET: VENUS (small: MERCURY = BUDH, SURAJ KE SABSE PAAS)",
+     "visual_note": "3D: a glowing Sun at left, small grey Mercury on a close orbit ring and yellow cloudy Venus farther out. A thermometer rises over each; Mercury's stops lower, Venus's goes higher and turns red to 465°C, and the camera pushes in on Venus on 'Venus!'. Tick for Mercury, reveal hit for Venus. Don't show Mercury's number. Build the Venus globe once and reuse it at 24.4 s."
+    },
+    {
+     "t_start": 21.7,
+     "t_end": 24.3,
+     "scene": "Original shot C (src 14.6-17.2): rising from the mountains up through thick yellow clouds",
+     "devanagari": "क्यों? कार्बन डाइऑक्साइड का बहुत घना एटमॉस्फियर!",
+     "roman": "Kyun? Carbon dioxide ka bahut ghana atmosphere!",
+     "on_screen": "KYUN? → GHANA CO₂ ATMOSPHERE (~96% CO₂)",
+     "visual_note": "'KYUN?' flashes on the first word. Small CO₂ molecules (one black C between two red O) drift up through the clouds, and a '~96% CO₂' chip pops on 'carbon dioxide'. Airy wind whoosh."
+    },
+    {
+     "t_start": 24.4,
+     "t_end": 28,
+     "scene": "3D: Venus globe inside a thick CO₂ cloud shell (pressure + trapped heat)",
+     "devanagari": "यही भारी प्रेशर बनाता है, और गर्मी क़ैद कर लेता है।",
+     "roman": "Yahi bhaari pressure banata hai, aur garmi qaid kar leta hai.",
+     "on_screen": "PRESSURE ↓ + GARMI QAID",
+     "visual_note": "3D (same Venus globe): a thick, churning yellow cloud shell. Heavy arrows press down on the surface on 'pressure' (low thump). Then yellow sunlight arrows go in, and red heat arrows try to leave but bounce back inside on 'garmi qaid' (lock click)."
+    },
+    {
+     "t_start": 28.1,
+     "t_end": 30.7,
+     "scene": "Original shot D (src 18.6-21.2): astronaut close-up, helmet visor",
+     "devanagari": "तुम वहाँ ज़्यादा देर ज़िंदा नहीं रह पाओगे।",
+     "roman": "Tum wahan zyada der zinda nahi reh paoge.",
+     "on_screen": "",
+     "visual_note": "Slow push-in towards the visor with a slight red vignette. The music drops to a heartbeat plus suit-breathing. No graphics on the helmet; captions only, kept low."
+    },
+    {
+     "t_start": 30.8,
+     "t_end": 34.1,
+     "scene": "3D: lander answer reveal (same lander scene)",
+     "devanagari": "सही जवाब — बी! सबसे लंबा रिकॉर्ड: करीब दो घंटे!",
+     "roman": "Sahi jawab — B! Sabse lamba record: kareeb 2 ghante!",
+     "on_screen": "B ✓ ~2 GHANTE (small: VENERA 13, 1982 · 127 MIN · RECORD)",
+     "visual_note": "3D: back to the lander on the surface. The progress bar completes and card B turns green with a reveal hit while A and C dim. The timer races to '127 MIN', then the signal bars drop to zero and the frame breaks to static with a radio crackle. Don't say or show why it stopped."
+    },
+    {
+     "t_start": 34.2,
+     "t_end": 36,
+     "scene": "Original shot D (src 22.6-24.4): astronaut close-up, helmet visor",
+     "devanagari": "वीनस सिर्फ़ गरम नहीं है…",
+     "roman": "Venus sirf garam nahi hai…",
+     "on_screen": "",
+     "visual_note": "Cut from the static back to the visor. The music dips and a soft riser builds; hold about 0.3 s of silence after 'nahi hai…' before the punchline. Captions only."
+    },
+    {
+     "t_start": 36.1,
+     "t_end": 38.7,
+     "scene": "Original shot E (src 26.5-28.6, slowed to ~0.8×): camera pulls back, astronaut small in a wide view",
+     "devanagari": "ये पूरे प्लैनेट जितना बड़ा प्रेशर कुकर है!",
+     "roman": "Ye poore planet jitna bada pressure cooker hai!",
+     "on_screen": "PLANET JITNA BADA PRESSURE COOKER! (chips: PRESSURE ↑ · TEMP ↑)",
+     "visual_note": "The pull-back shows the scale. Text builds in the upper sky, away from the tiny astronaut, with 'PRESSURE ↑ / TEMP ↑' chips in the same style as the Leh Short's cooker overlay. A synthesized cooker whistle (seeti) on 'cooker' calls back to the Leh dal video, and the music comes back in."
+    },
+    {
+     "t_start": 38.8,
+     "t_end": 40.8,
+     "scene": "Original shot E (src 28.6-30.3, slowed to ~0.85×), then the channel end card 40.9-42.9 (no VO)",
+     "devanagari": "तुम्हारा गेस क्या था? कमेंट करो!",
+     "roman": "Tumhara guess kya tha? Comment karo!",
+     "on_screen": "A, B YA C? COMMENT KARO! (small: FOLLOW · Science Unseen Hindi)",
+     "visual_note": "CTA card with the three quiz letters and a comment icon; captions off (captions.until 40.8). Then dip to black and fade in the ~2 s 'SCIENCE UNSEEN HINDI' logo card with a slow push-in, fade it out to black, and let the music fade out underneath."
+    }
+   ],
+   "word_count": 118,
+   "est_seconds": 40.8,
+   "facts_used": [
+    "Venus surface pressure is about 92 bar, about 92 times Earth's sea-level pressure (NASA NSSDC Venus fact sheet). This is the original's number, said as 'lagbhag baanve guna'.",
+    "92 bar is about the pressure ~900 m down in the ocean: (92 - 1) bar / (1025 kg/m3 x 9.81 m/s2) ≈ 905 m, and NASA also uses a '~3,000 ft / 900 m' comparison. Said as 'kareeb 900 metre'. Avoid the popular 'a mile underwater' line, which overstates it.",
+    "Venus mean surface temperature is about 464-465 °C (737 K, NSSDC). This is the original's number, said as 'lagbhag 465 degree'.",
+    "Mercury is the planet closest to the Sun, yet Venus is the hottest planet in the solar system: Mercury's dayside peaks around 430 °C and its average is far lower. Mercury's number is not spoken or shown.",
+    "Venus has a very dense atmosphere, about 96.5% carbon dioxide. Shown as '~96% CO2'; the spoken line is just 'bahut ghana' CO2 atmosphere (the original's fact).",
+    "The weight of that thick atmosphere makes the high surface pressure, and its CO2 greenhouse effect traps the heat ('Yahi bhaari pressure banata hai, aur garmi qaid kar leta hai').",
+    "Humans could not survive there for long. This keeps the original's wording, and no time is claimed (nothing about being crushed or melting in one second).",
+    "Quiz answer: the Soviet Venera 13 lander (landed 1 March 1982) sent data from the surface for 127 minutes. That is the longest any Venus lander has lasted (its design life was 32 min), and every other lander lasted less. Said as 'sabse lamba record: kareeb 2 ghante'; '2 minute' and '2 din' are both wrong. The reason it stopped is deliberately not stated.",
+    "'Planet-size pressure cooker' is a metaphor kept from the original ending (high pressure + high temperature), and it calls back to the creator's Leh dal / pressure-cooker Short."
+   ],
+   "rationale": "WHY 'QUIZ' WON: it copies the creator's own Leh storyboard almost beat for beat: hook, A/B/C quiz, 'Jawab end mein', facts, answer reveal, the pressure-cooker line, then 'Tumhara … Comment karo!'. It also has the strongest retention engine, a ~30 s open loop with a progress bar. One lander model serves 4 beats, and the burned-in English numbers are covered right where they sit.\n\nWHAT I FIXED IN IT:\n- The orphaned 'one second' hook now flows into the quiz: 'Venus par sirf ek second! Insaan toh chhodo… machine bhi wahan kitni der tiki?' (the 'machine bhi nahi' idea is grafted from 'immersive'). The cut from astronaut to lander lands on the word 'machine'.\n- 'Robot' became 'machine'.\n- The reveal is phrased as the record ('Sabse lamba record: kareeb 2 ghante'), so the question and the answer are both accurate.\n- The first fact now lands at 9.0 s instead of 8.8+ with a wordier quiz.\n\nGRAFTED FROM 'COMPARISON': the 'Pehla jhatka: pressure! / Doosra jhatka: garmi!' rhythm, which sounds like a real Indian creator, and the 'par sabse garam? Venus!' → 'Kyun? Carbon dioxide…' bridge. That bridge turns the original CO2 line into the answer to a question.\n\nGRAFTED FROM 'IMMERSIVE': src 8.9 in-point to skip the astronaut's leg in shot B, the heartbeat + suit-breathing beat on 'zinda nahi reh paoge', and that wording itself.\n\nLEFT OUT ON PURPOSE:\n- Lead melting and the oven. Either would be a 4th extra fact; lead can go in the pinned comment or the description.\n- Mercury's 430 °C number.\n- 'Seeti kabhi nahi bajti'. It is a fun line, but it adds a line and the hardest 3D morph; use it in the YouTube description.\n\nORIGINAL ORDER KEPT: 1 second → 92× → 465 °C → thick CO2 atmosphere → pressure + heat → you wouldn't survive → not just hot → pressure cooker. There are exactly 3 extra facts, all rounded and hedged: ~900 m of ocean, hotter than Mercury, and the Venera 13 record of ~2 hours.\n\nLENGTH: 118 words at ~2.9 words/s, so the VO ends at ~40.8 s, plus the 2 s end card (~42.9 s total). Footage is ~21 s original and ~19 s 3D.\n\n3D BUILDS (4, all simple Three.js):\n1. Lander + timer + quiz cards, used in the quiz and the reveal.\n2. Ocean column with a depth meter and a crushing can.\n3. Sun / Mercury / Venus orbits with thermometers.\n4. Venus globe in a cloud shell with pressure and heat arrows. It reuses the globe from build 3.\n\nIF THE CREATOR'S READ RUNS PAST ~42 s: first run tighten_vo.py. If it is still too long, drop line 8 (the Mercury line). 'Kyun? Carbon dioxide…' then follows the 465° line and still makes sense.\n\nEDIT WARNINGS:\n- ref.mp4 has English text burned in at src 0-2, 3-6.5 and 8-12.5 s. Best: ask the creator for the clean AI clips. Otherwise our Hindi cards cover those spots, as planned above.\n- The footage is AI-generated with a sparkle watermark at bottom right. Keep the watermark, add the 'AI visual' tag, and remind the creator to tick YouTube's 'altered or synthetic content' box.\n- Pin a comment with the answer (B, Venera 13, 127 min).\n\nRECORDING TIPS FOR THE CREATOR:\n- Read the Devanagari and say the numbers as written: बानवे, नौ सौ, चार सौ पैंसठ, दो घंटे.\n- Pause briefly after each quiz option, after 'Jawab end mein!' and after 'par sabse garam?'.\n- Leave ~0.3 s of silence after 'Venus sirf garam nahi hai…'.\n- Keep the energy high on 'Pehla jhatka' and 'Doosra jhatka'.\n- The Roman lines are the captions, so they use digits."
+  }
+ },
+ "facts": {
+  "issues": [
+   {
+    "line": 1,
+    "severity": "low",
+    "problem": "The 3D lander descent is not quite how Venera 13 landed. It used parachutes only high up, dropped them at about 47-50 km (around the cloud base), and fell the last ~50 km with just a disc-shaped drag plate. The air near the surface is so thick that the disc alone slowed it to ~7.5 m/s at touchdown. The disc in the model is that drag plate, with the antenna on top of it; it is not a 'disc antenna'. A parachute all the way to the ground is a common mistake that space fans will notice. The spoken line is fine.",
+    "fix_devanagari": "इंसान तो छोड़ो… मशीन भी वहाँ कितनी देर टिकी?  (spoken line unchanged; visual fix only)",
+    "fix_roman": "Insaan toh chhodo… machine bhi wahan kitni der tiki?  [spoken line unchanged. Visual: the parachute opens high in the orange clouds, is cut loose below the cloud deck, then the lander (sphere on a ring base, flat disc brake with a small antenna on top) drops with only the disc and lands in a dust puff]",
+    "source": "Venera 13 descent profile (parachutes deployed ~63 km, released ~47-50 km, airbraking disc to the surface, touchdown ~7-8 m/s): https://en.wikipedia.org/wiki/Venera_13 ; https://astro.if.ufrgs.br/solar/venerall.htm (Venera mission summaries)"
+   },
+   {
+    "line": 1,
+    "severity": "low",
+    "problem": "The question and the answer do not match exactly. The question asks in general how long a machine lasted ('kitni der tiki?'), but B (~2 hours) is true only for the record holder, Venera 13 (127 min). Most landers lasted about 1 hour (Venera 14: 57 min, Venera 9: 53 min, Venera 8: ~50 min). Line 11 ('Sabse lamba record') saves the answer, but a pedantic commenter could say 'Venera 14 sirf 57 minute tiki'. The cheapest fix is the on-screen text: make the question about the record.",
+    "fix_devanagari": "इंसान तो छोड़ो… मशीन भी वहाँ ज़्यादा से ज़्यादा कितनी देर टिकी?  (or keep the spoken line and change only the on-screen text to: MACHINE KA RECORD: KITNI DER TIKI?)",
+    "fix_roman": "Insaan toh chhodo… machine bhi wahan zyada se zyada kitni der tiki?  [cheaper option: keep the spoken line, on-screen 'RECORD: MACHINE KITNI DER TIKI? ??:??']",
+    "source": "Lander surface times: Venera 13 127 min (record), Venera 12 110 min, Venera 14 57 min (Guinness World Records 'Longest time survived on Venus by a spacecraft': https://guinnessworldrecords.com/world-records/78367-longest-time-survived-on-venus-by-a-spacecraft ; https://en.wikipedia.org/wiki/Venera_13)"
+   },
+   {
+    "line": 7,
+    "severity": "low",
+    "problem": "The thermometers can mislead if Mercury's is drawn much lower. Mercury's dayside peaks at ~430 °C, only ~35 °C below Venus's ~465 °C (its average and night temperatures are far lower, about -180 °C at night). If the bars are to scale, Mercury's should stop just a bit below Venus's, or be labelled 'DIN MEIN MAX'. A big gap would exaggerate the difference. The spoken line is correct.",
+    "fix_devanagari": "सूरज के सबसे पास मर्करी है… पर सबसे गरम? वीनस!  (spoken line unchanged; visual fix only)",
+    "fix_roman": "Sooraj ke sabse paas Mercury hai… par sabse garam? Venus!  [Visual: Mercury's thermometer stops a little below Venus's (dayside max ~430 vs ~465 °C); Venus's keeps going to the top and turns red]",
+    "source": "NASA Space Place, Mercury (dayside ~430 °C / 800 °F, night ~-180 °C): https://spaceplace.nasa.gov/all-about-mercury/en ; Guinness 'Hottest planet' (Venus): https://guinnessworldrecords.com/world-records/64987-hottest-planet"
+   },
+   {
+    "line": 8,
+    "severity": "low",
+    "problem": "The standard figure is 96.5% CO2 (with 3.5% N2). '~96%' is not wrong with the tilde, but it rounds the wrong way. The exact standard number fits the chip just as well and is what a fact-checker expects. The spoken line is fine.",
+    "fix_devanagari": "क्यों? कार्बन डाइऑक्साइड का बहुत घना एटमॉस्फियर!  (spoken line unchanged; chip text only)",
+    "fix_roman": "Kyun? Carbon dioxide ka bahut ghana atmosphere!  [chip: '96.5% CO₂' (or '~97% CO₂')]",
+    "source": "NASA NSSDC Venus Fact Sheet: atmosphere 96.5% CO2, 3.5% N2 by volume near the surface: https://nssdc.gsfc.nasa.gov/planetary/factsheet/venusfact.html"
+   },
+   {
+    "line": 9,
+    "severity": "low",
+    "problem": "The greenhouse visual is a little off. The thick yellow 'cloud shell' is the sulfuric-acid cloud deck, which reflects about 75% of the sunlight, so only a small part of it reaches the ground. The heat is trapped mainly by the CO2 gas, which absorbs infrared and sends it back down (runaway greenhouse). It is not heat bouncing off the clouds like a mirror. Showing every sunlight arrow passing through and IR bouncing off the cloud layer suggests the clouds do the trapping. The spoken line ('Yahi …' = the CO2 atmosphere) is correct.",
+    "fix_devanagari": "यही भारी प्रेशर बनाता है, और गर्मी क़ैद कर लेता है।  (spoken line unchanged; visual fix only)",
+    "fix_roman": "Yahi bhaari pressure banata hai, aur garmi qaid kar leta hai.  [Visual: most yellow sunlight arrows bounce off the cloud tops and a few reach the ground; red heat arrows rising from the ground are absorbed by small CO₂ molecules in the thick lower air and re-emitted back down; label the layer 'CO₂']",
+    "source": "NASA NSSDC Venus Fact Sheet (Bond albedo ~0.77, i.e. most sunlight reflected): https://nssdc.gsfc.nasa.gov/planetary/factsheet/venusfact.html ; Space.com Venus facts (dense CO2 atmosphere traps heat in a runaway greenhouse effect): https://www.space.com/44-venus-second-planet-from-the-sun-brightest-planet-in-solar-system.html"
+   },
+   {
+    "line": 5,
+    "severity": "low",
+    "problem": "Make sure the crushing can is an EMPTY (air-filled) sealed can. A can full of drink is mostly incompressible liquid and would not crumple dramatically at ~90 bar, so the effect only works, and is only honest, for an air-filled can. The spoken line and the 900 m number are correct.",
+    "fix_devanagari": "यानी समंदर में करीब नौ सौ मीटर नीचे जितना!  (spoken line unchanged; visual fix only)",
+    "fix_roman": "Yaani samandar mein kareeb 900 metre neeche jitna!  [Visual: an empty sealed tin can (air inside) crumples on 'neeche']",
+    "source": "Physics: gas-filled containers collapse under external pressure while liquids are nearly incompressible; pressure at 900 m of seawater ≈ 1 + 1025×9.81×900/1e5 ≈ 91.5 bar"
+   }
+  ],
+  "verified_facts": [
+   {
+    "claim": "Line 4 / on-screen '92×': Venus surface pressure is 'lagbhag 92 guna' Earth's.",
+    "verdict": "CORRECT. The NSSDC lists the surface pressure as 92 bar. Against Earth's sea-level 1.013 bar that is ~91×, and NASA/ESA/Planetary Society figures range from 90× to 93×, so 'lagbhag 92 guna' is fine (it is also the original video's number).",
+    "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/venusfact.html ; https://science.nasa.gov/resource/ten-mysteries-of-venus/ (~90×) ; https://planetary.org/articles/what-would-it-be-like-to-stand-on-the-surface-of-venus (92 bar / 1,350 psi)"
+   },
+   {
+    "claim": "Line 5: 92× pressure ≈ about 900 m under the sea.",
+    "verdict": "CORRECT. (92 - 1.01 bar) / (1025 kg/m3 × 9.81 m/s2) ≈ 905 m, and secondary sources quote NASA as '~3,000 ft (900-930 m)'. I could not open NASA's own page to confirm that wording (NASA hosts were unreachable from here), but the physics checks out. The popular 'a mile underwater' (~1.6 km ≈ 163 bar) overstates it, so leaving it out is right.",
+    "source": "Hydrostatic calculation; https://ntrs.nasa.gov/citations/20070014676 (NASA history: Venus surface ≈ 3,300 ft ocean depth) ; https://scienceblog.com/m-the-surface-of-venus-is-more-than-200c-hotter-than-a-home-oven-and-thats-before-the-pressure-gets-you-rise-fifty-kilometres-into-the-clouds-and-both-the-heat-and-the-crush-ease-off/"
+   },
+   {
+    "claim": "Line 6 / on-screen '~465°C': surface temperature about 465 °C.",
+    "verdict": "CORRECT. The NSSDC mean surface temperature is 737 K = 464 °C, and it is nearly the same day/night and pole/equator. The script's '~' and 'lagbhag' cover the 1 °C rounding. Saying 'degree' without 'Celsius' is fine for Indian viewers because the screen shows °C.",
+    "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/venusfact.html ; https://www.universetoday.com/14306/temperature-of-venus/"
+   },
+   {
+    "claim": "Line 7: Mercury is closest to the Sun, but Venus is the hottest planet.",
+    "verdict": "CORRECT. Mercury's dayside peaks at ~430 °C (800 °F) with nights near -180 °C, while Venus is ~465 °C everywhere. 'Hottest planet' means surface temperature, which is the standard usage (NASA, Guinness).",
+    "source": "https://spaceplace.nasa.gov/all-about-mercury/en ; https://guinnessworldrecords.com/world-records/64987-hottest-planet"
+   },
+   {
+    "claim": "Line 8: Venus has a very thick (bahut ghana) carbon dioxide atmosphere.",
+    "verdict": "CORRECT. It is 96.5% CO2 and 3.5% N2. Surface air density is ~65 kg/m3, about 50× Earth's sea-level air, and the atmosphere's total mass is ~93× Earth's.",
+    "source": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/venusfact.html"
+   },
+   {
+    "claim": "Line 9: this atmosphere makes the heavy pressure and traps the heat.",
+    "verdict": "CORRECT. The weight of the massive atmosphere gives the ~92 bar, and the CO2 runaway greenhouse traps the heat. This is also why Venus beats Mercury, which has almost no atmosphere.",
+    "source": "https://www.space.com/44-venus-second-planet-from-the-sun-brightest-planet-in-solar-system.html ; https://nssdc.gsfc.nasa.gov/planetary/factsheet/venusfact.html"
+   },
+   {
+    "claim": "Line 10: 'Tum wahan zyada der zinda nahi reh paoge.'",
+    "verdict": "CORRECT and not overclaimed. No time is given, and nothing about being crushed or melting in one second.",
+    "source": "General knowledge; consistent with https://planetary.org/articles/what-would-it-be-like-to-stand-on-the-surface-of-venus"
+   },
+   {
+    "claim": "Lines 0-1 and title: 'Venus par sirf ek second!' hook.",
+    "verdict": "OK. It is only a framing device (taken from the original) and no line claims a specific survival time for a human. It never 'pays off', but that is a style point, not a factual one.",
+    "source": "Script review"
+   },
+   {
+    "claim": "Line 11 / on-screen: correct answer B, ~2 hours; 'VENERA 13, 1982 · 127 MIN · RECORD'.",
+    "verdict": "CORRECT. Venera 13 landed on 1 March 1982 and transmitted from the surface for 127 min (2 h 7 min), against a design life of ~32 min. That beat Venera 12 (110 min); its twin Venera 14 lasted 57 min. No lander has reached Venus's surface since Vega 2 (1985), so it is still the record in 2026. '2 minute' and '2 din' are clearly wrong. Not saying why it stopped is the safe choice.",
+    "source": "https://guinnessworldrecords.com/world-records/78367-longest-time-survived-on-venus-by-a-spacecraft ; https://en.wikipedia.org/wiki/Venera_13 ; https://www.space.com/18551-venera-13.html"
+   },
+   {
+    "claim": "Line 13: 'Ye poore planet jitna bada pressure cooker hai!' with chips PRESSURE ↑ · TEMP ↑.",
+    "verdict": "OK as a metaphor (both high pressure and high temperature), kept from the original. Line 9 already gives the real cause (the CO2 greenhouse), so it does not suggest that pressure alone heats Venus.",
+    "source": "Script review"
+   },
+   {
+    "claim": "On-screen labels: VENUS = SHUKRA, MERCURY = BUDH.",
+    "verdict": "CORRECT (शुक्र = Venus, बुध = Mercury).",
+    "source": "Standard Hindi planet names"
+   },
+   {
+    "claim": "Spoken numbers: बानवे = 92, नौ सौ = 900, चार सौ पैंसठ = 465, दो घंटे = 2 hours.",
+    "verdict": "CORRECT.",
+    "source": "Hindi numerals"
+   },
+   {
+    "claim": "word_count 118, est_seconds 40.8.",
+    "verdict": "CORRECT. A recount of the Roman lines (numbers counted as spoken words, e.g. 'chaar sau painsath' = 3) gives 118; at 2.9 words/s that is ~40.7 s.",
+    "source": "Manual recount"
+   },
+   {
+    "claim": "Facts kept for the description / pinned comment: lead melts at ~327 °C (Venus is hotter); at 92 bar water boils at only ~305 °C.",
+    "verdict": "CORRECT. Lead melts at 327.5 °C. From steam tables, water's saturation temperature at 9.2 MPa is ≈ 305 °C, so at 465 °C there is no liquid water on Venus, which makes the 'seeti kabhi nahi bajti' joke physically sound if it is used in the description.",
+    "source": "Standard reference values (lead melting point; IAPWS steam tables: 9 MPa → 303 °C, 10 MPa → 311 °C)"
+   },
+   {
+    "claim": "Footage caveat (not a script claim): the AI shots show a sharp Sun disc through the clouds and puffy cumulus clouds.",
+    "verdict": "ARTISTIC, NOT REALISTIC. From Venus's surface the solid cloud deck hides the Sun's disc, and the light is a dim, diffuse orange. Nothing in the script claims otherwise, and the planned 'AI visual' tag covers it. Don't add any line like 'yahan se Sooraj aisa dikhta hai'.",
+    "source": "https://planetary.org/articles/what-would-it-be-like-to-stand-on-the-surface-of-venus"
+   },
+   {
+    "claim": "Verification method note.",
+    "verdict": "NASA, Wikipedia and Guinness pages could not be fetched directly from this container (DNS blocked). The figures were checked through web-search results that quote those pages, plus physics calculations and standard reference values from my own knowledge.",
+    "source": "Tool limitation"
+   }
+  ]
+ },
+ "lang": {
+  "issues": [
+   {
+    "line": 14,
+    "severity": "high",
+    "problem": "WHOLE SCRIPT (anchored on the last line because it sets the VO end). The slots are planned at 2.7 to 3.3 words/s with only 0.1 s between lines. The script also asks for about 6 deliberate pauses that the slots have no room for: after each quiz option, after 'Jawab end mein!', after 'par sabse garam?', and 0.3 s after 'nahi hai…'. A natural, energetic Hindi read with real breaths (0.2 to 0.4 s) puts 118 words at about 44 to 47 s of VO, not 40.8 s. That is over the 42 s target. Lines 13 and 14 sit on shot E, which is already slowed to 0.8-0.85x and has only 3.9 s of source, so they cannot stretch. Fix: apply the word cuts in lines 1, 5, 7, 8, 9, 10 and 13 (118 words become about 108, roughly 41 to 43 s). Give the extra time to the 3D scenes, which can be any length, and lengthen the in/out points on the footage lines as noted per line. If the read is still over 42 s after tighten_vo.py, drop line 7 (the Mercury line) as the plan already says.",
+    "fix_devanagari": "(no single-line change: apply the per-line fixes, about 108 words in total)",
+    "fix_roman": "(no single-line change: apply the per-line fixes, about 108 words in total)",
+    "source": "timing"
+   },
+   {
+    "line": 0,
+    "severity": "medium",
+    "problem": "LANGUAGE: 'सिर्फ़ एक सेकंड!' is followed straight by 'इंसान तो छोड़ो…', so a listener hears 'a human lasts only one second there'. That is the overclaim the brief forbids. In the original, 'one second' was followed by what you would face; here the facts only start at about 9 s. Dropping 'सिर्फ़' and framing the line as a thought experiment ('सोचो') removes that meaning and keeps the same 5 words. The on-screen text becomes 'VENUS PAR / 1 SECOND?'. TIMING: 5 words in 1.6 s is about 3.1 words/s. Shot A continues, so let the slot run to about 1.8 to 1.9 s; the hook text is still on screen inside 2 s.",
+    "fix_devanagari": "सोचो, वीनस पर एक सेकंड!",
+    "fix_roman": "Socho, Venus par ek second!",
+    "source": "language"
+   },
+   {
+    "line": 1,
+    "severity": "medium",
+    "problem": "LANGUAGE: after 'इंसान तो छोड़ो', a native speaker asks 'कितनी देर टिक पाई?' ('could manage to last'). '…भी वहाँ कितनी देर टिकी?' sounds flat and slightly translated. 'वहाँ' isn't needed because the lander visual shows where. The gender is correct (मशीन is feminine). TIMING: 9 words plus the '…' pause in 2.9 s is about 3.1 words/s. Everything after 'मशीन' plays over 3D, so let the slot run to about 5.0 s; the cut on 'मशीन' lands at about 2.9 to 3.0 s. Update the on-screen text and the title idea to 'MACHINE KITNI DER TIK PAAYI?'.",
+    "fix_devanagari": "इंसान तो छोड़ो… मशीन भी कितनी देर टिक पाई?",
+    "fix_roman": "Insaan toh chhodo… machine bhi kitni der tik paayi?",
+    "source": "language"
+   },
+   {
+    "line": 2,
+    "severity": "medium",
+    "problem": "TIMING: 10 words plus the planned pause after each option (one tick per card) in 3.3 s needs about 3.9 to 4.0 s. The wording is fine and natural ('ए, बी, सी' read as letters; the parallel 'दो मिनट / दो घंटे / दो दिन' is easy to say). It plays over 3D, so just lengthen the slot to about 4.0 s.",
+    "fix_devanagari": "ए — दो मिनट? बी — दो घंटे? या सी — दो दिन?",
+    "fix_roman": "A: 2 minute? B: 2 ghante? Ya C: 2 din?",
+    "source": "timing"
+   },
+   {
+    "line": 3,
+    "severity": "low",
+    "problem": "TIMING: 3 words in 0.9 s (3.3 words/s), and the stamp plus lock animation needs a beat after it. It plays over 3D, so give it about 1.1 to 1.2 s. The wording is natural Hinglish.",
+    "fix_devanagari": "जवाब एंड में!",
+    "fix_roman": "Jawab end mein!",
+    "source": "timing"
+   },
+   {
+    "line": 4,
+    "severity": "medium",
+    "problem": "TIMING: 8 words plus a pause after 'प्रेशर!' in 2.7 s. The source has more room: frame check of ref.mp4 shows shot A runs to about 7.37 s, and the burned-in '92× EARTH'S PRESSURE' fades out by about 7.1 s. Use src 3.3-6.5 (about 3.2 s); the Hindi card still covers the English text. LANGUAGE: natural ('पहला झटका' sounds like a real Indian creator, and बानवे is spelled right). End on '!' rather than '।' for energy.",
+    "fix_devanagari": "पहला झटका: प्रेशर! धरती से लगभग बानवे गुना!",
+    "fix_roman": "Pehla jhatka: pressure! Dharti se lagbhag 92 guna!",
+    "source": "timing"
+   },
+   {
+    "line": 5,
+    "severity": "medium",
+    "problem": "LANGUAGE: the dangling '…नीचे जितना!' sounds translated (it copies English 'as much as'). 'जैसे … नीचे!' is how it would be said aloud, and it saves a word (9 to 8). The creator spells it 'samundar' in the Leh storyboard, so use समुंदर/samundar. Use 'क़रीब' with a nukta to match सिर्फ़/ज़मीन/क़ैद elsewhere. Change the on-screen text to '≈ 900 m SAMUNDAR MEIN NEECHE'.",
+    "fix_devanagari": "जैसे समुंदर में क़रीब नौ सौ मीटर नीचे!",
+    "fix_roman": "Jaise samundar mein kareeb 900 metre neeche!",
+    "source": "language"
+   },
+   {
+    "line": 6,
+    "severity": "medium",
+    "problem": "TIMING: 10 words, including the long 'चार सौ पैंसठ डिग्री', plus a pause after 'गर्मी!' in 3.3 s. Shot B is usable to about src 13.3, and the burned-in '465°C' (until about 12.5) is covered by our card. Use src 8.9-12.6 (about 3.7 s). Keep 'लगभग': 465 is the rounded mean (about 464 °C). Spelling is correct (पैंसठ = 65). Leaving out 'सेल्सियस' is natural in spoken Hindi; the screen shows °C.",
+    "fix_devanagari": "दूसरा झटका: गर्मी! ज़मीन पर लगभग चार सौ पैंसठ डिग्री!",
+    "fix_roman": "Doosra jhatka: garmi! Zameen par lagbhag 465 degree!",
+    "source": "timing"
+   },
+   {
+    "line": 6,
+    "severity": "low",
+    "problem": "CAPTIONS: the Roman text uses digits where several words are spoken: 'चार सौ पैंसठ' (3 words) becomes 465, 'नौ सौ' (line 5, 2 words) becomes 900, 'बानवे' (line 4) becomes 92. That is right for reading. But in word_text, map the FIRST spoken word to the digit string and blank the following ones ('सौ', 'पैंसठ'), or the captions will show a stray 'sau'/'painsath' or flash '465' too early. No text change.",
+    "fix_devanagari": "दूसरा झटका: गर्मी! ज़मीन पर लगभग चार सौ पैंसठ डिग्री!",
+    "fix_roman": "Doosra jhatka: garmi! Zameen par lagbhag 465 degree!",
+    "source": "language"
+   },
+   {
+    "line": 7,
+    "severity": "medium",
+    "problem": "TIMING: 10 words with two planned pauses ('…' and after 'garam?') in 3.3 s needs about 4 s. Dropping 'है' is natural with the ellipsis (9 words). It plays over 3D, so lengthen the slot to about 3.7 to 3.8 s. LANGUAGE: the on-screen chip says 'SURAJ' but the caption says 'Sooraj'. Use one spelling; 'Suraj' is the common Hinglish one. मर्करी is spelled correctly.",
+    "fix_devanagari": "सूरज के सबसे पास मर्करी… पर सबसे गरम? वीनस!",
+    "fix_roman": "Suraj ke sabse paas Mercury… par sabse garam? Venus!",
+    "source": "timing"
+   },
+   {
+    "line": 8,
+    "severity": "medium",
+    "problem": "TIMING: only 7 words, but 'कार्बन डाइऑक्साइड' and 'एटमॉस्फियर' are long. That is about 16 syllables plus a pause after 'क्यों?' in 2.6 s, which is a mouthful for one breath. Drop 'बहुत' ('घना' alone carries 'thick'). analysis.json shows src 7.4-18.5 is one continuous camera move with no cut, so the shot can also start earlier and end later: src 14.3-17.4 (about 3.1 s). Spelling: write 'एटमॉस्फ़ियर' with a nukta to match the rest. The gender agreement is right (masculine: का/घना).",
+    "fix_devanagari": "क्यों? कार्बन डाइऑक्साइड का घना एटमॉस्फ़ियर!",
+    "fix_roman": "Kyun? Carbon dioxide ka ghana atmosphere!",
+    "source": "timing"
+   },
+   {
+    "line": 9,
+    "severity": "medium",
+    "problem": "TIMING + LANGUAGE: 11 words in 3.6 s (3.06 words/s), and two animation beats (the pressure thump and the heat bouncing back) need breathing room. '…बनाता है, और गर्मी क़ैद कर लेता है' is grammatical but sounds textbook. The punchier spoken version without a verb has 8 words and still says both facts (the weight of the atmosphere makes the pressure, and the CO2 traps the heat). The on-screen text 'PRESSURE ↓ + GARMI QAID' still fits.",
+    "fix_devanagari": "इसी से भारी प्रेशर… और गर्मी अंदर क़ैद!",
+    "fix_roman": "Isi se bhaari pressure… aur garmi andar qaid!",
+    "source": "language"
+   },
+   {
+    "line": 10,
+    "severity": "medium",
+    "problem": "TIMING: this is the slow, dramatic heartbeat line, but it is 8 words in 2.6 s (3.1 words/s), so it would have to be rushed. Shot D is free up to src about 22.4 (line 12 starts at 22.6), so use src 18.6-21.8 (about 3.2 s). Optionally save a word with 'रहोगे' instead of 'रह पाओगे'; both are natural. Spelling is correct (ज़्यादा, ज़िंदा). 'तुम' matches the creator's 'Tumhara' CTA.",
+    "fix_devanagari": "वहाँ तुम ज़्यादा देर ज़िंदा नहीं रहोगे।",
+    "fix_roman": "Wahan tum zyada der zinda nahi rahoge.",
+    "source": "timing"
+   },
+   {
+    "line": 11,
+    "severity": "low",
+    "problem": "LANGUAGE: 'सबसे लंबा रिकॉर्ड' reads a bit like a translation. The creator's own reveal line is 'Sahi jawab hai C: …', and calling back to the quiz verb 'टिक पाई' with 'सबसे ज़्यादा टिकी' sounds more natural. It stays accurate: the longest-lasting lander did about 2 hours. Use 'क़रीब' with a nukta. 9 words over 3D, so the length is fine.",
+    "fix_devanagari": "सही जवाब है बी! सबसे ज़्यादा टिकी — क़रीब दो घंटे!",
+    "fix_roman": "Sahi jawab hai B! Sabse zyada tiki — kareeb 2 ghante!",
+    "source": "language"
+   },
+   {
+    "line": 12,
+    "severity": "low",
+    "problem": "TIMING: the 1.8 s slot includes the planned 0.3 s of silence, which leaves about 1.5 s for 5 words (3.3 words/s) on a line that should be said slowly before the punchline. Shot D holds the close-up until about src 26, so use src 22.6-24.9. The wording is natural.",
+    "fix_devanagari": "वीनस सिर्फ़ गरम नहीं है…",
+    "fix_roman": "Venus sirf garam nahi hai…",
+    "source": "timing"
+   },
+   {
+    "line": 13,
+    "severity": "medium",
+    "problem": "TIMING: the punchline sits on footage that is already slowed to 0.8x (shot E has only 3.9 s of source for lines 13 and 14), so it cannot stretch. 8 words in 2.6 s means the punchline gets rushed. Drop 'ये': Venus carries over from line 12 ('Venus sirf garam nahi hai… poore planet jitna bada pressure cooker hai!'). That gives 7 words, about 2.7 words/s. प्लैनेट is spelled fine.",
+    "fix_devanagari": "पूरे प्लैनेट जितना बड़ा प्रेशर कुकर है!",
+    "fix_roman": "Poore planet jitna bada pressure cooker hai!",
+    "source": "timing"
+   },
+   {
+    "line": 14,
+    "severity": "low",
+    "problem": "LANGUAGE: 'गेस' works, but the creator's own CTA uses 'jawab' ('Tumhara jawab A, B ya C tha? Comment karo!'), and 'jawab' is already the quiz word in lines 3 and 11. The word count stays at 6; 2.0 s (3 words/s) is OK. If it runs tight, hold the last frame of shot E for about 0.2 s before the dip to the end card.",
+    "fix_devanagari": "तुम्हारा जवाब क्या था? कमेंट करो!",
+    "fix_roman": "Tumhara jawab kya tha? Comment karo!",
+    "source": "language"
+   }
+  ],
+  "verified_facts": [
+   {
+    "claim": "word_count = 118",
+    "verdict": "Correct. Recounted per line: 5+9+10+3+8+9+10+10+7+11+8+9+5+8+6 = 118. The suggested fixes bring it to about 108.",
+    "source": "timing"
+   },
+   {
+    "claim": "est_seconds 40.8 at about 2.9 words/s",
+    "verdict": "Optimistic. Words/s per slot: L0 3.1, L1 3.1, L2 3.0, L3 3.3, L4 3.0, L5 3.0, L6 3.0, L7 3.0, L8 2.7 (long English words), L9 3.1, L10 3.1, L11 2.7, L12 3.3 (after the 0.3 s silence), L13 3.1, L14 3.0. That is at or above the top of the 2.5-3 range, with 0.1 s gaps and no room for the 6 scripted pauses. A realistic read is about 44 to 47 s as written, and about 41 to 43 s with the cuts.",
+    "source": "timing"
+   },
+   {
+    "claim": "Hook within the first 2 s",
+    "verdict": "Yes. Line 0 ends at 1.6 s (1.8-1.9 s if the slot is lengthened as suggested).",
+    "source": "timing"
+   },
+   {
+    "claim": "Number words: बानवे = 92, नौ सौ = 900, चार सौ पैंसठ = 465, दो = 2",
+    "verdict": "Correct spellings and natural to say aloud. The digit captions need a word_text merge for the words spoken as several words (900, 465).",
+    "source": "language"
+   },
+   {
+    "claim": "Devanagari spellings (वीनस, मर्करी, प्लैनेट, कार्बन डाइऑक्साइड, एटमॉस्फियर, रिकॉर्ड, कमेंट, सिर्फ़, ज़मीन, क़ैद, ज़्यादा, ज़िंदा, पैंसठ, बानवे, समंदर)",
+    "verdict": "All acceptable. Only the nukta use is inconsistent: 'करीब' and 'एटमॉस्फियर' lack it while सिर्फ़/क़ैद have it. This has no effect on the read. 'समंदर' is fine, but the creator writes 'samundar'.",
+    "source": "language"
+   },
+   {
+    "claim": "Roman Hinglish matches the Devanagari word for word",
+    "verdict": "Yes on all 15 lines. Digits are used for spoken numbers by design, and 'minute'/'metre'/'degree' are acceptable English spellings for मिनट/मीटर/डिग्री. One mismatch: the line 7 on-screen text says 'SURAJ' while the caption says 'Sooraj'.",
+    "source": "language"
+   },
+   {
+    "claim": "Gender/number agreement",
+    "verdict": "Correct: मशीन (feminine) takes टिकी/टिक पाई; एटमॉस्फियर (masculine) takes का/घना/बनाता/लेता; 'दो घंटे' and 'दो मिनट' are correct plural forms.",
+    "source": "language"
+   },
+   {
+    "claim": "Shot A in ref.mp4 runs 0-7.4 s",
+    "verdict": "Confirmed with a 10 fps frame strip from 6.2 to 7.4 s. Shot A lasts until about 7.37 s, and the burned-in '92× EARTH'S PRESSURE' fades out by about 7.1 s. The 7.000 thumbnail in sheet_01 already shows shot B because of a seek offset. Line 4 can therefore use src 3.3-6.5.",
+    "source": "/home/user/virat/projects/short4/download/ref.mp4 (frames 6.2-7.4 s)"
+   },
+   {
+    "claim": "Shots B and C are separate shots (7.4-13.4, 13.4-18.5)",
+    "verdict": "analysis.json finds scene cuts only at 7.4 and 18.5. 7.4-18.5 is one continuous camera move (ground, then mountains, then clouds), so the in/out points of lines 6 and 8 can be lengthened freely within it.",
+    "source": "/home/user/virat/projects/short4/work/analysis.json"
+   },
+   {
+    "claim": "Script follows the creator's own Leh style",
+    "verdict": "Mostly yes (A/B/C quiz, 'lagbhag', 'garam', 'toh', 'Comment karo!'). Small differences from the creator's words: 'Sahi jawab — B' vs their 'Sahi jawab hai C', 'guess' vs their 'jawab', 'samandar' vs their 'samundar'.",
+    "source": "/home/user/virat/projects/short3/storyboard.md"
+   }
+  ]
+ }
+}

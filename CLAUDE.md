@@ -51,6 +51,8 @@ before assembling. AI-generated shots: small `tag` overlay "AI visual" and tell 
 - `projects/short3` (Leh dal Short): built from the creator's own VO + clips following their storyboard (`storyboard.md`,
   their words; my notes in `storyboard_notes.md`). Shots + stock credits: `sources.md`; cut: `edl.json`; edit: `plan.json`.
   Verified science + numbers are in `NOTES.md`. v3 uses the creator's AI clips (dal hook, whistle cooker) with "AI visual" tags.
+- `projects/short4` (Venus Hindi remake): Hindi VO script delivered (`script.md`); waiting for the creator's recording, then
+  edit over their English Short's footage + Three.js 3D scenes (plan in `NOTES.md`).
 
 ## AI voiceover ("you give new voice over")
 `tts.py <voice> script.txt out.wav --speed 1.34 --pauses '[...]' --json timings.json` — free offline Hindi voices
