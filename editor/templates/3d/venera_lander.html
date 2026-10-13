@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<title>Venera lander 3D</title>
+<!-- Soviet Venera-style lander on Venus (Three.js inside HyperFrames, CPU-renderable, deterministic, no text).
+     Lander: dark grey pressure sphere on a toroidal landing ring, wide flat drag-brake disc around its upper half,
+     antenna housing + short mast with a helical antenna, a few instrument boxes (gold foil / grey). Generic: no flags,
+     no lettering. Everything is procedural (seeded noise): ground slabs, rocks, clouds, sky, canopy.
+     Look: warm golden-orange haze, dim diffuse light (no Sun disc), dark brown rocky plain; post pass does ACES,
+     a warm grade, vignette, film grain and heat shimmer (screen-space refraction above the hot lander / horizon).
+     Settings live in the one-line window.CFG below; render3d.py --config '{"mode":"reveal"}' merges JSON over it.
+       mode "descent" (6.8 s): under an orange/white parachute through yellow cloud layers rushing upward; chute cut
+                       loose at cutAt (default 1.8) and floats up out of frame; falls on the disc brake, clouds thin out,
+                       the plain appears below; touchdown at touchAt (default 4.8) with dust puff + small camera shake;
+                       rests with faint heat shimmer. From ~1.2 s the lander sits in y ~1060-1460 px; y 200-1000 stays
+                       sky/haze/soft cloud (quiz cards go there).
+       mode "reveal"  (3.8 s, pass --duration 3.8): lander standing on the plain, slow push-in, hull + disc glow
+                       progressively dull red-orange, heat shimmer above; the green status light on the mast blinks and
+                       goes dark at blinkAt (default 2.7) and a wisp of smoke rises. Top band y 150-470 stays calm sky;
+                       the lander sits in y ~800-1500.
+     Optional CFG keys (absolute seconds): cutAt, touchAt, blinkAt. -->
+<script>
+window.CFG = { mode: "descent", duration: 6.8 };
+</script>
+<script src="assets/gsap.min.js"></script>
+<script type="importmap">{ "imports": { "three": "./assets/three.module.js" } }</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+#root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #7a4e22; }
+#gl { position: absolute; inset: 0; width: 1080px; height: 1920px; display: block; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6.8" data-width="1080" data-height="1920">
+  <canvas id="gl" width="1080" height="1920"></canvas>
+</div>
+<script>
+  (function () {
+    const C = window.CFG, root = document.getElementById("root");
+    root.setAttribute("data-duration", String(C.duration));
+    const tl = gsap.timeline({ paused: true });
+    tl.set({}, {}, C.duration); // timeline length == composition length (no DOM animation: all motion is WebGL)
+    window.__timelines = window.__timelines || {};
+    window.__timelines["main"] = tl;
+  })();
+</script>
+<script type="module">
+import * as THREE from "three";
+
+const CFG = window.CFG;
+const W = 1080, H = 1920, D2R = Math.PI / 180, TAU = Math.PI * 2;
+const MODE = CFG.mode === "reveal" ? "reveal" : "descent";
+const DUR = +CFG.duration || (MODE === "reveal" ? 3.8 : 6.8);
+const CUT = CFG.cutAt ?? 1.8, TOUCH = CFG.touchAt ?? 4.8, BLINK = CFG.blinkAt ?? 2.7;
+const FOV = 40, TANF = Math.tan((FOV / 2) * D2R);
+const clamp01 = (x) => Math.max(0, Math.min(1, x));
+const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const lerp = (a, b, t) => a + (b - a) * t;
+
+// ---------------------------------------------------------------- seeded noise (tileable gradient noise + 3D value noise)
+let seed = 7041983;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const P = new Uint8Array(512);
+for (let i = 0; i < 256; i++) P[i] = i;
+for (let i = 255; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [P[i], P[j]] = [P[j], P[i]]; }
+for (let i = 0; i < 256; i++) P[i + 256] = P[i];
+const wrap = (i, p) => ((i % p) + p) % p & 255;
+const GX = new Float32Array(256), GY = new Float32Array(256);
+for (let i = 0; i < 256; i++) { const a = rnd() * TAU; GX[i] = Math.cos(a); GY[i] = Math.sin(a); }
+function tnoise(x, y, px, py) { // gradient noise, periodic in x (px) and y (py); ~[0,1]
+  const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi;
+  const u = fx * fx * fx * (fx * (fx * 6 - 15) + 10), v = fy * fy * fy * (fy * (fy * 6 - 15) + 10);
+  const x0 = wrap(xi, px), x1 = wrap(xi + 1, px), y0 = wrap(yi, py), y1 = wrap(yi + 1, py);
+  const g = (ix, iy, dx, dy) => { const h = P[P[ix] + iy]; return GX[h] * dx + GY[h] * dy; };
+  const a = g(x0, y0, fx, fy), b = g(x1, y0, fx - 1, fy), c = g(x0, y1, fx, fy - 1), d = g(x1, y1, fx - 1, fy - 1);
+  return 0.5 + 0.75 * (a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v);
+}
+function tfbm(x, y, f, oct) { // x, y in [0,1): tileable fbm starting at integer frequency f
+  let s = 0, a = 0.5, n = 0;
+  for (let i = 0; i < oct; i++) { s += a * tnoise(x * f, y * f, f, f); n += a; f *= 2; a *= 0.5; }
+  return s / n;
+}
+const nz = (x, y) => tnoise(x, y, 256, 256);               // plain 2D noise (period 256)
+function fbm2(x, y, oct) { let s = 0, a = 0.5, n = 0; for (let i = 0; i < oct; i++) { s += a * nz(x, y); n += a; x *= 2.03; y *= 2.03; a *= 0.5; } return s / n; }
+const fade = (t) => t * t * (3 - 2 * t);
+function vnoise3(x, y, z) {
+  const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
+  x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+  const u = fade(x), v = fade(y), w = fade(z), h = (a, b, c) => P[P[P[a] + b] + c] / 255;
+  return lerp(lerp(lerp(h(X, Y, Z), h(X + 1, Y, Z), u), lerp(h(X, Y + 1, Z), h(X + 1, Y + 1, Z), u), v),
+              lerp(lerp(h(X, Y, Z + 1), h(X + 1, Y, Z + 1), u), lerp(h(X, Y + 1, Z + 1), h(X + 1, Y + 1, Z + 1), u), v), w);
+}
+// tileable Voronoi: N x N jittered feature points; results in VF1 / VF2 / VID
+function makeCells(N) {
+  const px = new Float32Array(N * N), py = new Float32Array(N * N), tone = new Float32Array(N * N);
+  for (let k = 0; k < N * N; k++) { px[k] = (k % N) + 0.12 + 0.76 * rnd(); py[k] = Math.floor(k / N) + 0.12 + 0.76 * rnd(); tone[k] = rnd(); }
+  return { N, px, py, tone };
+}
+let VF1 = 0, VF2 = 0, VID = 0;
+function voronoi(C, u, v) {
+  const N = C.N, x = u * N, y = v * N, xi = Math.floor(x), yi = Math.floor(y);
+  let f1 = 9, f2 = 9, id = 0;
+  for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+    const cx = xi + di, cy = yi + dj, wx = ((cx % N) + N) % N, wy = ((cy % N) + N) % N, k = wy * N + wx;
+    const dx = C.px[k] - wx + cx - x, dy = C.py[k] - wy + cy - y, d = Math.sqrt(dx * dx + dy * dy);
+    if (d < f1) { f2 = f1; f1 = d; id = k; } else if (d < f2) f2 = d;
+  }
+  VF1 = f1; VF2 = f2; VID = id;
+}
+
+// ---------------------------------------------------------------- canvas textures
+function makeCanvas(w, h = w) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
+function paint(w, h, fn, fn2) { // fn(u, v, o) writes RGBA into o (0..255); optional fn2 second canvas from the same pass
+  const c = makeCanvas(w, h), img = c.getContext("2d").createImageData(w, h);
+  const c2 = fn2 ? makeCanvas(w, h) : null, img2 = c2 ? c2.getContext("2d").createImageData(w, h) : null;
+  const o = [0, 0, 0, 255], o2 = [0, 0, 0, 255];
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    o[3] = 255; o2[3] = 255;
+    fn((i + 0.5) / w, (j + 0.5) / h, o, o2);
+    const k = (j * w + i) * 4;
+    img.data[k] = o[0]; img.data[k + 1] = o[1]; img.data[k + 2] = o[2]; img.data[k + 3] = o[3];
+    if (img2) { img2.data[k] = o2[0]; img2.data[k + 1] = o2[1]; img2.data[k + 2] = o2[2]; img2.data[k + 3] = o2[3]; }
+  }
+  c.getContext("2d").putImageData(img, 0, 0);
+  if (c2) c2.getContext("2d").putImageData(img2, 0, 0);
+  return c2 ? [c, c2] : c;
+}
+function tex(c, { srgb = true, rep = [1, 1], repeat = true } = {}) {
+  const t = new THREE.CanvasTexture(c);
+  if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep[0], rep[1]); }
+  t.anisotropy = 4;
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+// ground: dark brown basalt slabs with cracks, pebble patches and ochre dust (colour + height), tileable
+const GT = 1024;
+const slabs = makeCells(6), pebs = makeCells(44), grit = makeCells(110);
+const [groundC, groundBC] = paint(GT, GT, (u, v, o, b) => {
+  const wu = u + (tfbm(u + 0.31, v + 0.77, 6, 3) - 0.5) * 0.05, wv = v + (tfbm(u + 0.62, v + 0.18, 6, 3) - 0.5) * 0.05;
+  voronoi(slabs, ((wu % 1) + 1) % 1, ((wv % 1) + 1) % 1);
+  const edge = VF2 - VF1, tone = slabs.tone[VID];
+  const crack = 1 - smooth(0.0, 0.05, edge);
+  const chip = 1 - smooth(0.04, 0.12, edge);                           // broken slab rims
+  voronoi(pebs, u, v); const pd = VF1, ptone = pebs.tone[VID];
+  const peb = 1 - smooth(0.05, 0.42, pd);
+  const pebMask = smooth(0.5, 0.66, tfbm(u + 0.5, v + 0.1, 5, 3));
+  voronoi(grit, u, v); const gr = 1 - smooth(0.0, 0.35, VF1), gtone = grit.tone[VID];
+  const n = tfbm(u, v, 4, 5), dust = smooth(0.52, 0.78, tfbm(u + 0.9, v + 0.4, 3, 4));
+  const fine = tnoise(u * 256, v * 256, 256, 256) - 0.5;
+  const t = clamp01(tone * 0.55 + n * 0.6 - 0.1);
+  let r = lerp(46, 92, t), g = lerp(33, 64, t), bl = lerp(24, 42, t);    // basalt brown
+  const pk = pebMask * smooth(0.2, 0.5, peb);                           // pebbles over the slab
+  r = lerp(r, lerp(52, 98, ptone) * (0.7 + 0.45 * peb), pk); g = lerp(g, lerp(37, 68, ptone) * (0.7 + 0.45 * peb), pk); bl = lerp(bl, lerp(26, 44, ptone) * (0.7 + 0.45 * peb), pk);
+  const gk = smooth(0.35, 0.7, gr) * 0.35 * (1 - pk);                  // grit
+  r = lerp(r, lerp(40, 110, gtone), gk); g = lerp(g, lerp(30, 78, gtone), gk); bl = lerp(bl, lerp(22, 50, gtone), gk);
+  const dk = dust * 0.4 * (1 - pk);                                     // ochre dust drifts in the low parts
+  r = lerp(r, 128, dk); g = lerp(g, 88, dk); bl = lerp(bl, 52, dk);
+  const shade = 1 - 0.6 * crack - 0.15 * chip;
+  o[0] = (r + fine * 14) * shade; o[1] = (g + fine * 11) * shade; o[2] = (bl + fine * 8) * shade;
+  const hgt = 0.55 + 0.18 * tone + 0.12 * n - 0.55 * crack - 0.12 * chip + pk * 0.35 * peb + gk * 0.3 + fine * 0.08 - dk * 0.1;
+  b[0] = b[1] = b[2] = 255 * clamp01(hgt);
+});
+const groundMap = tex(groundC, { rep: [1, 1] }), groundBump = tex(groundBC, { srgb: false });
+
+// hull: equirect for the sphere (seams, rivets, grime streaks) + bump
+const [hullC, hullBC] = paint(512, 256, (u, v, o, b) => {
+  const lat = (0.5 - v) * Math.PI;                          // canvas top = sphere top
+  const lon = u * TAU;
+  const g = tfbm(u, v * 0.5, 8, 4), streak = tfbm(u * 1.0, v * 0.12, 32, 3);
+  const panel = (Math.floor(u * 12) % 2) * 0.04;
+  let s = 0.82 + 0.16 * (g - 0.5) + panel - 0.12 * smooth(0.55, 0.8, streak);
+  let h = 0.6 + 0.1 * g;
+  const seamLat = [0.0, 0.38, -0.42, 0.95, -0.9];
+  for (const L of seamLat) { const d = Math.abs(lat - L) * 256 / Math.PI; s -= 0.35 * (1 - smooth(0.4, 1.6, d)); h -= 0.5 * (1 - smooth(0.4, 1.6, d)); }
+  const du = Math.abs(((u * 12) % 1) - 0.5) * 2;           // longitudinal seams every 30 deg
+  const dl = (1 - du) * 512 / 12 * Math.cos(lat);
+  if (Math.abs(lat) < 0.95) { s -= 0.25 * (1 - smooth(0.3, 1.2, dl)); h -= 0.35 * (1 - smooth(0.3, 1.2, dl)); }
+  // rivets along the equator flange rows
+  for (const L of [0.03, -0.03]) {
+    const dy = (lat - L) * 256 / Math.PI, cu = ((u * 96) % 1) - 0.5, dx = cu * 512 / 96 * Math.cos(lat);
+    const rr = Math.sqrt(dx * dx + dy * dy);
+    if (rr < 1.6) { s += 0.18 * (1 - rr / 1.6); h += 0.4 * (1 - rr / 1.6); }
+  }
+  s = Math.max(0.3, s);
+  o[0] = 255 * Math.min(1, s * 0.98); o[1] = 255 * Math.min(1, s * 0.97); o[2] = 255 * Math.min(1, s * 0.95);
+  b[0] = b[1] = b[2] = 255 * clamp01(h);
+});
+const hullMap = tex(hullC, { repeat: false }), hullBump = tex(hullBC, { srgb: false, repeat: false });
+
+// panelled metal (disc brake, ring): u = around, v = along profile
+const [panelC, panelBC] = paint(1024, 64, (u, v, o, b) => {
+  const k = u * 32, f = k % 1, id = Math.floor(k);
+  const seam = 1 - smooth(0.0, 0.025, Math.min(f, 1 - f));
+  const g = tfbm(u, v, 16, 3);
+  const s = 0.86 + 0.05 * ((id * 7) % 3 - 1) + 0.1 * (g - 0.5) - 0.3 * seam;
+  o[0] = o[1] = o[2] = 255 * s; o[2] *= 0.97;
+  b[0] = b[1] = b[2] = 255 * clamp01(0.6 - 0.5 * seam + 0.05 * g);
+});
+const panelMap = tex(panelC), panelBump = tex(panelBC, { srgb: false });
+
+// crinkled gold foil (MLI blanket)
+const [foilC, foilBC] = paint(256, 256, (u, v, o, b) => {
+  const a = Math.abs(tfbm(u, v, 4, 4) - 0.5) * 2, c = Math.abs(tfbm(u + 0.5, v + 0.3, 8, 3) - 0.5) * 2;
+  const h = 1 - Math.min(1, a * 0.7 + c * 0.6);
+  const s = 0.75 + 0.35 * h;
+  o[0] = 255 * Math.min(1, s); o[1] = 255 * Math.min(1, s * 0.98); o[2] = 255 * Math.min(1, s * 0.95);
+  b[0] = b[1] = b[2] = 255 * h;
+});
+const foilMap = tex(foilC), foilBump = tex(foilBC, { srgb: false });
+
+// canopy: 16 gores alternating orange / white, darker seams
+const NG = 16;
+const canopyC = paint(1024, 64, (u, v, o) => {
+  const k = u * NG, f = k % 1, id = Math.floor(k);
+  const seam = 1 - smooth(0.0, 0.03, Math.min(f, 1 - f));
+  const band = 1 - smooth(0.0, 0.04, Math.abs(v - 0.62));
+  const orange = id % 2 === 0;
+  let r = orange ? 226 : 238, g = orange ? 104 : 230, bl = orange ? 38 : 214;
+  const n = tfbm(u, v, 32, 2) - 0.5;
+  const s = 1 - 0.28 * seam - 0.12 * band + 0.05 * n;
+  o[0] = r * s; o[1] = g * s; o[2] = bl * s;
+});
+const canopyMap = tex(canopyC, { repeat: false });
+
+// cloud puffs (billowy, lit from above) and stretched wisps
+function puffCanvas(n, opt) {
+  const lobes = [], nl = opt.lobes;
+  for (let i = 0; i < nl; i++) {
+    const a = rnd() * TAU, r = Math.sqrt(rnd()) * opt.spread;
+    lobes.push([Math.cos(a) * r * opt.wx, Math.sin(a) * r * opt.wy - 0.05, opt.r0 + rnd() * opt.r1]);
+  }
+  const off = rnd() * 7;
+  return paint(n, n, (u, v, o) => {
+    const x = u * 2 - 1, y = v * 2 - 1; // y down
+    let d = 0;
+    for (const [lx, ly, lr] of lobes) { const q = Math.hypot(x - lx, (y - ly) * opt.sy) / lr; d = Math.max(d, 1 - q); }
+    d *= 1 - smooth(opt.flat, opt.flat + 0.4, y);
+    d *= 1 - smooth(0.82, 1.0, Math.max(Math.abs(x), Math.abs(y)));
+    const nn = tfbm((u * opt.nx + off) % 1, (v * opt.ny + off * 0.37) % 1, 4, 5);
+    const dens = d * 1.5 + (nn - 0.5) * 0.95;
+    const a = smooth(0.06, 0.62, dens) * opt.alpha;
+    const shade = 0.8 + 0.22 * (-y) + 0.25 * (nn - 0.5) + 0.12 * smooth(0.1, 0.8, d);
+    const s = Math.max(0.35, Math.min(1.08, shade));
+    o[0] = 255 * Math.min(1, s); o[1] = 255 * Math.min(1, s * 0.94); o[2] = 255 * Math.min(1, s * 0.84); o[3] = 255 * a;
+  });
+}
+const puffTex = [
+  puffCanvas(512, { lobes: 7, spread: 0.5, wx: 1.3, wy: 0.55, r0: 0.3, r1: 0.25, sy: 1, flat: 0.25, nx: 1, ny: 1, alpha: 1 }),
+  puffCanvas(512, { lobes: 6, spread: 0.45, wx: 1.4, wy: 0.4, r0: 0.28, r1: 0.22, sy: 1.15, flat: 0.2, nx: 1, ny: 1, alpha: 1 }),
+  puffCanvas(256, { lobes: 5, spread: 0.4, wx: 1.0, wy: 0.8, r0: 0.3, r1: 0.25, sy: 1, flat: 0.4, nx: 1, ny: 1, alpha: 0.9 }),
+  puffCanvas(256, { lobes: 5, spread: 0.45, wx: 0.5, wy: 1.3, r0: 0.22, r1: 0.18, sy: 0.55, flat: 0.75, nx: 1, ny: 0.4, alpha: 0.8 }), // wisp
+].map((c) => tex(c, { repeat: false }));
+
+// soft dust / smoke blob, glow, contact shadow
+const dustTex = tex(paint(256, 256, (u, v, o) => {
+  const x = u * 2 - 1, y = v * 2 - 1, r = Math.hypot(x, y);
+  const n = tfbm(u, v, 4, 4);
+  const a = Math.pow(1 - smooth(0.0, 1.0, r * (0.85 + 0.35 * (n - 0.5) * 2)), 1.6) * (0.55 + 0.9 * (n - 0.35));
+  o[0] = o[1] = o[2] = 255 * (0.85 + 0.2 * (n - 0.5)); o[3] = 255 * clamp01(a);
+}), { repeat: false });
+const glowTex = tex(paint(128, 128, (u, v, o) => {
+  const r = Math.hypot(u * 2 - 1, v * 2 - 1);
+  o[0] = o[1] = o[2] = 255; o[3] = 255 * Math.pow(clamp01(1 - r), 2.2);
+}), { repeat: false });
+const shadowTex = tex(paint(256, 256, (u, v, o) => {
+  const r = Math.hypot(u * 2 - 1, v * 2 - 1);
+  const ring = Math.exp(-Math.pow((r - 0.8) / 0.12, 2));
+  o[0] = o[1] = o[2] = 0; o[3] = 255 * clamp01(0.75 * Math.pow(clamp01(1 - r), 0.8) + 0.25 * ring);
+}), { repeat: false });
+// overcast ceiling (seen in the sky) and the shimmer displacement noise
+const ceilTex = tex(paint(512, 512, (u, v, o) => {
+  const n = tfbm(u, v, 3, 6), m = tfbm(u + 0.4, v + 0.2, 2, 3);
+  o[0] = o[1] = o[2] = 255 * clamp01(0.5 + (n - 0.5) * 1.6 + (m - 0.5) * 0.5);
+}), { srgb: false });
+const shimC = paint(256, 256, (u, v, o) => {
+  o[0] = 255 * tfbm(u, v, 4, 3); o[1] = 255 * tfbm(u + 0.5, v + 0.25, 4, 3); o[2] = 0;
+});
+const shimTex = tex(shimC, { srgb: false });
+
+// ---------------------------------------------------------------- renderer (linear HDR target -> post pass)
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("gl"), antialias: false, alpha: false,
+  preserveDrawingBuffer: true, powerPreference: "high-performance" });
+renderer.setSize(W, H, false); renderer.setPixelRatio(1);
+renderer.toneMapping = THREE.NoToneMapping;
+const rt = new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType, samples: 4 });
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(FOV, W / H, 0.1, 3000);
+
+// environment for metal reflections: golden overcast above, bright horizon, dark ground below
+{
+  const eqC = paint(256, 128, (u, v, o) => {
+    const e = 0.5 - v; // +0.5 = zenith
+    let r, g, b;
+    if (e > 0) { const k = smooth(0, 0.5, e); r = lerp(250, 205, k); g = lerp(196, 140, k); b = lerp(110, 66, k);
+      const glow = Math.exp(-Math.pow((u - 0.18) / 0.12, 2)) * smooth(0.02, 0.25, e) * (1 - smooth(0.25, 0.48, e)); r += 30 * glow; g += 26 * glow; b += 14 * glow; }
+    else { const k = smooth(0, 0.12, -e); r = lerp(210, 62, k); g = lerp(150, 42, k); b = lerp(80, 26, k); }
+    o[0] = Math.min(255, r); o[1] = Math.min(255, g); o[2] = Math.min(255, b);
+  });
+  const eq = tex(eqC, { repeat: false }); eq.mapping = THREE.EquirectangularReflectionMapping;
+  const pm = new THREE.PMREMGenerator(renderer);
+  scene.environment = pm.fromEquirectangular(eq).texture;
+  scene.environmentIntensity = 0.85;
+  pm.dispose();
+}
+
+// sky dome (fog-matched horizon, soft overcast texture, broad diffuse glow, no Sun disc)
+const skyU = {
+  cHor: { value: new THREE.Color() }, cZen: { value: new THREE.Color() }, cGlow: { value: new THREE.Color() },
+  glowDir: { value: new THREE.Vector3(-0.45, 0.35, -0.8).normalize() }, ceilA: { value: 0 }, ceilH: { value: 10 },
+  tCeil: { value: ceilTex }, cOff: { value: new THREE.Vector2() },
+};
+const sky = new THREE.Mesh(new THREE.SphereGeometry(1500, 48, 24), new THREE.ShaderMaterial({
+  uniforms: skyU, side: THREE.BackSide, depthWrite: false, fog: false,
+  vertexShader: `varying vec3 vDir; void main(){ vec4 wp = modelMatrix * vec4(position, 1.0); vDir = wp.xyz - cameraPosition;
+    gl_Position = projectionMatrix * viewMatrix * wp; }`,
+  fragmentShader: `uniform vec3 cHor, cZen, cGlow, glowDir; uniform float ceilA, ceilH; uniform sampler2D tCeil; uniform vec2 cOff;
+    varying vec3 vDir;
+    void main(){
+      vec3 d = normalize(vDir); float e = d.y;
+      vec3 col = mix(cHor, cZen, smoothstep(0.0, 0.6, e));
+      if (e > 0.004) {
+        vec2 p = d.xz / max(e, 0.03) * ceilH * 0.012 + cOff;
+        float c = texture2D(tCeil, p).r * 0.65 + texture2D(tCeil, p * 2.7 + 0.31).r * 0.35;
+        col *= 1.0 + (c - 0.5) * 0.42 * ceilA * smoothstep(0.03, 0.3, e);
+      }
+      float g = pow(max(dot(d, glowDir), 0.0), 5.0);
+      col += cGlow * g;
+      gl_FragColor = vec4(col, 1.0);
+    }`,
+}));
+sky.renderOrder = -10; sky.frustumCulled = false; scene.add(sky);
+scene.fog = new THREE.FogExp2(0xc08040, 0.012);
+
+// ---------------------------------------------------------------- the plain: gently rolling, low ridges far away
+const ground = (() => {
+  const S = 1000, N = 200;
+  const g = new THREE.PlaneGeometry(S, S, N, N); g.rotateX(-Math.PI / 2);
+  const p = g.attributes.position, col = new Float32Array(p.count * 3);
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), z = p.getZ(i), r = Math.hypot(x, z);
+    let h = (fbm2(x / 35 + 11, z / 35 + 5, 3) - 0.5) * 2.4 * smooth(10, 45, r);
+    const ridge = 1 - Math.abs(fbm2(x / 90 + 3, z / 90 + 17, 4) - 0.5) * 2;
+    h += Math.pow(ridge, 3) * 22 * smooth(90, 220, r) + (fbm2(x / 60, z / 60, 3) - 0.45) * 10 * smooth(120, 260, r);
+    p.setY(i, h);
+    const m = fbm2(x / 14 + 40, z / 14 + 9, 4), m2 = fbm2(x / 4 + 7, z / 4 + 3, 2);
+    const k = 0.62 + 0.75 * (m - 0.5) + 0.25 * (m2 - 0.5);
+    col[3 * i] = k * 1.02; col[3 * i + 1] = k * 0.97; col[3 * i + 2] = k * 0.92;
+  }
+  g.setAttribute("color", new THREE.BufferAttribute(col, 3));
+  g.computeVertexNormals();
+  const rep = S / 4.2;
+  groundMap.repeat.set(rep, rep); groundBump.repeat.set(rep, rep);
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: groundMap, bumpMap: groundBump, bumpScale: 2.2,
+    vertexColors: true, roughness: 0.96, metalness: 0, envMapIntensity: 0.7 }));
+  scene.add(m);
+  return m;
+})();
+
+// rocks: angular stones (icosahedra cut by random planes), flat slabs, scattered around the landing site
+function rockGeo(cuts, flat) {
+  const g = new THREE.IcosahedronGeometry(1, 2), p = g.attributes.position, v = new THREE.Vector3();
+  const so = rnd() * 50, planes = [];
+  for (let i = 0; i < cuts; i++) {
+    const n = new THREE.Vector3(rnd() * 2 - 1, rnd() * 1.6 - 0.4, rnd() * 2 - 1).normalize();
+    planes.push([n, 0.55 + rnd() * 0.3]);
+  }
+  for (let i = 0; i < p.count; i++) {
+    v.fromBufferAttribute(p, i).normalize();
+    v.multiplyScalar(0.8 + 0.45 * vnoise3(v.x * 1.6 + so, v.y * 1.6, v.z * 1.6 + so) + 0.12 * vnoise3(v.x * 5 + so, v.y * 5, v.z * 5));
+    for (const [n, d] of planes) { const e = v.dot(n) - d; if (e > 0) v.addScaledVector(n, -e); }
+    v.y *= flat; if (v.y < -0.18 * flat) v.y = -0.18 * flat;
+    p.setXYZ(i, v.x, v.y, v.z);
+  }
+  g.computeVertexNormals();
+  const c = new Float32Array(p.count * 3);
+  for (let i = 0; i < p.count; i++) { const y = p.getY(i) / flat, k = 0.42 + 0.58 * smooth(-0.2, 0.7, y); c[3 * i] = c[3 * i + 1] = c[3 * i + 2] = k; }
+  g.setAttribute("color", new THREE.BufferAttribute(c, 3));
+  return g;
+}
+const rockMat = new THREE.MeshStandardMaterial({ map: groundMap.clone(), bumpMap: groundBump.clone(), bumpScale: 1.2, vertexColors: true,
+  roughness: 0.9, metalness: 0, envMapIntensity: 0.8 });
+rockMat.map.repeat.set(1.5, 1.5); rockMat.bumpMap.repeat.set(1.5, 1.5);
+const rockGeos = [rockGeo(5, 0.7), rockGeo(6, 0.55), rockGeo(4, 0.85), rockGeo(7, 0.28)];
+// keep-out corridors: between the lander and the camera positions of both modes
+const CAM_AZ_D = 24 * D2R, CAM_AZ_R = -12 * D2R;
+function corridorDist(x, z, az, len) { // distance from (x,z) to the segment origin -> (sin az, cos az) * len
+  const dx = Math.sin(az), dz = Math.cos(az), s = Math.max(0, Math.min(len, x * dx + z * dz));
+  return Math.hypot(x - dx * s, z - dz * s);
+}
+{
+  const per = [[], [], [], []];
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), sv = new THREE.Vector3(), pv = new THREE.Vector3();
+  const colr = new THREE.Color();
+  let placed = 0, tries = 0;
+  while (placed < 520 && tries < 6000) {
+    tries++;
+    const a = rnd() * TAU, r = 1.7 + Math.pow(rnd(), 1.6) * 70;
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    let s = 0.04 + Math.pow(rnd(), 3.2) * (0.35 + r * 0.012);
+    if (r < 3.2) s = Math.min(s, 0.14);
+    const kind = rnd() < 0.22 ? 3 : Math.floor(rnd() * 3);
+    if (kind === 3) s *= 1.6;
+    // nothing big between the lander and either camera, nor in the near foreground of the descent camera
+    const cd = Math.min(corridorDist(x, z, CAM_AZ_D, 16), corridorDist(x, z, CAM_AZ_R, 10));
+    if (cd < 1.2 + s * 2 && s > 0.12) continue;
+    if (cd < 0.7 && s > 0.07) continue;
+    q.setFromEuler(e.set((rnd() - 0.5) * 0.3, rnd() * TAU, (rnd() - 0.5) * 0.3));
+    sv.set(s * (0.8 + rnd() * 0.5), s, s * (0.8 + rnd() * 0.5));
+    pv.set(x, -0.04 * s, z);
+    m4.compose(pv, q, sv);
+    const tone = 0.75 + rnd() * 0.45;
+    per[kind].push([m4.clone(), colr.setRGB(tone, tone * (0.95 + rnd() * 0.05), tone * (0.9 + rnd() * 0.08)).clone()]);
+    placed++;
+  }
+  per.forEach((list, k) => {
+    const im = new THREE.InstancedMesh(rockGeos[k], rockMat, list.length);
+    list.forEach(([m, c], i) => { im.setMatrixAt(i, m); im.setColorAt(i, c); });
+    im.computeBoundingSphere();
+    scene.add(im);
+  });
+}
+
+// ---------------------------------------------------------------- the lander (origin = centre of the ring's ground contact)
+const lander = new THREE.Group(); scene.add(lander);
+const body = new THREE.Group(); lander.add(body);
+const hullMat = new THREE.MeshStandardMaterial({ color: 0x4d4c49, map: hullMap, bumpMap: hullBump, bumpScale: 0.8,
+  metalness: 0.6, roughness: 0.42, envMapIntensity: 1.1, emissive: 0x000000, emissiveMap: hullMap });
+const discMat = new THREE.MeshStandardMaterial({ color: 0x96938c, map: panelMap, bumpMap: panelBump, bumpScale: 0.6,
+  metalness: 0.55, roughness: 0.4, envMapIntensity: 1.1, emissive: 0x000000, side: THREE.DoubleSide });
+const ringMat = new THREE.MeshStandardMaterial({ color: 0x75726b, map: panelMap, bumpMap: panelBump, bumpScale: 0.5,
+  metalness: 0.5, roughness: 0.5, envMapIntensity: 1.0, emissive: 0x000000 });
+const strutMat = new THREE.MeshStandardMaterial({ color: 0x5c5a55, metalness: 0.6, roughness: 0.45, emissive: 0x000000 });
+const darkMat = new THREE.MeshStandardMaterial({ color: 0x141312, metalness: 0.3, roughness: 0.6 });
+const glassMat = new THREE.MeshStandardMaterial({ color: 0x0b0d10, metalness: 0.9, roughness: 0.08, envMapIntensity: 1.6 });
+const goldMat = new THREE.MeshStandardMaterial({ color: 0xd7a84e, map: foilMap, bumpMap: foilBump, bumpScale: 1.2,
+  metalness: 0.85, roughness: 0.32, envMapIntensity: 1.3, emissive: 0x000000 });
+const greyBoxMat = new THREE.MeshStandardMaterial({ color: 0x8a8781, metalness: 0.3, roughness: 0.55, emissive: 0x000000 });
+const heatMats = [hullMat, discMat, ringMat, strutMat, greyBoxMat, goldMat];
+const add = (geo, mat, parent = body) => { const m = new THREE.Mesh(geo, mat); parent.add(m); return m; };
+const SPH_Y = 0.98, SPH_R = 0.56;
+// landing ring (toroidal, with a band of perforations) + conical skirt + struts
+add(new THREE.TorusGeometry(0.84, 0.15, 28, 120).rotateX(Math.PI / 2).scale(1, 0.82, 1).translate(0, 0.125, 0), ringMat);
+add(new THREE.TorusGeometry(0.84, 0.018, 8, 120).rotateX(Math.PI / 2).translate(0, 0.245, 0), strutMat);
+{
+  const holes = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.03, 0.03, 0.03, 12).rotateX(Math.PI / 2), darkMat, 40);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
+  for (let i = 0; i < 40; i++) {
+    const a = (i / 40) * TAU;
+    q.setFromAxisAngle(up, a + Math.PI / 2);
+    m4.compose(new THREE.Vector3(Math.cos(a) * 0.985, 0.125, -Math.sin(a) * 0.985), q, new THREE.Vector3(1, 1.25, 1));
+    holes.setMatrixAt(i, m4);
+  }
+  body.add(holes);
+}
+add(new THREE.LatheGeometry([[0.72, 0.2], [0.66, 0.27], [0.5, 0.38], [0.36, 0.47], [0.3, 0.52]].map(([r, y]) => new THREE.Vector2(r, y)), 72),
+  new THREE.MeshStandardMaterial({ color: 0x55534e, metalness: 0.55, roughness: 0.5, side: THREE.DoubleSide, emissive: 0x000000 }));
+{
+  const up = new THREE.Vector3(0, 1, 0);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * TAU + 0.2;
+    const A = new THREE.Vector3(Math.cos(a) * 0.8, 0.24, Math.sin(a) * 0.8), B = new THREE.Vector3(Math.cos(a + 0.35) * 0.34, 0.6, Math.sin(a + 0.35) * 0.34);
+    const d = B.clone().sub(A), L = d.length();
+    const m = add(new THREE.CylinderGeometry(0.02, 0.02, L, 8).translate(0, L / 2, 0), strutMat);
+    m.position.copy(A); m.quaternion.setFromUnitVectors(up, d.normalize());
+  }
+}
+// pressure sphere + flanges + camera ports
+add(new THREE.SphereGeometry(SPH_R, 72, 48).translate(0, SPH_Y, 0), hullMat);
+add(new THREE.TorusGeometry(SPH_R + 0.006, 0.024, 10, 96).rotateX(Math.PI / 2).translate(0, SPH_Y, 0), strutMat);
+add(new THREE.TorusGeometry(Math.sqrt(SPH_R * SPH_R - 0.36 * 0.36) + 0.004, 0.016, 8, 96).rotateX(Math.PI / 2).translate(0, SPH_Y - 0.36, 0), strutMat);
+function onSphere(lonDeg, latDeg, out = 0) { // point on the sphere + outward normal
+  const lo = lonDeg * D2R, la = latDeg * D2R, n = new THREE.Vector3(Math.sin(lo) * Math.cos(la), Math.sin(la), Math.cos(lo) * Math.cos(la));
+  return [n.clone().multiplyScalar(SPH_R + out).add(new THREE.Vector3(0, SPH_Y, 0)), n];
+}
+for (const lon of [-28, 32]) {
+  const [pos, n] = onSphere(lon, -28);
+  const g = new THREE.Group(); g.position.copy(pos); g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n); body.add(g);
+  add(new THREE.CylinderGeometry(0.075, 0.09, 0.12, 24).translate(0, 0.02, 0), strutMat, g);
+  add(new THREE.CylinderGeometry(0.052, 0.052, 0.02, 24).translate(0, 0.085, 0), glassMat, g);
+  add(new THREE.TorusGeometry(0.06, 0.012, 8, 24).rotateX(Math.PI / 2).translate(0, 0.082, 0), strutMat, g);
+}
+// side sensor + gold box on the hull
+{
+  const [pos, n] = onSphere(78, 8);
+  const g = new THREE.Group(); g.position.copy(pos); g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), n); body.add(g);
+  add(new THREE.CylinderGeometry(0.03, 0.03, 0.22, 12).translate(0, 0.1, 0), strutMat, g);
+  add(new THREE.SphereGeometry(0.045, 16, 10).translate(0, 0.22, 0), greyBoxMat, g);
+}
+// drag-brake disc around the upper half: thin panelled annulus with a rolled rim, top ribs and a collar
+const DISC_Y = 1.31;
+{
+  const prof = [[0.44, DISC_Y - 0.01], [0.7, DISC_Y - 0.03], [1.04, DISC_Y - 0.055], [1.1, DISC_Y - 0.045], [1.11, DISC_Y - 0.02],
+    [1.08, DISC_Y + 0.0], [0.7, DISC_Y + 0.025], [0.44, DISC_Y + 0.045], [0.44, DISC_Y - 0.01]];
+  add(new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r, y)), 128), discMat);
+  add(new THREE.TorusGeometry(1.1, 0.024, 10, 128).rotateX(Math.PI / 2).translate(0, DISC_Y - 0.03, 0), strutMat);
+  add(new THREE.TorusGeometry(Math.sqrt(SPH_R * SPH_R - (DISC_Y + 0.03 - SPH_Y) ** 2) + 0.01, 0.035, 10, 72).rotateX(Math.PI / 2).translate(0, DISC_Y + 0.03, 0), strutMat);
+  const ribs = new THREE.InstancedMesh(new THREE.BoxGeometry(0.62, 0.02, 0.022), strutMat, 24);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0), tilt = new THREE.Quaternion();
+  tilt.setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.atan2(0.045, 0.6));
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * TAU + 0.13;
+    q.setFromAxisAngle(up, -a).multiply(tilt);
+    m4.compose(new THREE.Vector3(Math.cos(a) * 0.76, DISC_Y + 0.025 - 0.0, Math.sin(a) * 0.76), q, new THREE.Vector3(1, 1, 1));
+    ribs.setMatrixAt(i, m4);
+  }
+  body.add(ribs);
+}
+// antenna housing on top, mast, helical antenna, status light
+const MAST_TOP = 2.14;
+add(new THREE.CylinderGeometry(0.17, 0.2, 0.3, 40).translate(0, 1.58, 0), ringMat);
+add(new THREE.TorusGeometry(0.2, 0.016, 8, 40).rotateX(Math.PI / 2).translate(0, 1.44, 0), strutMat);
+add(new THREE.TorusGeometry(0.17, 0.014, 8, 40).rotateX(Math.PI / 2).translate(0, 1.72, 0), strutMat);
+add(new THREE.SphereGeometry(0.17, 32, 12, 0, TAU, 0, Math.PI / 2).scale(1, 0.38, 1).translate(0, 1.73, 0), ringMat);
+add(new THREE.CylinderGeometry(0.028, 0.034, 0.3, 14).translate(0, 1.92, 0), strutMat);
+{
+  class Helix extends THREE.Curve {
+    getPoint(t, target = new THREE.Vector3()) { const a = t * TAU * 4.5; return target.set(Math.cos(a) * 0.055, 2.0 + t * 0.12, Math.sin(a) * 0.055); }
+  }
+  add(new THREE.TubeGeometry(new Helix(), 120, 0.007, 6, false), goldMat);
+  add(new THREE.CylinderGeometry(0.014, 0.014, 0.16, 8).translate(0, 2.06, 0), strutMat);
+  add(new THREE.CylinderGeometry(0.07, 0.07, 0.014, 24).translate(0, 1.995, 0), strutMat);
+  add(new THREE.SphereGeometry(0.022, 12, 8).translate(0, MAST_TOP - 0.01, 0), strutMat);
+}
+const lampMat = new THREE.MeshStandardMaterial({ color: 0x1a221a, emissive: 0x35ff6a, emissiveIntensity: 0, roughness: 0.3, metalness: 0 });
+const LAMP = new THREE.Vector3(0, 1.88, 0.036);
+add(new THREE.SphereGeometry(0.021, 14, 10).translate(LAMP.x, LAMP.y, LAMP.z), lampMat);
+add(new THREE.CylinderGeometry(0.026, 0.026, 0.014, 14).rotateX(Math.PI / 2).translate(LAMP.x, LAMP.y, LAMP.z - 0.012), strutMat);
+// instrument boxes on the ring / disc + a folded probe arm
+function box(w, h, d, mat, x, y, z, ry) { const m = add(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.rotation.y = ry; return m; }
+{
+  const at = (deg, r) => [Math.sin(deg * D2R) * r, Math.cos(deg * D2R) * r];
+  let [x, z] = at(-38, 0.66); box(0.24, 0.13, 0.15, goldMat, x, 0.33, z, -38 * D2R);
+  [x, z] = at(52, 0.68); box(0.17, 0.11, 0.13, greyBoxMat, x, 0.32, z, 52 * D2R);
+  [x, z] = at(-118, 0.68); box(0.2, 0.1, 0.12, goldMat, x, 0.31, z, -118 * D2R);
+  [x, z] = at(150, 0.72); box(0.14, 0.09, 0.12, greyBoxMat, x, DISC_Y + 0.06, z, 150 * D2R);
+  [x, z] = at(-70, 0.74); box(0.15, 0.08, 0.11, goldMat, x, DISC_Y + 0.07, z, -70 * D2R);
+  // probe arm folded along the ring
+  const arm = new THREE.Group(); [x, z] = at(18, 0.84); arm.position.set(x, 0.29, z); arm.rotation.y = 18 * D2R + Math.PI / 2; body.add(arm);
+  add(new THREE.BoxGeometry(0.42, 0.025, 0.035).translate(0.18, 0, 0), strutMat, arm);
+  add(new THREE.CylinderGeometry(0.035, 0.035, 0.07, 14).rotateZ(Math.PI / 2).translate(0.4, 0, 0), greyBoxMat, arm);
+}
+// glow sprites: status light halo, heat halo behind the lander
+const lampHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0x5dff86, transparent: true, opacity: 0,
+  blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+lampHalo.scale.set(0.28, 0.28, 1); lampHalo.position.copy(LAMP).add(new THREE.Vector3(0, 0, 0.03)); body.add(lampHalo);
+const heatHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xff5a1e, transparent: true, opacity: 0,
+  blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+heatHalo.scale.set(4.2, 3.6, 1); scene.add(heatHalo);
+const heatLight = new THREE.PointLight(0xff5a24, 0, 7, 2); heatLight.position.set(0, 0.5, 0.0); scene.add(heatLight);
+
+// contact shadow under the lander (overcast light: one soft blob)
+const shadow = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 3.0).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: shadowTex,
+  transparent: true, depthWrite: false, opacity: 0, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+shadow.position.y = 0.012; shadow.renderOrder = 1; scene.add(shadow);
+
+// ---------------------------------------------------------------- parachute (rig origin = riser attachment at the mast top)
+const chute = new THREE.Group(); scene.add(chute);
+const SEG_U = NG * 6, SEG_V = 12, CONF_Y = 0.8, CAN_Y = 3.5, CAN_R = 1.9, CAN_H = 1.35;
+const canopyGeo = new THREE.BufferGeometry();
+{
+  const n = (SEG_U + 1) * (SEG_V + 1), uv = new Float32Array(n * 2), idx = [];
+  for (let j = 0; j <= SEG_V; j++) for (let i = 0; i <= SEG_U; i++) { const k = j * (SEG_U + 1) + i; uv[2 * k] = i / SEG_U; uv[2 * k + 1] = 1 - j / SEG_V; }
+  for (let j = 0; j < SEG_V; j++) for (let i = 0; i < SEG_U; i++) {
+    const a = j * (SEG_U + 1) + i, b = a + SEG_U + 1; idx.push(a, b, a + 1, b, b + 1, a + 1);
+  }
+  canopyGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  canopyGeo.setAttribute("uv", new THREE.BufferAttribute(uv, 2)); canopyGeo.setIndex(idx);
+}
+const canopyMat = new THREE.MeshStandardMaterial({ map: canopyMap, side: THREE.DoubleSide, roughness: 0.85, metalness: 0,
+  emissive: 0xffffff, emissiveMap: canopyMap, emissiveIntensity: 0.12 });
+const canopy = new THREE.Mesh(canopyGeo, canopyMat); canopy.position.y = CAN_Y; chute.add(canopy);
+const skirt = []; // line attachment points in canopy space
+function shapeCanopy(R, Hc, t) {
+  const p = canopyGeo.attributes.position;
+  for (let j = 0; j <= SEG_V; j++) {
+    const s = j / SEG_V, th = lerp(0.1, 1.42, s);
+    for (let i = 0; i <= SEG_U; i++) {
+      const phi = (i / SEG_U) * TAU, f = (i % 6) / 6, b = Math.sin(Math.PI * f);
+      const breathe = 1 + 0.025 * Math.sin(t * 5.1 + phi * 2) * s;
+      const r = R * Math.sin(th) * (1 + 0.07 * b * s) * breathe;
+      const y = Hc * Math.cos(th) + 0.1 * b * smooth(0.7, 1, s);
+      p.setXYZ(j * (SEG_U + 1) + i, Math.cos(phi) * r, y, Math.sin(phi) * r);
+    }
+  }
+  p.needsUpdate = true; canopyGeo.computeVertexNormals();
+  skirt.length = 0;
+  for (let g = 0; g < NG; g++) { const k = SEG_V * (SEG_U + 1) + g * 6; skirt.push(new THREE.Vector3(p.getX(k), p.getY(k), p.getZ(k))); }
+}
+const lineMat = new THREE.MeshStandardMaterial({ color: 0xe0d6c4, roughness: 0.8, metalness: 0 });
+const lines = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 5).translate(0, 0.5, 0), lineMat, NG + 1);
+lines.frustumCulled = false; chute.add(lines);
+const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _d = new THREE.Vector3(), _m = new THREE.Matrix4(), _q = new THREE.Quaternion();
+const UP = new THREE.Vector3(0, 1, 0);
+function setLine(i, A, B, r) {
+  _d.copy(B).sub(A); const L = _d.length(); _q.setFromUnitVectors(UP, _d.divideScalar(L));
+  _m.compose(A, _q, _b.set(r, L, r)); lines.setMatrixAt(i, _m);
+}
+function updateLines() {
+  const conf = new THREE.Vector3(0, CONF_Y, 0);
+  setLine(0, new THREE.Vector3(0, 0, 0), conf, 0.016);
+  for (let g = 0; g < NG; g++) setLine(g + 1, conf, _a.copy(skirt[g]).add(canopy.position).clone(), 0.0085);
+  lines.instanceMatrix.needsUpdate = true;
+}
+// pyro puff + flash at the cut
+const pyroPuff = new THREE.Sprite(new THREE.SpriteMaterial({ map: dustTex, color: 0xf4e6cc, transparent: true, opacity: 0, depthWrite: false }));
+const pyroFlash = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffe2a0, transparent: true, opacity: 0,
+  blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+scene.add(pyroPuff, pyroFlash);
+
+// ---------------------------------------------------------------- descent kinematics (lander altitude table)
+const V1 = 5.5, VMAX = 13, VLAND = 6;
+function vel(t) {
+  if (t < CUT) return V1;
+  return V1 + (VMAX - V1) * (1 - Math.exp(-(t - CUT) / 0.3)) - (VMAX - VLAND) * smooth(CUT + 1.2, TOUCH - 0.2, t);
+}
+const DT = 1 / 1200, NS = Math.ceil(TOUCH / DT) + 2, S = new Float64Array(NS + 1);
+for (let i = 1; i <= NS; i++) S[i] = S[i - 1] + 0.5 * (vel((i - 1) * DT) + vel(i * DT)) * DT;
+const sAt = (t) => { const x = Math.max(0, t) / DT, i = Math.min(NS - 1, Math.floor(x)); return lerp(S[i], S[i + 1], x - i); };
+const altAt = (t) => (t >= TOUCH ? 0 : sAt(TOUCH) - sAt(t));
+const CLOUD_BASE = 27;
+
+// camera rig (descent): looks at the lander's middle from a little above; lens shift puts it low in the frame
+const D_PITCH = 9, D_FRAMEY = 1262;
+const dDist = (t) => lerp(15.0, 13.7, smooth(0, DUR, t));
+const dAz = (t) => lerp(18, 30, t / DUR);
+function camPosDescent(t) { // world position of the camera if the lander were exactly on its path (no lag/shake)
+  const A = altAt(t), d = dDist(t), az = dAz(t) * D2R, pt = D_PITCH * D2R;
+  return new THREE.Vector3(Math.sin(az) * Math.cos(pt) * d, A + 1.05 + Math.sin(pt) * d, Math.cos(az) * Math.cos(pt) * d);
+}
+
+// ---------------------------------------------------------------- clouds (world-fixed sprites the camera falls through)
+const clouds = [];
+function addCloud(x, y, z, size, k, tint, op, rot, stretch = 1) {
+  const m = new THREE.SpriteMaterial({ map: puffTex[k], color: tint, transparent: true, opacity: op, depthWrite: false, fog: true });
+  m.rotation = rot;
+  const s = new THREE.Sprite(m); s.position.set(x, y, z); s.scale.set(size, size * stretch, 1);
+  scene.add(s); clouds.push({ s, op });
+}
+if (MODE === "descent") {
+  const camDirXZ = [Math.sin(24 * D2R), Math.cos(24 * D2R)];
+  let n = 0, tries = 0;
+  while (n < 70 && tries < 3000) {
+    tries++;
+    const y = 22 + Math.pow(rnd(), 0.8) * 40;
+    const a = rnd() * TAU, r = 3 + Math.pow(rnd(), 0.7) * 48, x = Math.cos(a) * r, z = Math.sin(a) * r;
+    const size = 9 + rnd() * 16;
+    const along = x * camDirXZ[0] + z * camDirXZ[1], lat = Math.abs(x * camDirXZ[1] - z * camDirXZ[0]);
+    if (along > -2 && along < 17 && lat < 3.5 + size * 0.3) continue;     // keep the camera -> lander corridor open
+    const hi = smooth(22, 40, y);
+    const tint = new THREE.Color().setRGB(lerp(0.86, 1.0, hi), lerp(0.66, 0.86, hi), lerp(0.42, 0.6, hi), THREE.SRGBColorSpace);
+    addCloud(x, y, z, size, Math.floor(rnd() * 3), tint, 0.55 + rnd() * 0.4, (rnd() - 0.5) * 0.5);
+    n++;
+  }
+  // stragglers below the deck
+  for (let i = 0; i < 16; i++) {
+    const y = 13 + rnd() * 10, a = rnd() * TAU, r = 6 + rnd() * 40, x = Math.cos(a) * r, z = Math.sin(a) * r;
+    const along = x * camDirXZ[0] + z * camDirXZ[1], lat = Math.abs(x * camDirXZ[1] - z * camDirXZ[0]);
+    if (along > -2 && along < 17 && lat < 6) continue;
+    addCloud(x, y, z, 6 + rnd() * 8, 3, new THREE.Color().setRGB(0.85, 0.62, 0.4, THREE.SRGBColorSpace), 0.35 + rnd() * 0.3, (rnd() - 0.5) * 0.3, 1.5);
+  }
+  // near-camera wisps that rush past (mostly before the cards arrive; later ones pass at the frame edges)
+  const wisps = [[0.15, 0.0, 3.5], [0.45, -1.4, 5], [0.75, 1.2, 4], [1.05, -0.4, 6.5], [1.3, 1.6, 3.2], [1.6, -2.4, 5.5],
+    [2.0, 2.8, 6], [2.35, -3.0, 7], [2.7, 3.2, 8]];
+  for (const [tw, lat, depth] of wisps) {
+    const cp = camPosDescent(tw), az = dAz(tw) * D2R;
+    const fx = -Math.sin(az), fz = -Math.cos(az), rx = Math.cos(az), rz = -Math.sin(az);
+    addCloud(cp.x + fx * depth + rx * lat, cp.y - 1.0, cp.z + fz * depth + rz * lat, 4 + depth * 0.5, rnd() < 0.5 ? 3 : 2,
+      new THREE.Color().setRGB(1.0, 0.86, 0.62, THREE.SRGBColorSpace), 0.6, (rnd() - 0.5) * 0.3, 1.7);
+  }
+}
+
+// dust puff at touchdown: a ring of billows rolling outward along the ground + a few rising
+const dust = [];
+for (let i = 0; i < 34; i++) {
+  const ring = i < 26, a = (i / 26) * TAU + rnd() * 0.2;
+  const m = new THREE.SpriteMaterial({ map: dustTex, color: new THREE.Color().setRGB(0.72, 0.5, 0.3, THREE.SRGBColorSpace), transparent: true, opacity: 0, depthWrite: false });
+  m.rotation = rnd() * TAU;
+  const s = new THREE.Sprite(m); s.visible = false; scene.add(s);
+  dust.push({ s, a: ring ? a : rnd() * TAU, ring, sp: 2.2 + rnd() * 1.6, up: ring ? 0.15 + rnd() * 0.25 : 0.5 + rnd() * 0.5,
+    size: ring ? 0.5 + rnd() * 0.4 : 0.4 + rnd() * 0.3, grow: ring ? 1.4 + rnd() * 0.8 : 1.0 + rnd() * 0.6, op: ring ? 0.75 : 0.45, r0: ring ? 0.9 : 0.6 });
+}
+// smoke wisp (reveal)
+const smoke = [];
+for (let i = 0; i < 14; i++) {
+  const m = new THREE.SpriteMaterial({ map: dustTex, color: new THREE.Color().setRGB(0.36, 0.31, 0.28, THREE.SRGBColorSpace), transparent: true, opacity: 0, depthWrite: false });
+  m.rotation = rnd() * TAU;
+  const s = new THREE.Sprite(m); s.visible = false; scene.add(s);
+  smoke.push({ s, born: BLINK + 0.06 + i * 0.075, sway: rnd() * TAU, op: 0.45 + rnd() * 0.25 });
+}
+
+// ---------------------------------------------------------------- lights (dim, diffuse, warm)
+const hemi = new THREE.HemisphereLight(0xffd59a, 0x3a2414, 0.9); scene.add(hemi);
+const key = new THREE.DirectionalLight(0xffc98a, 1.5); key.position.set(-5, 9, 6); scene.add(key);
+const rim = new THREE.DirectionalLight(0xffb468, 1.6); rim.position.set(6, 5, -9); scene.add(rim);
+lander.add(key.target); // directions only; targets at origin are fine
+
+// ---------------------------------------------------------------- post pass: shimmer, ACES, grade, vignette, grain
+const postU = {
+  tScene: { value: rt.texture }, tNoise: { value: shimTex }, uTime: { value: 0 }, uFrame: { value: 0 },
+  uHot: { value: new THREE.Vector4(0.5, 0.5, 0.1, 0.1) }, uHotAmt: { value: 0 },
+  uBand: { value: new THREE.Vector2(0.5, 0.05) }, uBandAmt: { value: 0 }, uExposure: { value: 1.0 },
+};
+const postScene = new THREE.Scene(), postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+  uniforms: postU, depthTest: false, depthWrite: false,
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+  fragmentShader: `uniform sampler2D tScene, tNoise; uniform float uTime, uFrame, uHotAmt, uBandAmt, uExposure;
+    uniform vec4 uHot; uniform vec2 uBand; varying vec2 vUv;
+    vec3 rrt(vec3 v){ vec3 a = v * (v + 0.0245786) - 0.000090537; vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081; return a / b; }
+    vec3 aces(vec3 c){
+      mat3 I = mat3(vec3(0.59719, 0.07600, 0.02840), vec3(0.35458, 0.90834, 0.13383), vec3(0.04823, 0.01566, 0.83777));
+      mat3 O = mat3(vec3(1.60475, -0.10208, -0.00327), vec3(-0.53108, 1.10813, -0.07276), vec3(-0.07367, -0.00605, 1.07602));
+      return clamp(O * rrt(I * (c / 0.6)), 0.0, 1.0);
+    }
+    vec3 srgb(vec3 c){ return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c)); }
+    void main(){
+      vec2 uv = vUv;
+      vec2 q = (uv - uHot.xy) / uHot.zw;
+      float k = uHotAmt * (1.0 - smoothstep(0.3, 1.0, length(q)))
+              + uBandAmt * (1.0 - smoothstep(0.0, 1.0, abs(uv.y - uBand.x) / uBand.y));
+      if (k > 0.0005) {
+        vec2 n1 = texture2D(tNoise, vec2(uv.x * 2.2, uv.y * 1.3 - uTime * 0.32)).rg - 0.5;
+        vec2 n2 = texture2D(tNoise, vec2(uv.x * 6.0 + 0.37, uv.y * 3.2 - uTime * 0.75)).rg - 0.5;
+        uv += (n1 + 0.6 * n2) * k * vec2(0.006, 0.003);
+      }
+      vec3 c = texture2D(tScene, uv).rgb;
+      c = srgb(aces(c * uExposure));
+      c = mix(c, c * c * (3.0 - 2.0 * c), 0.2);
+      c += vec3(0.02, 0.009, -0.004) * (1.0 - c);
+      vec2 vq = (vUv - 0.5) * vec2(1.0, 0.72);
+      c *= 1.0 - 0.5 * pow(clamp(length(vq) * 1.5, 0.0, 1.0), 2.6);
+      float g = fract(sin(dot(gl_FragCoord.xy + vec2(uFrame * 7.13, uFrame * 3.71), vec2(12.9898, 78.233))) * 43758.5453);
+      c += (g - 0.5) * 0.03;
+      gl_FragColor = vec4(c, 1.0);
+    }`,
+}));
+quad.frustumCulled = false; postScene.add(quad);
+
+// ---------------------------------------------------------------- helpers
+const _s = new THREE.Vector3();
+function toScreen(v) { _s.copy(v).project(camera); return [(_s.x * 0.5 + 0.5) * W, (-_s.y * 0.5 + 0.5) * H]; }
+function aimCamera(target, dist, azDeg, pitchDeg, frameY, sx = 0, sy = 0) {
+  const az = azDeg * D2R, pt = pitchDeg * D2R;
+  camera.position.set(target.x + Math.sin(az) * Math.cos(pt) * dist, target.y + Math.sin(pt) * dist, target.z + Math.cos(az) * Math.cos(pt) * dist);
+  camera.lookAt(target);
+  camera.setViewOffset(W, H, sx, -(frameY - H / 2) + sy, W, H);
+  camera.updateMatrixWorld();
+}
+function setHot(center, halfW, halfH, amt) { // screen-space ellipse (world centre, half sizes in world units at that depth)
+  const [x, y] = toScreen(center), d = camera.position.distanceTo(center), pxu = H / (2 * d * TANF);
+  postU.uHot.value.set(x / W, 1 - y / H, (halfW * pxu) / W, (halfH * pxu) / H);
+  postU.uHotAmt.value = amt;
+}
+function setBand(amt) { // shimmer band along the horizon
+  const f = _a.set(-camera.position.x, 0, -camera.position.z).normalize().multiplyScalar(900).add(_b.set(camera.position.x, 0, camera.position.z));
+  const [, y] = toScreen(f);
+  postU.uBand.value.set(1 - y / H, 0.045); postU.uBandAmt.value = amt;
+}
+const C_CLOUD = { hor: new THREE.Color(0xe2b46a), zen: new THREE.Color(0xeec890), fog: new THREE.Color(0xdcac64) };
+const C_HAZE = { hor: new THREE.Color(0xd4954a), zen: new THREE.Color(0x9c5f26), fog: new THREE.Color(0xc98a44) };
+const _c = new THREE.Color();
+function atmosphere(inCloud, camAlt) {
+  const fog = scene.fog;
+  fog.color.copy(C_HAZE.fog).lerp(C_CLOUD.fog, inCloud);
+  fog.density = lerp(0.0125, 0.042, inCloud);
+  skyU.cHor.value.copy(fog.color);
+  skyU.cZen.value.copy(C_HAZE.zen).lerp(C_CLOUD.zen, inCloud);
+  skyU.cGlow.value.copy(_c.setRGB(0.5, 0.33, 0.14)).multiplyScalar(1 - inCloud);
+  skyU.ceilA.value = 1 - inCloud;
+  skyU.ceilH.value = Math.max(2, CLOUD_BASE + 6 - camAlt);
+  hemi.intensity = lerp(0.85, 1.25, inCloud);
+  key.intensity = lerp(1.45, 0.9, inCloud);
+  rim.intensity = lerp(1.7, 1.0, inCloud);
+  scene.environmentIntensity = lerp(0.8, 1.05, inCloud);
+}
+function setHeat(k) { // 0..1: hull + disc glow dull red-orange
+  const e = (m, s) => { m.emissive.setRGB(1.0, 0.24, 0.05); m.emissiveIntensity = k * s; };
+  e(hullMat, 1.25); e(discMat, 1.0); e(ringMat, 0.7); e(strutMat, 0.8); e(greyBoxMat, 0.5); e(goldMat, 0.35);
+  discMat.emissiveMap = panelMap; ringMat.emissiveMap = panelMap;
+}
+
+// ---------------------------------------------------------------- descent
+const tilt = new THREE.Euler();
+function descent(t) {
+  const A = altAt(t), tau = t - TOUCH;
+  // pendulum sway under the chute, damped after the cut; spin slows to a stop at touchdown
+  const sw = t < CUT ? 1 : Math.exp(-(t - CUT) / 0.7);
+  const land = tau >= 0;
+  const dip = land ? -0.06 * (tau / 0.07) * Math.exp(1 - tau / 0.07) : 0;  // crush ring absorbs the hit
+  lander.position.set(0, A + dip, 0);
+  lander.rotation.set(land ? 0 : 0.035 * Math.sin(t * 2.6 + 1) * sw, (CAM_AZ_D * 1.0 - 0.32) + 0.09 * (Math.min(t, TOUCH) - TOUCH),
+    land ? 0 : 0.045 * Math.sin(t * 2.2) * sw);
+  lander.updateMatrixWorld();
+
+  // camera: vertical lag after the cut (lander drops in frame), inertia dip + shake after touchdown
+  let lag = 0;
+  if (t > CUT) { const x = (t - CUT) / 0.4; lag += 0.42 * x * Math.exp(1 - x); }
+  if (land) { const x = tau / 0.16; lag += -0.16 * x * Math.exp(1 - x); }
+  const target = new THREE.Vector3(0, A + 1.05 + lag, 0);
+  let sx = 0, sy = 0;
+  if (land) { const e = Math.exp(-tau / 0.17); sx = 5.5 * e * Math.sin(tau * 71); sy = 8 * e * Math.sin(tau * 93 + 0.7); }
+  aimCamera(target, dDist(t), dAz(t), D_PITCH, D_FRAMEY, sx, sy);
+  const camAlt = camera.position.y;
+  const inCloud = smooth(CLOUD_BASE - 5, CLOUD_BASE + 6, camAlt);
+  atmosphere(inCloud, camAlt);
+  skyU.cOff.value.set(t * 0.004, 0);
+  sky.position.copy(camera.position);
+
+  // clouds: fade near the lens, hide while far below the camera's view
+  for (const c of clouds) {
+    const d = c.s.position.distanceTo(camera.position);
+    c.s.material.opacity = c.op * smooth(1.2, 4.5, d);
+    c.s.visible = c.s.material.opacity > 0.003;
+  }
+
+  // parachute: rigid with the lander until the cut, then decelerates, drifts, tilts and partly collapses
+  const attach = lander.localToWorld(new THREE.Vector3(0, MAST_TOP, 0));
+  if (t < CUT) {
+    chute.visible = true;
+    shapeCanopy(CAN_R, CAN_H, t);
+    chute.position.copy(attach);
+    chute.rotation.set(lander.rotation.x, 0.3 + t * 0.05, lander.rotation.z);
+  } else {
+    const tc = t - CUT;
+    chute.visible = tc < 2.2;
+    const k = smooth(0, 0.9, tc);
+    shapeCanopy(CAN_R * (1 - 0.22 * k), CAN_H * (1 + 0.18 * k), t);
+    const cutAttach = new THREE.Vector3(0, altAt(CUT) + MAST_TOP, 0);
+    const fall = V1 * 0.45 * (1 - Math.exp(-tc / 0.45)) + 0.9 * tc;
+    chute.position.set(cutAttach.x + 0.7 * tc + 0.2 * tc * tc, cutAttach.y - fall + 0.25 * (1 - Math.exp(-tc / 0.08)), cutAttach.z - 0.25 * tc);
+    chute.rotation.set(0.04 * Math.sin(CUT * 2.6 + 1) + 0.12 * k, 0.3 + t * 0.05 + 0.2 * k, 0.045 * Math.sin(CUT * 2.2) - 0.32 * k);
+  }
+  updateLines();
+  // pyro flash + puff where the riser is cut (stays in the air as the lander falls away)
+  const tp = t - CUT;
+  if (tp >= 0 && tp < 1.4) {
+    const p0 = new THREE.Vector3(0, altAt(CUT) + MAST_TOP + 0.05, 0);
+    pyroFlash.visible = pyroPuff.visible = true;
+    pyroFlash.position.copy(p0); pyroFlash.scale.setScalar(0.9);
+    pyroFlash.material.opacity = tp < 0.04 ? tp / 0.04 : Math.exp(-(tp - 0.04) / 0.06);
+    pyroPuff.position.copy(p0).add(_a.set(0.15 * tp, 0.2 * tp, 0));
+    pyroPuff.scale.setScalar(0.25 + 1.1 * (1 - Math.exp(-tp / 0.25)));
+    pyroPuff.material.opacity = 0.85 * smooth(0, 0.05, tp) * Math.exp(-tp / 0.45);
+  } else { pyroFlash.visible = pyroPuff.visible = false; }
+
+  // contact shadow grows darker as the ground comes up
+  shadow.material.opacity = 0.8 * smooth(5, 0.0, A);
+  shadow.scale.setScalar(1 + A * 0.12);
+
+  // dust puff
+  for (const p of dust) {
+    if (!land) { p.s.visible = false; continue; }
+    const a = tau, e = 1 - Math.exp(-a / 0.32);
+    const r = p.r0 + p.sp * e * (p.ring ? 1 : 0.4);
+    p.s.visible = true;
+    p.s.position.set(Math.cos(p.a) * r, 0.12 + p.up * e + (p.ring ? 0 : 0.35 * a), Math.sin(p.a) * r);
+    p.s.scale.setScalar(p.size * (1 + p.grow * e + 0.25 * a));
+    p.s.material.opacity = p.op * smooth(0, 0.05, a) * Math.exp(-a / (p.ring ? 1.25 : 0.9));
+  }
+  // heat shimmer: faint over the horizon and above the lander once landed
+  const hk = smooth(TOUCH + 0.15, TOUCH + 1.1, t);
+  setHot(new THREE.Vector3(0, 2.35, 0), 1.6, 1.25, 0.55 * hk);
+  setBand(0.18 * hk + 0.06 * smooth(2.5, 4.0, t) * (1 - hk));
+  setHeat(0);
+  lampMat.emissiveIntensity = 1.4; lampHalo.material.opacity = 0.45;
+  heatHalo.visible = false; heatLight.intensity = 0;
+  for (const p of smoke) p.s.visible = false;
+}
+
+// ---------------------------------------------------------------- reveal
+function reveal(t) {
+  chute.visible = false; pyroFlash.visible = pyroPuff.visible = false;
+  for (const p of dust) p.s.visible = false;
+  lander.position.set(0, 0, 0);
+  lander.rotation.set(0, CAM_AZ_R - 0.2, 0);
+  lander.updateMatrixWorld();
+  const e = smooth(0, DUR, t);
+  aimCamera(new THREE.Vector3(0, 1.02, 0), lerp(8.9, 8.0, e), lerp(-14, -10, e), 3.5, 1168);
+  atmosphere(0, camera.position.y);
+  skyU.cOff.value.set(t * 0.004, 0);
+  sky.position.copy(camera.position);
+  shadow.material.opacity = 0.8; shadow.scale.setScalar(1);
+
+  // heating ramp
+  const k = Math.pow(smooth(0.05, DUR - 0.1, t), 1.15);
+  setHeat(0.08 + 0.92 * k);
+  heatLight.intensity = 6 * (0.1 + 0.9 * k);
+  heatHalo.visible = true;
+  const back = _a.copy(camera.position).setY(0).normalize().multiplyScalar(-0.9);
+  heatHalo.position.set(back.x, 1.05, back.z);
+  heatHalo.material.opacity = 0.32 * k;
+
+  // status light: steady + heartbeat, then blinks and dies (signal lost)
+  let on;
+  const b = t - BLINK;
+  if (b < 0) on = 0.85 + 0.15 * Math.cos(t * TAU * 1.2);
+  else if (b < 0.07) on = 0; else if (b < 0.15) on = 1; else if (b < 0.24) on = 0; else if (b < 0.3) on = 0.6; else on = 0;
+  lampMat.emissiveIntensity = 2.2 * on; lampHalo.material.opacity = 0.75 * on;
+
+  // smoke wisp rising from the top of the hull after the signal dies
+  const src = lander.localToWorld(new THREE.Vector3(0.12, 1.62, 0.12));
+  for (const p of smoke) {
+    const a = t - p.born;
+    if (a <= 0) { p.s.visible = false; continue; }
+    p.s.visible = true;
+    p.s.position.set(src.x + 0.22 * a + 0.05 * Math.sin(a * 3 + p.sway), src.y + 0.62 * a - 0.04 * a * a, src.z + 0.05 * Math.cos(a * 2.5 + p.sway));
+    p.s.scale.setScalar(0.12 + 0.42 * a);
+    p.s.material.opacity = p.op * smooth(0, 0.12, a) * Math.exp(-a / 0.9);
+  }
+  setHot(new THREE.Vector3(0, 2.25, 0), 1.5, 1.2, 0.5 + 0.9 * k);
+  setBand(0.2);
+}
+
+// ---------------------------------------------------------------- deterministic frame
+if (MODE === "reveal") for (const c of clouds) c.s.visible = false;
+function renderAt(t) {
+  t = Math.max(0, Math.min(DUR, Number(t) || 0));
+  if (MODE === "descent") descent(t); else reveal(t);
+  postU.uTime.value = t; postU.uFrame.value = Math.round(t * 30);
+  renderer.setRenderTarget(rt); renderer.render(scene, camera);
+  renderer.setRenderTarget(null); renderer.render(postScene, postCam);
+}
+window.addEventListener("hf-seek", (e) => renderAt(e.detail.time));
+renderAt(window.__hfThreeTime || 0);
+</script>
+</body>
+</html>

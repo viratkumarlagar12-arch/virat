@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<title>Ocean can crush 3D</title>
+<!-- "92x Earth's pressure = ~900 m under the sea": an empty, sealed, unbranded drink can sinks with the camera through
+     the ocean and is crushed by the water pressure (Three.js inside HyperFrames, CPU-renderable, deterministic).
+     0 s: bright blue water just under the surface (shimmering surface at the very top, light shafts). The camera sinks
+     with the can; marine snow streams upward past the lens (motion-streaked, defocused near the lens) and the water
+     darkens to deep navy. Just before crushStart the wall flexes ("oil-canning"); crushStart..crushEnd: the can implodes —
+     three dents start at mid-height one after another and spread towards the ends, the whole body is squeezed and
+     twisted, creases form (vertex displacement on a 168 x 170 grid), the can shortens and kinks; camera jolt; a burst of
+     bubbles from a ruptured fold (mostly towards the camera) plus a fizz from the other folds. The descent slows during
+     the crush (so the bubbles read) and resumes after it. Ends crumpled, sinking into the dark.
+     Everything procedural and seeded (HDR underwater environment with Snell's window, can textures, particles):
+     a pure function of t. Layout: can centred around y 900-1300 px; the band y 150-520 px stays calm (depth counter goes
+     there: the snow and bubbles are thinned there, nothing else is drawn); no text.
+     Settings: the one-line window.CFG below; render3d.py --config '{"band":"#1d6fd1"}' merges JSON over it.
+       duration, crushStart, crushEnd (absolute seconds), band (paint colour of the can's band, CSS hex), seed. -->
+<script>
+window.CFG = { duration: 2.8, crushStart: 1.5, crushEnd: 2.1, band: "#e8601a", seed: 3 };
+</script>
+<script src="assets/gsap.min.js"></script>
+<script type="importmap">{ "imports": { "three": "./assets/three.module.js" } }</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+#root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #062440; }
+#gl { position: absolute; inset: 0; width: 1080px; height: 1920px; display: block; }
+#vig { position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 92% 62% at 50% 56%, rgba(0,0,0,0) 52%, rgba(0,5,14,0.6) 100%),
+    linear-gradient(to bottom, rgba(0,6,16,0) 0%, rgba(0,6,16,0) 70%, rgba(0,4,12,0.42) 100%); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="2.8" data-width="1080" data-height="1920">
+  <canvas id="gl" width="1080" height="1920"></canvas>
+  <div id="vig"></div>
+</div>
+<script>
+  (function () {
+    const C = window.CFG;
+    document.getElementById("root").setAttribute("data-duration", String(C.duration));
+    const tl = gsap.timeline({ paused: true });
+    tl.set({}, {}, C.duration); // timeline length == composition length
+    window.__timelines = window.__timelines || {};
+    window.__timelines["main"] = tl;
+  })();
+</script>
+<script type="module">
+import * as THREE from "three";
+
+const CFG = window.CFG;
+const W = 1080, H = 1920, FOV = 30, D2R = Math.PI / 180;
+const TT = CFG.duration, C0 = CFG.crushStart, C1 = CFG.crushEnd;
+const PXK = (H / 2) / Math.tan(FOV / 2 * D2R);       // pixels per world unit at distance 1
+const clamp01 = (x) => Math.max(0, Math.min(1, x));
+const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const lerp = (a, b, t) => a + (b - a) * t;
+let seed = 918273 + (CFG.seed | 0) * 7919;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+
+// ---------------------------------------------------------------- seeded 3D value noise (static detail only)
+const P = new Uint8Array(512);
+for (let i = 0; i < 256; i++) P[i] = i;
+for (let i = 255; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [P[i], P[j]] = [P[j], P[i]]; }
+for (let i = 0; i < 256; i++) P[i + 256] = P[i];
+const fade = (t) => t * t * (3 - 2 * t);
+function vnoise(x, y, z) {
+  const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
+  x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+  const u = fade(x), v = fade(y), w = fade(z);
+  const h = (a, b, c) => P[P[P[a] + b] + c] / 255;
+  const l = (a, b, t) => a + (b - a) * t;
+  return l(l(l(h(X, Y, Z), h(X + 1, Y, Z), u), l(h(X, Y + 1, Z), h(X + 1, Y + 1, Z), u), v),
+           l(l(h(X, Y, Z + 1), h(X + 1, Y, Z + 1), u), l(h(X, Y + 1, Z + 1), h(X + 1, Y + 1, Z + 1), u), v), w);
+}
+function fbm(x, y, z, oct) { let a = 0.5, f = 1, s = 0, n = 0; for (let i = 0; i < oct; i++) { s += a * vnoise(x * f, y * f, z * f); n += a; f *= 2.03; a *= 0.5; } return s / n; }
+
+// ---------------------------------------------------------------- descent (camera sinks with the can)
+// speed in cm/s of this (scaled) world: slows right down while the can implodes so the bubble burst reads, then resumes.
+function vel(t) {
+  const ramp = 0.55 + 0.45 * smooth(0, 0.45, t);
+  const slow = 1 - 0.82 * smooth(C0 - 0.3, C0 + 0.04, t) * (1 - smooth(C1 - 0.05, C1 + 0.45, t));
+  return 46 * ramp * slow;
+}
+function descent(t) { // integral of vel, fixed steps: deterministic for any t
+  const n = Math.max(1, Math.ceil(t / 0.004)), h = t / n; let s = 0;
+  for (let i = 0; i < n; i++) s += vel((i + 0.5) * h);
+  return s * h;
+}
+const DT = descent(TT);
+// how deep we look: half descent, half time (a linear 0 -> 900 m counter stays in step)
+const depthK = (t) => clamp01(0.5 * descent(t) / DT + 0.5 * t / TT);
+
+// ---------------------------------------------------------------- renderer / scene / camera
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("gl"), antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H, false); renderer.setPixelRatio(1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(FOV, W / H, 1, 3000);
+scene.add(camera);
+scene.fog = new THREE.FogExp2(0x0b4a78, 0.0038);
+
+// ---------------------------------------------------------------- underwater HDR environment (reflections on the metal)
+// Looking up from under water you see the sky squeezed into Snell's window (a bright disc ~48.6 deg around the zenith,
+// sun inside it); outside it the water is dark. Soft vertical light shafts near the horizon behind the camera give the
+// metal its silver streaks. Linear float data, so highlights can be much brighter than the water.
+function envTexture() {
+  const w = 512, h = 256, data = new Float32Array(w * h * 4);
+  const sunDir = new THREE.Vector3(0.22, 1, 0.12).normalize();
+  for (let j = 0; j < h; j++) {
+    const el = ((j + 0.5) / h - 0.5) * Math.PI;              // row 0 = straight down (DataTexture is not flipped)
+    for (let i = 0; i < w; i++) {
+      const u = (i + 0.5) / w, ph = u * 2 * Math.PI;         // three's equirect: u = atan2(z, x) / 2pi + 0.5
+      const az = ph - Math.PI;
+      const dx = Math.cos(el) * Math.cos(az), dz = Math.cos(el) * Math.sin(az), dy = Math.sin(el);
+      const zen = Math.acos(Math.max(-1, Math.min(1, dy))) / D2R;
+      let r, g, b;
+      if (dy >= 0) { const k = Math.pow(dy, 0.8); r = lerp(0.02, 0.05, k); g = lerp(0.13, 0.27, k); b = lerp(0.26, 0.45, k); }
+      else { const k = Math.pow(-dy, 0.5); r = lerp(0.015, 0.002, k); g = lerp(0.09, 0.02, k); b = lerp(0.2, 0.05, k); }
+      const rip = 0.75 + 0.5 * fbm(dx * 5 + 3, dz * 5, 1.5, 3);
+      const win = (1 - smooth(45, 49.5, zen)) * rip;
+      const rim = Math.exp(-Math.pow((zen - 47.5) / 2.0, 2));
+      const cs = dx * sunDir.x + dy * sunDir.y + dz * sunDir.z, sa = Math.acos(Math.min(1, cs)) / D2R;
+      const sun = Math.exp(-Math.pow(sa / 4, 2)) * 30 + Math.exp(-Math.pow(sa / 14, 2)) * 2.5;
+      r += win * 1.25 + rim * 1.1 + sun * 1.0; g += win * 1.7 + rim * 1.4 + sun * 0.98; b += win * 1.95 + rim * 1.5 + sun * 0.92;
+      const sh = (cu, wd) => { let d = Math.abs(u - cu); d = Math.min(d, 1 - d); return Math.exp(-Math.pow(d / wd, 2)); };
+      const vfall = smooth(-0.3, 0.15, dy) * (1 - 0.6 * smooth(0.45, 0.95, dy));
+      const shafts = (sh(0.67, 0.03) * 1.6 + sh(0.84, 0.022) * 1.1 + sh(0.32, 0.045) * 0.7 + sh(0.12, 0.03) * 0.5) * vfall;
+      r += shafts * 0.9; g += shafts * 1.2; b += shafts * 1.35;
+      const k4 = (j * w + i) * 4;
+      data[k4] = r; data[k4 + 1] = g; data[k4 + 2] = b; data[k4 + 3] = 1;
+    }
+  }
+  const t = new THREE.DataTexture(data, w, h, THREE.RGBAFormat, THREE.FloatType);
+  t.mapping = THREE.EquirectangularReflectionMapping; t.colorSpace = THREE.LinearSRGBColorSpace;
+  t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; t.needsUpdate = true;
+  return t;
+}
+scene.environment = envTexture();
+
+// ---------------------------------------------------------------- background water (full-screen shader, display colours)
+const bgMat = new THREE.ShaderMaterial({
+  depthTest: false, depthWrite: false,
+  uniforms: { uTop: { value: new THREE.Vector3() }, uMid: { value: new THREE.Vector3() }, uBot: { value: new THREE.Vector3() },
+    uRayCol: { value: new THREE.Vector3(0.86, 0.97, 1.0) }, uRay: { value: 1 }, uSurf: { value: 0.94 }, uT: { value: 0 } },
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+  fragmentShader: `
+    precision highp float;
+    uniform vec3 uTop, uMid, uBot, uRayCol; uniform float uRay, uSurf, uT; varying vec2 vUv;
+    float h1(float n){ return fract(sin(n * 12.9898) * 43758.5453); }
+    float n1(float x){ float i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f); return mix(h1(i), h1(i + 1.0), f); }
+    float h2(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+    float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+      return mix(mix(h2(i), h2(i + vec2(1.0, 0.0)), f.x), mix(h2(i + vec2(0.0, 1.0)), h2(i + vec2(1.0, 1.0)), f.x), f.y); }
+    void main(){
+      vec2 uv = vUv;
+      vec3 col = uv.y > 0.5 ? mix(uMid, uTop, pow((uv.y - 0.5) * 2.0, 1.15)) : mix(uBot, uMid, pow(uv.y * 2.0, 0.85));
+      // light shafts fanning down from the surface (source above the frame, a little right of centre)
+      vec2 d = vec2((uv.x - 0.6) * 0.5625, uv.y - 1.32);
+      float ang = atan(d.x, -d.y), r = length(d);
+      float s = pow(n1(ang * 21.0 + uT * 0.32), 2.6) * 0.55
+              + pow(n1(ang * 47.0 - uT * 0.5 + 17.0), 3.4) * 0.42
+              + pow(n1(ang * 8.0 + uT * 0.17 + 5.0), 2.0) * 0.3;
+      float fall = exp(-max(r - 0.32, 0.0) * 2.1) * smoothstep(0.78, 0.18, abs(ang));
+      col += uRayCol * s * fall * uRay * 0.6;
+      col += uRayCol * 0.2 * uRay * exp(-max(uSurf - uv.y, 0.0) * 5.0);  // glow under the surface
+      // the surface itself (only near t = 0): a bright rippling ceiling that slides up out of frame as we sink
+      float sm = smoothstep(uSurf - 0.01, uSurf + 0.025, uv.y);
+      if (sm > 0.0) {
+        vec2 q = vec2(uv.x * 7.0, (uv.y - uSurf) * 55.0 + uT * 1.2);
+        float a = n2(q + vec2(uT * 0.7, 0.0)), b = n2(q * 1.8 + vec2(-uT * 1.0, 3.1));
+        float web = pow(1.0 - abs(a - b), 5.0);
+        vec3 sc = mix(vec3(0.36, 0.78, 0.92), vec3(0.97, 1.0, 1.0), web);
+        sc += vec3(0.1, 0.12, 0.1) * smoothstep(uSurf, uSurf + 0.06, uv.y);
+        col = mix(col, sc, sm);
+      }
+      col += (h2(gl_FragCoord.xy + fract(uT * 7.31) * 97.0) - 0.5) * (2.2 / 255.0); // dither: no banding in the dark blues
+      gl_FragColor = vec4(col, 1.0);
+    }`,
+});
+const bg = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), bgMat);
+bg.frustumCulled = false; bg.renderOrder = -10; scene.add(bg);
+
+// ---------------------------------------------------------------- the can (12 oz: 66 mm x 115 mm), deformable grid
+// profile (r, y) in mm from the bottom centre, round the outside, to the lid centre
+const PROF = [
+  [0, 9.6], [6, 9.3], [12, 8.2], [17, 6.4], [20.5, 4.4], [23, 2.3], [24.4, 0.8], [25.2, 0.15], [26.2, 0.0], [27.2, 0.35],
+  [28.6, 1.4], [30.4, 3.4], [31.8, 5.6], [32.7, 7.8], [33.05, 10.0], [33.1, 12], [33.1, 99.0],
+  [32.8, 101.0], [31.9, 103.3], [30.5, 105.8], [29.2, 108.0], [28.3, 110.0], [27.9, 111.3],
+  [28.0, 112.2], [28.25, 113.4], [28.1, 114.6], [27.55, 115.3], [26.9, 115.2],
+  [26.45, 114.4], [26.15, 112.9], [25.85, 112.1], [25.25, 111.9], [24.55, 112.3],
+  [23.6, 112.9], [20, 113.3], [10, 113.6], [0, 113.7]];
+const rows = []; // {r, y, s}
+{
+  let acc = 0;
+  for (let k = 0; k < PROF.length - 1; k++) {
+    const [r0, y0] = PROF[k], [r1, y1] = PROF[k + 1], L = Math.hypot(r1 - r0, y1 - y0), n = Math.max(1, Math.ceil(L / 1.05));
+    for (let i = 0; i < n; i++) rows.push({ r: lerp(r0, r1, i / n), y: lerp(y0, y1, i / n), s: acc + L * i / n });
+    acc += L;
+  }
+  rows.push({ r: 0, y: PROF[PROF.length - 1][1], s: acc });
+  for (const q of rows) q.s /= acc;
+}
+const NR = rows.length, NT = 168, NC = NT + 1;
+const NV = NR * NC;
+const YMID = 57.5, LOBES = 3, PHI0 = 0.35;
+const LOBE_DEPTH = [0.5, 0.4, 0.45];
+const wallW = (y) => smooth(9, 30, y) * (1 - smooth(82, 104, y));
+const cosT = new Float32Array(NC), sinT = new Float32Array(NC);
+for (let j = 0; j < NC; j++) { const a = (j / NT) * Math.PI * 2; cosT[j] = Math.cos(a); sinT[j] = Math.sin(a); }
+// static per-vertex data: wall weight, lobe index + dent profile, crease field
+const sW = new Float32Array(NV), sH = new Float32Array(NV), sLobe = new Uint8Array(NV), sCr = new Float32Array(NV), sYn = new Float32Array(NV), sBell = new Float32Array(NV);
+for (let i = 0; i < NR; i++) {
+  const { r, y } = rows[i], w = r > 29 ? wallW(y) : 0, yn = (y - 10) / 90;
+  for (let j = 0; j < NC; j++) {
+    const v = i * NC + j, th = (j % NT) / NT * Math.PI * 2;
+    const x = th - PHI0 - 0.45 * (yn - 0.5) - 0.08 * Math.sin(yn * 7.0 + 1.3); // lobes twist along the can
+    const xm = ((x % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    sLobe[v] = Math.round(xm / (2 * Math.PI / LOBES)) % LOBES;
+    sH[v] = Math.pow(Math.abs(Math.cos(LOBES * x / 2)), 0.7);   // 0 at the (sharp) ridges, 1 at the dent centres
+    sW[v] = w; sYn[v] = yn; sBell[v] = Math.sin(Math.PI * clamp01(yn));
+    // crease field: a few big folds (ridged noise) + diagonal fold lines (diamond buckling)
+    const cx = Math.cos(th) * 1.25, cz = Math.sin(th) * 1.25;
+    const rg = 1 - Math.abs(2 * fbm(cx + 11.3, yn * 2.4, cz + 4.1, 2) - 1);
+    const dia = 1 - Math.min(Math.abs(Math.sin(2.5 * th + 6.2 * yn + 0.7)), Math.abs(Math.sin(2.5 * th - 6.2 * yn + 2.1)));
+    sCr[v] = Math.pow(rg, 4) * 0.9 + Math.pow(dia, 5) * 0.45 - 0.18;
+  }
+}
+const canGeo = new THREE.BufferGeometry();
+const posA = new Float32Array(NV * 3), nrmA = new Float32Array(NV * 3), uvA = new Float32Array(NV * 2);
+const mmPos = new Float32Array(NV * 3);
+for (let i = 0; i < NR; i++) for (let j = 0; j < NC; j++) { const v = i * NC + j; uvA[v * 2] = j / NT; uvA[v * 2 + 1] = rows[i].s; }
+const idx = [];
+for (let i = 0; i < NR - 1; i++) for (let j = 0; j < NT; j++) {
+  const a = i * NC + j, b = a + 1, c = a + NC, d = c + 1;
+  idx.push(a, c, b, b, c, d);
+}
+canGeo.setIndex(idx);
+canGeo.setAttribute("position", new THREE.BufferAttribute(posA, 3));
+canGeo.setAttribute("normal", new THREE.BufferAttribute(nrmA, 3));
+canGeo.setAttribute("uv", new THREE.BufferAttribute(uvA, 2));
+canGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 9);
+
+// crush state at time t (pure functions of t)
+function easeOutBack(u, c1 = 1.4) { const c3 = c1 + 1; return 1 + c3 * Math.pow(u - 1, 3) + c1 * Math.pow(u - 1, 2); }
+function crushState(t) {
+  const s = (t - C0) / (C1 - C0), onset = [0, 0.1, 0.18], a = [], ext = [];
+  for (let k = 0; k < 3; k++) {
+    const u = clamp01((s - onset[k]) / 0.45);
+    a.push(u <= 0 ? 0 : easeOutBack(u)); ext.push(smooth(0, 0.6, u));
+  }
+  // "oil-canning" just before the implosion: the wall facing lobe 0 flexes in and out
+  const pre = smooth(C0 - 0.4, C0 - 0.1, t) * (1 - smooth(C0 - 0.02, C0 + 0.04, t)) * (0.5 + 0.5 * Math.sin((t - C0) * 38));
+  return { a, ext, pre: pre * 0.07, sq: smooth(0.05, 0.75, s), cr: smooth(0.1, 0.85, s), sh: smooth(0.1, 0.8, s), kink: smooth(0.15, 0.95, s), s };
+}
+const SH_MM = 6, KINK = 0.13, TWIST = 0.16, PIVOT = 56, SQUEEZE = 0.2;
+function deformCan(t) {
+  const st = crushState(t);
+  const half = st.ext.map((e) => lerp(0.14, 0.85, e));
+  const kAng = KINK * st.kink, tw = TWIST * st.kink;
+  for (let i = 0; i < NR; i++) {
+    const r0 = rows[i].r, y0 = rows[i].y;
+    const top = smooth(10, 100, y0), kw = smooth(34, 82, y0), twW = smooth(15, 104, y0);
+    let lidSink = 0;
+    if (y0 > 111.5 && r0 < 25) lidSink = st.cr * 1.6 * (1 - r0 / 25);
+    const ys = y0 - SH_MM * st.sh * top - lidSink;
+    const ca = Math.cos(kAng * kw), sa = Math.sin(kAng * kw), ct = Math.cos(tw * twW), stt = Math.sin(tw * twW);
+    for (let j = 0; j < NC; j++) {
+      const v = i * NC + j, w = sW[v];
+      let r = r0;
+      if (w > 0) {
+        const L = sLobe[v], yn = sYn[v];
+        const win = 1 - smooth(half[L] - 0.22, half[L], Math.abs(yn - 0.52));
+        const dentK = st.a[L] * win;                                       // 0..~1.1, how far this dent has gone
+        const dent = dentK * LOBE_DEPTH[L] * sH[v] * w + (L === 0 ? st.pre * sH[v] * w * sBell[v] : 0);
+        const squeeze = SQUEEZE * st.sq * w * (0.55 + 0.45 * sBell[v]);
+        const crease = st.cr * w * sCr[v] * (0.03 + 0.12 * Math.min(1, dentK) * (0.35 + 0.65 * sH[v]));
+        r = r0 * Math.max(0.12, 1 - dent - squeeze - crease);
+      }
+      let x = r * cosT[j], z = r * sinT[j];
+      const x1 = x * ct - z * stt, z1 = x * stt + z * ct; x = x1; z = z1;   // twist about the axis
+      const yy = ys - PIVOT;                                                   // kink about the mid-height
+      const xk = x * ca - yy * sa, yk = x * sa + yy * ca + PIVOT;
+      mmPos[v * 3] = xk; mmPos[v * 3 + 1] = yk; mmPos[v * 3 + 2] = z;
+      posA[v * 3] = xk / 10; posA[v * 3 + 1] = (yk - YMID) / 10; posA[v * 3 + 2] = z / 10;
+    }
+  }
+  // normals straight from the grid (wraps around the seam; the two poles point down / up)
+  for (let i = 0; i < NR; i++) for (let j = 0; j < NC; j++) {
+    const v = i * NC + j;
+    if (rows[i].r < 0.01) { nrmA[v * 3] = 0; nrmA[v * 3 + 1] = i === 0 ? -1 : 1; nrmA[v * 3 + 2] = 0; continue; }
+    const jp = (j % NT) + 1, jm = ((j % NT) + NT - 1) % NT;
+    const ip = Math.min(NR - 1, i + 1), im = Math.max(0, i - 1);
+    const a = i * NC + jp, b = i * NC + jm, c = ip * NC + (j % NT), d = im * NC + (j % NT);
+    const tx = mmPos[a * 3] - mmPos[b * 3], ty = mmPos[a * 3 + 1] - mmPos[b * 3 + 1], tz = mmPos[a * 3 + 2] - mmPos[b * 3 + 2];
+    const sx = mmPos[c * 3] - mmPos[d * 3], sy = mmPos[c * 3 + 1] - mmPos[d * 3 + 1], sz = mmPos[c * 3 + 2] - mmPos[d * 3 + 2];
+    const nx = sy * tz - sz * ty, ny = sz * tx - sx * tz, nz = sx * ty - sy * tx;
+    const l = Math.hypot(nx, ny, nz) || 1;
+    nrmA[v * 3] = nx / l; nrmA[v * 3 + 1] = ny / l; nrmA[v * 3 + 2] = nz / l;
+  }
+  canGeo.attributes.position.needsUpdate = true; canGeo.attributes.normal.needsUpdate = true;
+  return { st, kAng, tw };
+}
+
+// can textures: colour + (roughness G, metalness B), indexed by (angle, arc length along the profile)
+const rowAt = (v) => {
+  let lo = 0, hi = NR - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (rows[m].s <= v) lo = m; else hi = m; }
+  const q0 = rows[lo], q1 = rows[hi], f = (v - q0.s) / Math.max(1e-6, q1.s - q0.s);
+  return { r: lerp(q0.r, q1.r, f), y: lerp(q0.y, q1.y, f) };
+};
+const bandC = new THREE.Color(CFG.band || "#e8601a"); // linear
+const bandRGB = [bandC.r, bandC.g, bandC.b].map((c) => Math.round(Math.pow(c, 1 / 2.2) * 255));
+const TXW = 1024, TXH = 512;
+const colC = document.createElement("canvas"), ormC = document.createElement("canvas");
+colC.width = ormC.width = TXW; colC.height = ormC.height = TXH;
+{
+  const ci = colC.getContext("2d").createImageData(TXW, TXH), oi = ormC.getContext("2d").createImageData(TXW, TXH);
+  for (let jy = 0; jy < TXH; jy++) {
+    const v = 1 - (jy + 0.5) / TXH, { r, y } = rowAt(v);
+    const outer = r > 29 && y > 8 && y < 105;
+    const inBand = outer && y > 32 && y < 87;
+    const edge = outer ? Math.min(Math.abs(y - 32), Math.abs(y - 87)) : 99;
+    for (let ix = 0; ix < TXW; ix++) {
+      const u = (ix + 0.5) / TXW, th = u * Math.PI * 2;
+      const n = fbm(Math.cos(th) * 3 + 5, y * 0.08, Math.sin(th) * 3, 3);
+      const iron = vnoise(u * 420, y * 0.05, 7.7);                 // faint drawn-and-ironed streaks along the can
+      let cr, cg, cb, rough, metal;
+      if (inBand) {
+        const k = 0.96 + 0.06 * n;
+        cr = bandRGB[0] * k; cg = bandRGB[1] * k; cb = bandRGB[2] * k;
+        rough = 0.34 + 0.06 * n; metal = 0.25;
+        const soft = smooth(0, 1.0, edge);                           // paint edge into bare metal
+        cr = lerp(222, cr, soft); cg = lerp(226, cg, soft); cb = lerp(230, cb, soft);
+        rough = lerp(0.18, rough, soft); metal = lerp(1, metal, soft);
+      } else {
+        const lid = !outer && y > 105, bottom = !outer && y < 12;
+        const base = lid ? 205 : bottom ? 196 : 226;
+        const k = base + 16 * (n - 0.5) + 10 * (iron - 0.5) * (outer ? 1 : 0.3);
+        cr = k; cg = k + 2; cb = k + 5;
+        rough = (lid ? 0.26 : 0.16) + 0.08 * n + 0.05 * iron; metal = 1;
+      }
+      const ko = (jy * TXW + ix) * 4;
+      ci.data[ko] = cr; ci.data[ko + 1] = cg; ci.data[ko + 2] = cb; ci.data[ko + 3] = 255;
+      oi.data[ko] = 255; oi.data[ko + 1] = Math.round(clamp01(rough) * 255); oi.data[ko + 2] = Math.round(metal * 255); oi.data[ko + 3] = 255;
+    }
+  }
+  colC.getContext("2d").putImageData(ci, 0, 0); ormC.getContext("2d").putImageData(oi, 0, 0);
+}
+const colT = new THREE.CanvasTexture(colC); colT.colorSpace = THREE.SRGBColorSpace; colT.anisotropy = 4;
+const ormT = new THREE.CanvasTexture(ormC); ormT.anisotropy = 4;
+const canMat = new THREE.MeshPhysicalMaterial({ map: colT, roughnessMap: ormT, metalnessMap: ormT, roughness: 1, metalness: 1,
+  clearcoat: 0.7, clearcoatRoughness: 0.14 });
+const canGroup = new THREE.Group(); scene.add(canGroup);
+const canMesh = new THREE.Mesh(canGeo, canMat); canGroup.add(canMesh);
+
+// pull tab + rivet on the lid (follows the lid's rigid motion)
+const tab = new THREE.Group(); canGroup.add(tab);
+{
+  const s = new THREE.Shape();                              // rivet at (0,0); nose towards -y, finger ring towards +y
+  s.moveTo(5.6, -4.5); s.absarc(0, -4.5, 5.6, 0, -Math.PI, true);
+  s.lineTo(-6.3, 9.5); s.absarc(0, 9.5, 6.3, Math.PI, 0, true); s.lineTo(5.6, -4.5);
+  const hole = new THREE.Path();
+  hole.moveTo(-3.8, 6.2); hole.lineTo(3.8, 6.2); hole.absarc(0, 10.0, 3.8, 0, Math.PI, false); hole.lineTo(-3.8, 6.2);
+  s.holes.push(hole);
+  const g = new THREE.ExtrudeGeometry(s, { depth: 0.55, bevelEnabled: true, bevelThickness: 0.2, bevelSize: 0.25, bevelSegments: 1, curveSegments: 18 });
+  g.rotateX(-Math.PI / 2); // shape (x, y) -> lid plane (x, -z); thickness goes up
+  g.scale(0.08, 0.1, 0.08); g.translate(0, (113.75 - YMID) / 10, -0.2);
+  const tabMat = new THREE.MeshStandardMaterial({ color: 0xc8ced5, metalness: 1, roughness: 0.25 });
+  tab.add(new THREE.Mesh(g, tabMat));
+  const rv = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.12, 20), tabMat);
+  rv.position.set(0, (114.4 - YMID) / 10, -0.2); tab.add(rv);
+  const sc = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.025, 6, 40), tabMat); // scored opening outline
+  sc.scale.set(1, 1.25, 1); sc.rotation.x = -Math.PI / 2; sc.position.set(0, (113.72 - YMID) / 10, 1.2); tab.add(sc);
+}
+const TAB_SPIN = 2.2;
+
+// pose of the can relative to the camera rig (pure function of t)
+function canPose(t) {
+  const jolt = smooth(C0 + 0.02, C0 + 0.1, t) * Math.exp(-Math.max(0, t - C0 - 0.1) * 5);
+  return {
+    x: 0.9 * Math.sin(0.8 * t + 0.4), y: 0.35 * Math.sin(1.3 * t),
+    spin: -0.55 + 0.42 * t + 0.18 * jolt,
+    tiltX: 0.24 + 0.05 * Math.sin(0.9 * t) + 0.05 * jolt,
+    tiltZ: -0.2 + 0.05 * Math.sin(1.1 * t + 1.0) - 0.06 * jolt,
+  };
+}
+function applyPose(obj, p) { obj.position.set(p.x, p.y, 0); obj.rotation.set(p.tiltX, p.spin, p.tiltZ, "ZXY"); }
+
+// ---------------------------------------------------------------- lights (re-coloured with depth every frame)
+const hemi = new THREE.HemisphereLight(0x8fd8ff, 0x021428, 1.0); scene.add(hemi);
+const key = new THREE.DirectionalLight(0xf2fbff, 3.0); key.position.set(0.3, 1, 0.45); scene.add(key);
+const rim = new THREE.DirectionalLight(0x3d9ae0, 0.6); rim.position.set(-0.7, 0.25, -1); scene.add(rim);
+const fill = new THREE.DirectionalLight(0x2a7cc0, 0.3); fill.position.set(0.8, -0.4, 0.6); scene.add(fill);
+
+// ---------------------------------------------------------------- marine snow (camera-space particles, world-fixed motion)
+const SNOW = 1200;
+const snowGeo = new THREE.BufferGeometry();
+{
+  const base = new Float32Array(SNOW * 3), prop = new Float32Array(SNOW * 4), dummy = new Float32Array(SNOW * 3);
+  for (let i = 0; i < SNOW; i++) {
+    const near = i < 60;
+    const d = near ? 10 + 50 * rnd() : 40 + 520 * Math.pow(rnd(), 0.85);
+    base[i * 3] = (rnd() * 2 - 1) * 0.19; base[i * 3 + 1] = rnd(); base[i * 3 + 2] = d;
+    prop[i * 4] = 0.025 + 0.085 * Math.pow(rnd(), 2.6);         // flake radius (cm)
+    prop[i * 4 + 1] = 0.3 + 0.7 * Math.pow(rnd(), 1.5);          // brightness
+    prop[i * 4 + 2] = rnd() * 6.283; prop[i * 4 + 3] = 0.5 + rnd();
+  }
+  snowGeo.setAttribute("position", new THREE.BufferAttribute(dummy, 3));
+  snowGeo.setAttribute("aBase", new THREE.BufferAttribute(base, 3));
+  snowGeo.setAttribute("aProp", new THREE.BufferAttribute(prop, 4));
+}
+// y 150-520 px from the top = gl_FragCoord.y 1400-1770: thin the particles there (the depth counter sits on it)
+const BAND_GLSL = `float calmBand(){ float y = gl_FragCoord.y; return smoothstep(1320.0, 1430.0, y) * (1.0 - smoothstep(1760.0, 1860.0, y)); }`;
+const snowMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending,
+  uniforms: { uRise: { value: 0 }, uVel: { value: 0 }, uT: { value: 0 }, uLight: { value: 1 }, uPxK: { value: PXK },
+    uFocus: { value: 92 }, uShake: { value: new THREE.Vector2() }, uCol: { value: new THREE.Vector3(0.8, 0.9, 0.95) } },
+  vertexShader: `
+    attribute vec3 aBase; attribute vec4 aProp;
+    uniform float uRise, uVel, uT, uLight, uPxK, uFocus; uniform vec2 uShake;
+    varying float vA, vDiam, vLen;
+    void main(){
+      float d = aBase.z, halfH = 0.3 * d;
+      float y = mod(aBase.y * 2.0 * halfH + uRise + halfH, 2.0 * halfH) - halfH;
+      float x = aBase.x * d + sin(uT * 0.8 * aProp.w + aProp.z) * 0.4;
+      gl_Position = projectionMatrix * vec4(x - uShake.x, y - uShake.y, -d, 1.0);
+      float pk = uPxK / d;
+      float diam = max(aProp.x * 2.0 * pk, 1.5);
+      float coc = 30.0 * max(uFocus / d - 1.0, 0.0) + 2.0 * max(1.0 - uFocus / d, 0.0);
+      float dd = max(diam, coc);
+      float len = min(uVel * pk / 80.0, 160.0);            // ~135-degree shutter streak
+      float S = dd + len;
+      gl_PointSize = S;
+      vDiam = dd / S; vLen = len / S;
+      float energy = clamp(pow(diam / dd, 1.2), 0.05, 1.0) * clamp(dd / S * 1.6 + 0.25, 0.0, 1.0);
+      vA = aProp.y * uLight * exp(-d * 0.0042) * energy * (d < 30.0 ? 0.5 : 1.0);
+    }`,
+  fragmentShader: `
+    uniform vec3 uCol; varying float vA, vDiam, vLen;
+    ${BAND_GLSL}
+    void main(){
+      vec2 p = gl_PointCoord - 0.5;
+      float rad = vDiam * 0.5, hl = vLen * 0.5, dy = max(abs(p.y) - hl, 0.0);
+      float dist = length(vec2(p.x, dy));
+      float core = 1.0 - smoothstep(rad * 0.2, rad, dist);
+      float taper = 1.0 - 0.75 * smoothstep(0.0, hl + rad, abs(p.y));   // streaks fade towards their ends
+      float a = core * taper * vA * (1.0 - 0.6 * calmBand());
+      if (a < 0.004) discard;
+      gl_FragColor = vec4(uCol, a);
+    }`,
+});
+const snow = new THREE.Points(snowGeo, snowMat); snow.frustumCulled = false; scene.add(snow);
+
+// ---------------------------------------------------------------- bubble burst (simulated on the CPU per frame)
+const BUB = [];
+{
+  const tmp = new THREE.Object3D();
+  // the rupture: the fold (ridge) that faces the camera most at the moment of the implosion
+  const tR = C0 + 0.08; applyPose(tmp, canPose(tR)); tmp.updateMatrix();
+  let ruptTh = 0, best = -9;
+  for (let k = 0; k < 3; k++) {
+    const th = PHI0 + 0.45 * 0.15 + (k + 0.5) * (2 * Math.PI / 3);
+    const dv = new THREE.Vector3(Math.cos(th), 0, Math.sin(th)).transformDirection(tmp.matrix);
+    if (dv.z + 0.35 * dv.x > best) { best = dv.z + 0.35 * dv.x; ruptTh = th; }
+  }
+  const N = 560;
+  for (let i = 0; i < N; i++) {
+    const kind = i < 12 ? 2 : i < 70 ? 1 : 0;                   // 2 big, 1 medium, 0 fizz
+    const fromRupt = i % 5 !== 4;                                // 80 % from the rupture, the rest from all folds
+    const ts = C0 + 0.075 + (i % 7 === 0 ? 0.1 + 0.7 * rnd() : 0.26 * Math.pow(rnd(), 2.4));
+    let th, ymm;
+    if (fromRupt) { th = ruptTh + (rnd() - 0.5) * 0.35; ymm = 66 + (rnd() - 0.5) * 22; }
+    else { const L = Math.floor(rnd() * 3); ymm = 20 + 75 * rnd(); th = PHI0 + 0.45 * ((ymm - 10) / 90 - 0.5) + (L + 0.5) * (2 * Math.PI / 3) + (rnd() - 0.5) * 0.3; }
+    const local = new THREE.Vector3(2.9 * Math.cos(th), (ymm - YMID) / 10, 2.9 * Math.sin(th));
+    const out = new THREE.Vector3(Math.cos(th) + (rnd() - 0.5) * 1.1, (rnd() - 0.35) * 1.1, Math.sin(th) + (rnd() - 0.5) * 1.1).normalize();
+    applyPose(tmp, canPose(ts)); tmp.updateMatrix();
+    const p0 = local.applyMatrix4(tmp.matrix), dir = out.transformDirection(tmp.matrix);
+    const sp = (kind === 2 ? 30 : kind === 1 ? 55 : 80) * (0.35 + rnd());
+    BUB.push({ ts, p0, dir, sp, Dts: descent(ts), kind,
+      rad: kind === 2 ? 0.2 + 0.14 * rnd() : kind === 1 ? 0.07 + 0.07 * rnd() : 0.02 + 0.035 * rnd(),
+      vt: kind === 2 ? 15 + 4 * rnd() : kind === 1 ? 10 + 4 * rnd() : 5 + 5 * rnd(),
+      wob: kind === 2 ? 0.35 : 0.15 * rnd(), wf: 9 + 10 * rnd(), ph: rnd() * 6.28, life: 1.0 + 1.3 * rnd(), br: 0.55 + 0.45 * rnd() });
+  }
+}
+const NB = BUB.length;
+const bubGeo = new THREE.BufferGeometry();
+const bPos = new Float32Array(NB * 3), bR = new Float32Array(NB), bA = new Float32Array(NB), bL = new Float32Array(NB), bK = new Float32Array(NB);
+BUB.forEach((b, i) => { bK[i] = b.kind; });
+bubGeo.setAttribute("position", new THREE.BufferAttribute(bPos, 3));
+bubGeo.setAttribute("aR", new THREE.BufferAttribute(bR, 1));
+bubGeo.setAttribute("aA", new THREE.BufferAttribute(bA, 1));
+bubGeo.setAttribute("aL", new THREE.BufferAttribute(bL, 1));
+bubGeo.setAttribute("aK", new THREE.BufferAttribute(bK, 1));
+const bubMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending,
+  uniforms: { uPxK: { value: PXK }, uCol: { value: new THREE.Vector3(0.85, 0.96, 1.0) }, uLight: { value: 1 } },
+  vertexShader: `
+    attribute float aR, aA, aL, aK; uniform float uPxK, uLight; varying float vA, vD, vL, vS, vBig;
+    void main(){
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      float d = -mv.z, D = max(aR * 2.0 * uPxK / d, 1.6), L = min(aL, 90.0), S = D + L;
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize = S; vD = D; vL = L; vS = S; vBig = aK;
+      vA = aA * uLight;
+    }`,
+  // head (the bubble) at the top of the sprite, a faint motion-blur tail below it
+  fragmentShader: `
+    uniform vec3 uCol; varying float vA, vD, vL, vS, vBig;
+    ${BAND_GLSL}
+    void main(){
+      vec2 px = (gl_PointCoord - vec2(0.5, 0.0)) * vS;      // pixels from the sprite's top centre, y down
+      float rad = vD * 0.5;
+      vec2 q = (px - vec2(0.0, rad)) / rad; q.y = -q.y;
+      if (vBig > 1.5) q.y *= 1.28;                           // big bubbles are oblate
+      float r = length(q), head = 0.0;
+      if (r < 1.0) {
+        float aa = clamp((1.0 - r) * vD * 0.5, 0.0, 1.0);
+        float rimL = smoothstep(0.55, 0.94, r);
+        float hl = 1.0 - smoothstep(0.0, 0.3, length(q - vec2(-0.34, 0.42)));
+        float lo = (1.0 - smoothstep(0.0, 0.5, length(q - vec2(0.2, -0.52)))) * 0.35;
+        float small = 1.0 - smoothstep(3.0, 8.0, vD);        // tiny bubbles: just a bright dot
+        head = mix(rimL * 0.75 + hl * 1.15 + lo + 0.06, 0.95 * (1.0 - r * r), small) * aa;
+      }
+      float tail = 0.0;
+      if (vL > 0.5 && px.y > rad) {
+        float along = (px.y - rad) / vL;
+        tail = (1.0 - smoothstep(rad * 0.3, rad * 0.9, abs(px.x))) * (1.0 - along) * 0.28;
+      }
+      float a = max(head, tail) * vA * (1.0 - 0.55 * calmBand());
+      if (a < 0.004) discard;
+      gl_FragColor = vec4(uCol, a);
+    }`,
+});
+const bubbles = new THREE.Points(bubGeo, bubMat); bubbles.frustumCulled = false; scene.add(bubbles);
+function updateBubbles(t, D, camPos) {
+  for (let i = 0; i < NB; i++) {
+    const b = BUB[i], a = t - b.ts;
+    if (a <= 0) { bA[i] = 0; bR[i] = 0; bL[i] = 0; bPos[i * 3] = 0; bPos[i * 3 + 1] = -999; bPos[i * 3 + 2] = 0; continue; }
+    const k = 11, f = (1 - Math.exp(-k * a)) / k, tau = 0.15;
+    const rise = b.vt * (a - tau * (1 - Math.exp(-a / tau))) + (D - b.Dts);
+    const wob = b.wob * Math.sin(b.wf * a + b.ph) * smooth(0, 0.15, a);
+    const x = b.p0.x + b.dir.x * b.sp * f + wob, y = b.p0.y + b.dir.y * b.sp * f + rise, z = b.p0.z + b.dir.z * b.sp * f + wob * 0.5;
+    bPos[i * 3] = x; bPos[i * 3 + 1] = y; bPos[i * 3 + 2] = z;
+    const grow = smooth(0, 0.05, a);
+    bR[i] = b.rad * (0.4 + 0.6 * grow);
+    bA[i] = b.br * grow * (1 - smooth(b.life * 0.7, b.life, a));
+    const vy = b.dir.y * b.sp * Math.exp(-k * a) + b.vt * (1 - Math.exp(-a / tau)) + vel(t);
+    const dist = Math.hypot(x - camPos.x, y - camPos.y, z - camPos.z);
+    bL[i] = Math.max(0, vy) * PXK / dist / 70;
+  }
+  for (const n of ["position", "aR", "aA", "aL"]) bubGeo.attributes[n].needsUpdate = true;
+}
+
+// ---------------------------------------------------------------- colour grading by depth (display-space RGB)
+const mix3 = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
+const ramp3 = (s0, s1, s2, k) => (k < 0.5 ? mix3(s0, s1, k * 2) : mix3(s1, s2, (k - 0.5) * 2));
+const hex = (h) => [((h >> 16) & 255) / 255, ((h >> 8) & 255) / 255, (h & 255) / 255];
+const TOP = [hex(0x4cc2ea), hex(0x146aa6), hex(0x06213d)];
+const MID = [hex(0x168ccb), hex(0x0b4578), hex(0x03152a)];
+const BOT = [hex(0x0a5d98), hex(0x052c55), hex(0x010812)];
+const camPos = new THREE.Vector3(), look = new THREE.Vector3(), tmpV = new THREE.Vector3();
+
+function renderAt(t) {
+  t = Math.max(0, Math.min(TT, t));
+  const D = descent(t), K = depthK(t), Ks = smooth(0, 1, K), light = lerp(1, 0.28, Math.pow(K, 0.85));
+  // water
+  const top = ramp3(...TOP, K), mid = ramp3(...MID, K), bot = ramp3(...BOT, K);
+  bgMat.uniforms.uTop.value.set(...top); bgMat.uniforms.uMid.value.set(...mid); bgMat.uniforms.uBot.value.set(...bot);
+  bgMat.uniforms.uRay.value = Math.pow(1 - K, 1.8);
+  bgMat.uniforms.uSurf.value = 0.955 + D * 0.006;
+  bgMat.uniforms.uT.value = t;
+  scene.fog.color.setRGB(...mid, THREE.SRGBColorSpace);
+  // lights: sunlight from above fades and turns blue with depth; the blue rim keeps the can's outline in the dark
+  const kc = Math.pow(Ks, 1.3);
+  key.intensity = lerp(3.2, 0.7, Ks); key.color.setRGB(...mix3([1.0, 0.98, 0.94], [0.36, 0.6, 0.9], kc), THREE.SRGBColorSpace);
+  hemi.intensity = lerp(1.0, 0.3, Ks);
+  hemi.color.setRGB(...mix3([0.6, 0.86, 1.0], [0.14, 0.34, 0.6], Ks), THREE.SRGBColorSpace);
+  rim.intensity = lerp(0.8, 1.6, Ks);
+  fill.intensity = lerp(0.35, 0.25, Ks);
+  scene.environmentIntensity = lerp(1.0, 0.3, Math.pow(K, 0.8));
+  // camera: sinks with the can; pushes in a little as the can is crushed; jolts on the implosion
+  const push = smooth(C0 - 0.2, C1 + 0.45, t);
+  const dist = lerp(92, 79, push) - 2 * t / TT;
+  const el = (13 + 1.2 * Math.sin(t * 0.9)) * D2R;
+  const sk = smooth(C0 + 0.04, C0 + 0.1, t) * Math.exp(-Math.max(0, t - C0 - 0.1) * 6.5);
+  const shx = sk * (0.55 * Math.sin(t * 61) + 0.3 * Math.sin(t * 97 + 1.7)), shy = sk * (0.5 * Math.sin(t * 73 + 0.5) + 0.25 * Math.sin(t * 131));
+  camPos.set(0.4 * Math.sin(0.5 * t) + shx, dist * Math.sin(el) + shy, dist * Math.cos(el));
+  camera.position.copy(camPos);
+  // aim so the can centre sits ~140 px below frame centre (y ~ 1100)
+  const aimEl = -el + Math.atan(0.146 * Math.tan(FOV / 2 * D2R));
+  look.set(camPos.x * 0.9, camPos.y + Math.sin(aimEl) * 100, camPos.z - Math.cos(aimEl) * 100);
+  camera.lookAt(look);
+  camera.updateMatrixWorld();
+  // can
+  applyPose(canGroup, canPose(t));
+  const { kAng, tw, st } = deformCan(t);
+  // tab: the lid's rigid motion (twist about the axis, drop, kink about the mid-height pivot)
+  const pv = (PIVOT - YMID) / 10, drop = -SH_MM * st.sh / 10 - st.cr * 0.06;
+  const lidY = (113.85 - YMID) / 10, yy = lidY + drop - pv;
+  tab.rotation.set(0, TAB_SPIN + tw, kAng, "ZXY");
+  tmpV.set(0, lidY, 0).applyEuler(tab.rotation);
+  tab.position.set(-yy * Math.sin(kAng) - tmpV.x, yy * Math.cos(kAng) + pv - tmpV.y, -tmpV.z);
+  // particles
+  snowMat.uniforms.uRise.value = D; snowMat.uniforms.uVel.value = vel(t); snowMat.uniforms.uT.value = t;
+  snowMat.uniforms.uLight.value = light; snowMat.uniforms.uShake.value.set(shx, shy);
+  snowMat.uniforms.uFocus.value = dist;
+  snowMat.uniforms.uCol.value.set(...mix3([0.8, 0.92, 0.96], [0.5, 0.68, 0.86], Ks));
+  bubMat.uniforms.uLight.value = lerp(1, 0.55, Ks);
+  updateBubbles(t, D, camPos);
+  renderer.render(scene, camera);
+}
+window.addEventListener("hf-seek", (e) => renderAt(e.detail.time));
+renderAt(window.__hfThreeTime || 0);
+</script>
+</body>
+</html>
