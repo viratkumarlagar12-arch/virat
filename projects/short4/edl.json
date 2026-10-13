@@ -1,0 +1,19 @@
+{
+ "audio": "tight/voice48k.wav",
+ "fps": 30,
+ "shots": [
+  {"src": "download/clean.mp4", "in": 0.0, "dur": 3.2, "note": "1 hook: astronaut on Venus (creator's clean AI footage) - Socho, Venus par ek second! Insaan toh chhodo..."},
+  {"src": "media/3d/lander_descent.mp4", "in": 0.3, "dur": 6.2, "note": "2 3D Venera lander descent - machine bhi kitni der tik paayi? + A/B/C quiz + jawab end mein"},
+  {"src": "download/clean.mp4", "in": 3.4, "dur": 3.5, "note": "3 astronaut walking closer - Pehla jhatka: pressure! Dharti se lagbhag 92 guna"},
+  {"src": "media/3d/ocean_can.mp4", "in": 0.2, "dur": 2.2, "note": "4 3D sinking can crushed - jaise samundar mein kareeb 900 metre neeche"},
+  {"src": "download/clean.mp4", "in": 8.6, "dur": 3.75, "note": "5 hot rocky ground - Doosra jhatka: garmi! Zameen par lagbhag 465 degree"},
+  {"src": "media/3d/sun_planets.mp4", "in": 0.0, "dur": 3.9, "note": "6 3D Sun / Mercury / Venus thermometers - Suraj ke sabse paas Mercury... par sabse garam? Venus!"},
+  {"src": "download/clean.mp4", "in": 14.2, "dur": 2.6, "note": "7 rising through the clouds - Kyun? Carbon dioxide ka ghana atmosphere"},
+  {"src": "media/3d/venus_greenhouse.mp4", "in": 0.0, "dur": 2.9, "note": "8 3D Venus greenhouse cut-away - Isi se bhaari pressure... aur garmi andar qaid"},
+  {"src": "download/clean.mp4", "in": 18.6, "dur": 1.8, "note": "9 helmet close-up - Wahan tum zyada der zinda nahi rahoge"},
+  {"src": "media/3d/lander_reveal.mp4", "in": 0.0, "dur": 3.35, "note": "10 3D lander heats up, signal lost - Sahi jawab hai B! Sabse zyada tiki, kareeb 2 ghante"},
+  {"src": "download/clean.mp4", "in": 22.4, "dur": 1.4, "note": "11 helmet close-up - Venus sirf garam nahi hai..."},
+  {"src": "download/clean.mp4", "in": 26.4, "dur": 4.14, "speed": 0.97, "note": "12 pull-back wide - Poore planet jitna bada pressure cooker hai! / Tumhara jawab kya tha? Comment karo!"},
+  {"src": "../short1/fixed.mp4", "in": 44.5, "dur": 2.0, "note": "channel end card (Science Unseen Hindi logo)"}
+ ]
+}
