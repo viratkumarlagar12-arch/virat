@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<title>Venus greenhouse cut-away 3D</title>
+<!-- "Isi se bhaari pressure... aur garmi andar qaid!": Venus as a big globe in a thick, slowly swirling yellow-cream cloud shell, with a
+     wedge cut out of the top (like a slice removed) so you can see the layers: rocky surface, a thick glowing lower atmosphere (CO2), the
+     cloud deck. Warm golden-orange look to match the Venus-surface AI footage. Three.js inside HyperFrames: CPU-renderable, deterministic,
+     everything is a pure function of t (seeded random only). Procedural cloud bands (seeded noise -> canvas texture, sheared and wobbled in
+     the shader), procedural layer shading on the cut faces, extruded 3D arrows, glowing ribbons for sun rays and heat rays.
+     Beats (seconds, CFG.pressEnd / CFG.sunStart move the split):
+       0.0 - 1.3   two big heavy arrows push DOWN through the cloud deck onto the surface (radially, towards the planet's centre) with a
+                   subtle pulse; the surface glows at each push. The small label "CO2" sits on the lower atmosphere between them.
+       1.4 - 3.2   (rays are launched at CFG.sunStart = 1.26 s so the first beam is visible at 1.4 s and hitting by ~1.65 s) yellow sunlight comes in from the upper-left: MOST rays bounce off the cloud tops (flash at the hit, reflected beam goes
+                   away), two "pass" rays go through the deck and reach the surface (the ground flashes). Then wavy red-orange heat rays rise
+                   from the surface, hit small CO2 molecules in the thick lower atmosphere and are sent back down (trapped); the surface and
+                   the lower air glow hotter as the heat piles up. Heat is turned back by the CO2 gas, not by the clouds.
+     Layout: globe radius ~372 px (about 70 % of the width), centre near y 880. y 1250-1450 px is kept free of key detail (captions).
+     Only text: the "CO2" label (Montserrat 900, white) on the lower atmosphere (CFG.label, "" hides it).
+     Settings: the one-line window.CFG below; render3d.py --config '{"yaw":10}' merges JSON over it.
+       duration, pressEnd (arrows leave), sunStart (first ray), yaw / pitch (camera angle in degrees at the start; yaw eases to ~55 %), seed. -->
+<script>
+window.CFG = { duration: 3.2, pressEnd: 1.3, sunStart: 1.26, yaw: 15, pitch: 10, seed: 3, label: "CO2" };
+</script>
+<script src="assets/gsap.min.js"></script>
+<script type="importmap">{ "imports": { "three": "./assets/three.module.js" } }</script>
+<style>
+@font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-900.ttf"); font-weight: 900; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+#root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #0a0503; }
+#gl { position: absolute; inset: 0; width: 1080px; height: 1920px; display: block; }
+#vig { position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 100% 70% at 50% 46%, rgba(8,3,1,0) 60%, rgba(8,3,1,0.36) 100%),
+    linear-gradient(to bottom, rgba(8,3,1,0) 0%, rgba(8,3,1,0) 72%, rgba(8,3,1,0.2) 100%); }
+#lab { position: absolute; left: 0; top: 0; width: 300px; height: 80px; text-align: center; font-family: "Montserrat"; font-weight: 900;
+  font-size: 62px; line-height: 80px; color: #fff; letter-spacing: .01em; opacity: 0; white-space: nowrap;
+  text-shadow: 0 0 22px rgba(120,30,0,.95), 0 3px 12px rgba(60,10,0,.9), 0 0 3px rgba(60,10,0,.8); }
+#lab small { font-size: .6em; vertical-align: -0.16em; margin-left: .02em; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="3.2" data-width="1080" data-height="1920">
+  <canvas id="gl" width="1080" height="1920"></canvas>
+  <div id="vig"></div>
+  <div id="lab">CO<small>2</small></div>
+</div>
+<script>
+  (function () {
+    const C = window.CFG;
+    document.getElementById("root").setAttribute("data-duration", String(C.duration));
+    const tl = gsap.timeline({ paused: true });
+    tl.set({}, {}, C.duration); // timeline length == composition length; all motion is a pure function of t in renderAt()
+    window.__timelines = window.__timelines || {};
+    window.__timelines["main"] = tl;
+  })();
+</script>
+<script type="module">
+import * as THREE from "three";
+
+const CFG = window.CFG;
+const W = 1080, H = 1920, FOV = 22, D2R = Math.PI / 180;
+const TT = CFG.duration;
+const clamp01 = (x) => Math.max(0, Math.min(1, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const easeOutCubic = (u) => 1 - Math.pow(1 - clamp01(u), 3);
+const easeInCubic = (u) => Math.pow(clamp01(u), 3);
+const backOut = (u, s = 1.7) => { u = clamp01(u) - 1; return 1 + (s + 1) * u * u * u + s * u * u; };
+let seed = 90210 + (CFG.seed | 0) * 7919;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+
+// ---------------------------------------------------------------- layout of the cut-away (unit sphere = cloud tops)
+const R_SURF = 0.425, R_CLOUD = 0.80;            // rocky surface, base of the cloud deck (schematic: layers are exaggerated)
+const A0 = 35 * D2R, A1 = 145 * D2R;             // the wedge that is removed (angles in the xy plane, about the z axis)
+const Z_FX = 0.045;                               // plane of rays / heat / molecules, just in front of the back wall
+const e_r = (a) => [Math.cos(a), Math.sin(a)];
+const norm2 = (v) => { const l = Math.hypot(v[0], v[1]) || 1; return [v[0] / l, v[1] / l]; };
+
+// ---------------------------------------------------------------- seeded 3D value noise (for the one static texture)
+const P = new Uint8Array(512);
+for (let i = 0; i < 256; i++) P[i] = i;
+for (let i = 255; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [P[i], P[j]] = [P[j], P[i]]; }
+for (let i = 0; i < 256; i++) P[i + 256] = P[i];
+const fadeN = (t) => t * t * (3 - 2 * t);
+function vnoise(x, y, z) {
+  const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
+  x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+  const u = fadeN(x), v = fadeN(y), w = fadeN(z);
+  const h = (a, b, c) => P[P[P[a] + b] + c] / 255;
+  const l = (a, b, t) => a + (b - a) * t;
+  return l(l(l(h(X, Y, Z), h(X + 1, Y, Z), u), l(h(X, Y + 1, Z), h(X + 1, Y + 1, Z), u), v),
+           l(l(h(X, Y, Z + 1), h(X + 1, Y, Z + 1), u), l(h(X, Y + 1, Z + 1), h(X + 1, Y + 1, Z + 1), u), v), w);
+}
+function fbm(x, y, z, oct = 5) {
+  let a = 0.5, f = 1, s = 0;
+  for (let i = 0; i < oct; i++) { s += a * vnoise(x * f, y * f, z * f); f *= 2.02; a *= 0.5; }
+  return s;
+}
+
+// ---------------------------------------------------------------- Venus cloud-band texture (equirectangular, seamless in longitude)
+function cloudTexture(w, h) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const ctx = c.getContext("2d"); const img = ctx.createImageData(w, h);
+  const pal = [[128, 66, 20], [188, 114, 34], [221, 160, 58], [238, 194, 96], [251, 226, 150]];
+  const mixp = (v) => {
+    const f = clamp01(v) * (pal.length - 1), i = Math.min(pal.length - 2, Math.floor(f)), u = f - i;
+    return [lerp(pal[i][0], pal[i + 1][0], u), lerp(pal[i][1], pal[i + 1][1], u), lerp(pal[i][2], pal[i + 1][2], u)];
+  };
+  for (let j = 0; j < h; j++) {
+    const lat = Math.PI * (0.5 - j / h);
+    for (let i = 0; i < w; i++) {
+      const lon = 2 * Math.PI * (i / w);
+      const x = Math.cos(lat) * Math.cos(lon), y = Math.sin(lat), z = Math.cos(lat) * Math.sin(lon);
+      const warp = fbm(x * 1.6 + 3, y * 2.0, z * 1.6, 4);
+      const lat2 = lat + (warp - 0.5) * 0.7;
+      const band = 0.5 + 0.5 * Math.sin(lat2 * 8.0 + 1.1);
+      const streak = fbm(x * 2.4 + 9, y * 11.0, z * 2.4, 5);       // stretched along longitude: the long cloud streaks
+      const swirl = fbm(x * 5.2 + 20, y * 6.5 + warp * 2, z * 5.2, 5);
+      let v = 0.30 * band + 0.42 * streak + 0.40 * swirl + 0.12;
+      v = clamp01((v - 0.32) * 1.9);
+      v = v * v * (3 - 2 * v) * 0.78 + 0.22 * v;
+      const [r, g, b] = mixp(0.18 + v * 0.86);
+      const k = (j * w + i) * 4;
+      img.data[k] = r; img.data[k + 1] = g; img.data[k + 2] = b; img.data[k + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.NoColorSpace; t.wrapS = THREE.RepeatWrapping; t.wrapT = THREE.ClampToEdgeWrapping;
+  t.generateMipmaps = false; t.minFilter = THREE.LinearFilter; t.magFilter = THREE.LinearFilter;
+  return t;
+}
+function spriteTexture(w, h, draw) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  draw(c.getContext("2d"), w, h);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+// small CO2 molecule: O = C = O (two pale red oxygen atoms, one dark carbon atom, bonds)
+const molTex = spriteTexture(256, 112, (g, w, h) => {
+  const ball = (x, y, r, c0, c1, c2) => {
+    const gr = g.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r);
+    gr.addColorStop(0, c0); gr.addColorStop(0.55, c1); gr.addColorStop(1, c2);
+    g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+    g.lineWidth = 5; g.strokeStyle = "rgba(48,14,4,.9)"; g.stroke();
+  };
+  g.strokeStyle = "#3a1608"; g.lineWidth = 14; g.lineCap = "round";
+  g.beginPath(); g.moveTo(58, h / 2 - 8); g.lineTo(w - 58, h / 2 - 8); g.moveTo(58, h / 2 + 8); g.lineTo(w - 58, h / 2 + 8); g.stroke();
+  g.strokeStyle = "#e9c9a0"; g.lineWidth = 4;
+  g.beginPath(); g.moveTo(58, h / 2 - 8); g.lineTo(w - 58, h / 2 - 8); g.moveTo(58, h / 2 + 8); g.lineTo(w - 58, h / 2 + 8); g.stroke();
+  ball(w / 2, h / 2, 34, "#8d7468", "#3f2a22", "#1b0f0b");
+  ball(52, h / 2, 40, "#ffe6d6", "#ff5a3c", "#a8180c");
+  ball(w - 52, h / 2, 40, "#ffe6d6", "#ff5a3c", "#a8180c");
+});
+const dotTex = spriteTexture(64, 64, (g, w, h) => {
+  const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+  gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.35, "rgba(255,255,255,.55)"); gr.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+});
+
+// ---------------------------------------------------------------- renderer, camera, lights
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("gl"), antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H, false); renderer.setPixelRatio(1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(FOV, W / H, 0.1, 100);
+camera.setViewOffset(W, H, 0, 84, W, H);          // globe centre sits at y ~ 876 instead of 960
+const D0 = 13.31;                                  // camera distance -> cloud-top radius ~372 px (70 % of the width incl. the zoom)
+const sunDir = new THREE.Vector3(-0.55, 0.62, 0.56).normalize();
+scene.add(new THREE.AmbientLight(0xffe2b8, 1.25));
+const key = new THREE.DirectionalLight(0xfff0d2, 2.6); key.position.set(-2.5, 3.2, 4.5); scene.add(key);
+const fill = new THREE.DirectionalLight(0xff9a50, 0.9); fill.position.set(3, -1.5, 2); scene.add(fill);
+
+// ---------------------------------------------------------------- shared GLSL
+const GLSL_NOISE = `
+float h31(vec3 p){ p = fract(p*0.1031); p += dot(p, p.zyx+31.32); return fract((p.x+p.y)*p.z); }
+float vn(vec3 p){ vec3 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
+  return mix(mix(mix(h31(i),h31(i+vec3(1,0,0)),f.x), mix(h31(i+vec3(0,1,0)),h31(i+vec3(1,1,0)),f.x),f.y),
+             mix(mix(h31(i+vec3(0,0,1)),h31(i+vec3(1,0,1)),f.x), mix(h31(i+vec3(0,1,1)),h31(i+vec3(1,1,1)),f.x),f.y), f.z); }
+float fbm3(vec3 p){ float a=0.5, s=0.0; for(int i=0;i<4;i++){ s+=a*vn(p); p=p*2.03+vec3(1.7,9.2,3.1); a*=0.5; } return s; }
+`;
+
+// background: warm haze, sun glow from the top-left corner, soft vignette
+const bg = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+  uniforms: { uT: { value: 0 }, uC: { value: new THREE.Vector2(540, 876) } },
+  depthTest: false, depthWrite: false,
+  vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=vec4(position.xy,0.9999,1.0); }`,
+  fragmentShader: GLSL_NOISE + `uniform float uT; uniform vec2 uC; varying vec2 vUv;
+    void main(){
+      vec2 px = vec2(vUv.x*1080.0, (1.0-vUv.y)*1920.0);
+      float dC = length((px-uC)*vec2(1.0,0.82))/760.0;
+      vec3 col = mix(vec3(0.50,0.255,0.095), vec3(0.115,0.052,0.020), smoothstep(0.08,1.12,dC));
+      float hz = fbm3(vec3(px*0.0022+vec2(uT*0.03,0.0), uT*0.05));
+      col *= 0.74 + 0.58*hz;
+      float dS = length(px-vec2(-40.0,-30.0));
+      col += vec3(1.0,0.66,0.26)*(0.55*exp(-dS/330.0) + 0.20*exp(-dS/1100.0));
+      col += vec3(0.5,0.22,0.06)*0.10*exp(-abs(dC-0.62)*5.0);
+      gl_FragColor = vec4(col,1.0);
+    }`,
+}));
+bg.frustumCulled = false; bg.renderOrder = -10; scene.add(bg);
+
+// soft atmosphere glow ring behind the globe (billboard along the view axis)
+const halo = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.ShaderMaterial({
+  uniforms: { uHeat: { value: 0 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `uniform float uHeat; varying vec2 vUv;
+    void main(){ vec2 q=(vUv-0.5)*6.0; float d=length(q); float o=max(d-1.0,0.0);
+      float g = exp(-o*10.0)*0.60 + exp(-o*3.0)*0.26 + exp(-o*1.1)*0.05;
+      float side = 0.62 + 0.38*dot(normalize(q+vec2(1e-4)), normalize(vec2(-0.6,0.8)));
+      vec3 c = mix(vec3(1.0,0.60,0.18), vec3(1.0,0.34,0.08), uHeat*0.6);
+      gl_FragColor = vec4(c*g*side*(1.0+0.35*uHeat), 1.0); }`,
+}));
+halo.renderOrder = -5; scene.add(halo);
+
+// ---------------------------------------------------------------- the cloud shell: sphere with the wedge removed (geometry, not discard, so edges antialias)
+// polar axis of the sphere geometry is turned to +z so the wedge angle is the azimuth about z
+function shellPart(phiStart, phiLen, thStart, thLen) {
+  const g = new THREE.SphereGeometry(1, 128, 96, phiStart, phiLen, thStart, thLen);
+  g.rotateX(Math.PI / 2);
+  return g;
+}
+const cloudMat = new THREE.ShaderMaterial({
+  uniforms: { uTex: { value: cloudTexture(1024, 512) }, uT: { value: 0 }, uL: { value: sunDir }, uHeat: { value: 0 } },
+  vertexShader: `varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `uniform sampler2D uTex; uniform float uT, uHeat; uniform vec3 uL; varying vec3 vP;
+    void main(){
+      vec3 N = normalize(vP);
+      float lon = atan(N.z, N.x), lat = asin(clamp(N.y,-1.0,1.0));
+      float cl = cos(lat);
+      // differential rotation (equator races ahead) + a slow liquid wobble = swirling bands
+      float drift = uT*(0.030 + 0.050*cl*cl);
+      vec2 w1 = 0.011*vec2(sin(lat*13.0+uT*1.7+lon*2.0), cos(lon*4.0-uT*1.3+lat*5.0));
+      vec2 uv = vec2(lon/6.2831853 + drift, lat/3.1415927 + 0.5) + w1;
+      vec3 tex = texture2D(uTex, uv).rgb;
+      vec2 uv2 = vec2(lon*3.0/6.2831853 - uT*0.05*(0.5+cl), lat*2.4/3.1415927 + 0.5 + 0.02*sin(lon*3.0+uT));
+      float wisp = texture2D(uTex, uv2).g;
+      tex *= 0.92 + 0.16*wisp;
+      float nl = dot(N, uL);
+      float lit = smoothstep(-0.50, 0.80, nl);
+      vec3 col = tex * mix(vec3(0.30,0.14,0.06), vec3(1.0,0.88,0.70), lit);
+      vec3 V = normalize(cameraPosition - vP);
+      float fr = pow(1.0 - max(dot(N,V),0.0), 2.4);
+      col += vec3(1.0,0.50,0.14)*fr*(0.30 + 0.55*lit + 0.2*uHeat);
+      gl_FragColor = vec4(col, 1.0);
+    }`,
+});
+const wedgeLen = A1 - A0;
+const shellA = new THREE.Mesh(shellPart(A1 - Math.PI, 2 * Math.PI - wedgeLen, 0, Math.PI), cloudMat);       // everything outside the wedge
+const shellB = new THREE.Mesh(shellPart(A0 - Math.PI, wedgeLen, Math.PI / 2, Math.PI / 2), cloudMat);       // back half inside the wedge (behind the wall)
+scene.add(shellA, shellB);
+
+// ---------------------------------------------------------------- cut faces: the cross-section layers (shader, by 3D radius)
+const wallUniforms = { uT: { value: 0 }, uHeat: { value: 0 }, uPulse: { value: 0 }, uShade: { value: 1 } };
+const wallMat = (shade) => new THREE.ShaderMaterial({
+  uniforms: { ...wallUniforms, uShade: { value: shade } }, side: THREE.DoubleSide,
+  vertexShader: `varying vec3 vP; void main(){ vec4 wp=modelMatrix*vec4(position,1.0); vP=wp.xyz; gl_Position=projectionMatrix*viewMatrix*wp; }`,
+  fragmentShader: GLSL_NOISE + `uniform float uT, uHeat, uPulse, uShade; varying vec3 vP;
+    const float RS=${R_SURF.toFixed(3)}, RC=${R_CLOUD.toFixed(3)};
+    void main(){
+      vec3 p = vP; float rho = length(p); vec3 dir = p/max(rho,1e-4);
+      float rs = RS + 0.016*(vn(dir*15.0)-0.5) + 0.012*(vn(dir*41.0)-0.5);
+      vec3 q = p*vec3(4.5,4.5,4.5) + vec3(uT*0.30, uT*0.10, 0.0);
+      float sw = fbm3(q + 1.6*vec3(fbm3(q*0.7+vec3(0.0,uT*0.15,0.0))));
+      float rc = RC + 0.030*(fbm3(dir*6.0+vec3(0.0,0.0,uT*0.07))-0.5) + 0.012*(vn(dir*22.0)-0.5);
+      float heat = clamp(uHeat,0.0,1.0);
+      // --- rock below the surface: strata + grain, glowing cracks near the top
+      float rn = fbm3(p*16.0);
+      float strata = 0.5 + 0.5*sin(rho*62.0 + 4.0*fbm3(p*3.2) + 6.0*vn(dir*5.0));
+      vec3 rock = mix(vec3(0.16,0.075,0.045), vec3(0.40,0.205,0.105), strata*0.8+0.2*rn);
+      rock *= 0.55 + 0.9*rn*0.5;
+      rock *= 0.72 + 0.55*smoothstep(0.0, 0.42, rho);
+      float depth = rs - rho;
+      rock = mix(rock, vec3(0.50,0.27,0.13)*(0.7+0.5*rn), smoothstep(0.035,0.0,depth)*0.65);
+      float veins = pow(1.0 - abs(2.0*fbm3(p*10.0+vec3(3.0,1.0,7.0)) - 1.0), 6.0);
+      float gl = exp(-depth*9.0);
+      rock += vec3(1.0,0.36,0.07)*(veins*1.1+0.10)*gl*(0.35 + 1.0*heat + 0.6*uPulse);
+      // --- thick lower atmosphere: dense glowing CO2 haze
+      float h = clamp((rho-rs)/(rc-rs), 0.0, 1.0);
+      vec3 aBot = vec3(1.00,0.30,0.06), aMid = vec3(0.97,0.48,0.11), aTop = vec3(0.98,0.66,0.22);
+      vec3 atm = h<0.5 ? mix(aBot,aMid,h*2.0) : mix(aMid,aTop,(h-0.5)*2.0);
+      atm *= 0.50 + 0.62*sw;
+      atm += vec3(1.0,0.28,0.04)*(0.10 + 0.40*heat)*(1.0-h)*(0.55+0.6*sw);
+      atm += vec3(1.0,0.45,0.10)*0.30*exp(-h*7.0)*(0.7+0.6*uPulse);
+      // --- cloud deck
+      float ct = clamp((rho-rc)/(1.0-rc), 0.0, 1.0);
+      float bil = fbm3(p*vec3(8.0,8.0,8.0)+vec3(uT*0.22,0.0,uT*0.05));
+      vec3 cloud = mix(vec3(0.74,0.52,0.28), vec3(0.99,0.92,0.68), clamp(ct*0.85 + bil*0.55, 0.0, 1.0));
+      cloud *= 0.94 + 0.10*sw;
+      // --- stack the layers
+      vec3 col = mix(rock, atm, smoothstep(rs-0.004, rs+0.004, rho));
+      col = mix(col, cloud, smoothstep(rc-0.016, rc+0.016, rho + 0.03*(bil-0.5)));
+      // bright lip along the surface line, soft dark seam under the cloud base
+      col += vec3(1.0,0.62,0.22)*smoothstep(0.011,0.0,abs(rho-rs))*(0.55+0.7*heat+0.5*uPulse);
+      col *= 1.0 - 0.30*smoothstep(0.03,0.0,abs(rho-rc+0.012))*step(rs+0.02,rho);
+      // gentle falloff toward the very outer edge keeps the rim from blowing out
+      col *= vec3(1.0, 0.88+0.12*uShade, 0.74+0.26*uShade) * uShade;
+      gl_FragColor = vec4(col, 1.0);
+    }`,
+});
+const backWall = new THREE.Mesh(new THREE.CircleGeometry(1, 128, A0, wedgeLen), wallMat(1.0));
+scene.add(backWall);
+function sideWall(alpha, shade) {
+  const m = new THREE.Mesh(new THREE.CircleGeometry(1, 64, 0, Math.PI / 2), wallMat(shade));
+  const eu = new THREE.Vector3(Math.cos(alpha), Math.sin(alpha), 0), ez = new THREE.Vector3(0, 0, 1);
+  const n = new THREE.Vector3().crossVectors(eu, ez);
+  m.matrixAutoUpdate = false; m.matrix.makeBasis(eu, ez, n);
+  scene.add(m); return m;
+}
+const wallL = sideWall(A1, 0.74), wallR = sideWall(A0, 0.92);
+const wallMats = [backWall, wallL, wallR].map((m) => m.material);
+
+// ---------------------------------------------------------------- ribbons (sun rays, heat rays): strip meshes with per-vertex path length s
+const RIB_VS = `attribute float aS; attribute float aV; attribute float aA; varying float vS; varying float vV; varying float vA;
+  void main(){ vS=aS; vV=aV; vA=aA; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`;
+const RIB_FS = `uniform vec3 uColor, uCoreC; uniform float uReveal, uAlpha, uT, uFlow, uFreq, uAmp, uFadeIn, uFadeOut, uLen, uHead, uCoreK, uTail, uBand;
+  varying float vS; varying float vV; varying float vA;
+  void main(){
+    float av = clamp(1.0-abs(vV),0.0,1.0);
+    float edge = mix(pow(av, 1.35), smoothstep(0.0, 0.34, av), uBand), core = mix(pow(av, 4.0), smoothstep(0.30, 0.95, av), uBand);   // uBand 1 = solid glowing band, 0 = thin beam
+    float m = 1.0 - smoothstep(uReveal-0.10, uReveal, vS);
+    float hgOn = step(0.0, uReveal) * (1.0 - smoothstep(uLen, uLen+0.15, uReveal));
+    float hg = exp(-pow((vS-uReveal)/uHead, 2.0)) * hgOn;
+    float fl = 1.0 - uAmp + uAmp*sin((vS*uFreq - uT*uFlow)*6.2831853);
+    float tail = mix(1.0, smoothstep(uReveal-uTail, uReveal, vS)*0.75+0.25, step(0.001,uTail));
+    float fin = smoothstep(0.0, uFadeIn, vS), fout = 1.0 - smoothstep(uLen-uFadeOut, uLen, vS);
+    float a = mix(edge*0.62 + core*0.7, edge*0.98 + core*0.10, uBand) * m * fl * tail * fin * fout * vA + hg*edge*1.5*vA*fin;
+    vec3 c = uColor*(0.8+core*0.5) + uCoreC*core*uCoreK;
+    gl_FragColor = vec4(c, clamp(a*uAlpha, 0.0, 1.0));
+  }`;
+function ribGeometry(pts, width, z, s0, aArr) {
+  const n = pts.length, pos = new Float32Array(n * 6), S = new Float32Array(n * 2), V = new Float32Array(n * 2), A = new Float32Array(n * 2), idx = [];
+  let s = s0;
+  for (let i = 0; i < n; i++) {
+    const p = pts[i], a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
+    let tx = b[0] - a[0], ty = b[1] - a[1]; const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+    if (i > 0) s += Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]);
+    const w = typeof width === "function" ? width(i / (n - 1)) : width;
+    for (let k = 0; k < 2; k++) {
+      const sg = k ? 1 : -1, o = (i * 2 + k);
+      pos[o * 3] = p[0] - ty * w * 0.5 * sg; pos[o * 3 + 1] = p[1] + tx * w * 0.5 * sg; pos[o * 3 + 2] = z;
+      S[o] = s; V[o] = sg; A[o] = aArr ? aArr[i] : 1;
+    }
+    if (i < n - 1) { const q = i * 2; idx.push(q, q + 1, q + 2, q + 1, q + 3, q + 2); }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  g.setAttribute("aS", new THREE.BufferAttribute(S, 1));
+  g.setAttribute("aV", new THREE.BufferAttribute(V, 1));
+  g.setAttribute("aA", new THREE.BufferAttribute(A, 1));
+  g.setIndex(idx);
+  return { geo: g, end: s };
+}
+const ribMats = [];
+function ribMesh(pts, o) {
+  const { geo, end } = ribGeometry(pts, o.width, o.z ?? Z_FX, o.s0 || 0, o.aArr);
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      uColor: { value: new THREE.Color(...o.color) }, uCoreC: { value: new THREE.Color(...(o.coreC || [1, 1, 1])) }, uCoreK: { value: o.coreK ?? 0.5 },
+      uReveal: { value: -1 }, uAlpha: { value: o.alpha ?? 1 }, uT: { value: 0 }, uFlow: { value: o.flow ?? 0.6 }, uFreq: { value: o.freq ?? 1.2 },
+      uAmp: { value: o.amp ?? 0.18 }, uFadeIn: { value: o.fadeIn ?? 0.01 }, uFadeOut: { value: o.fadeOut ?? 0.01 }, uLen: { value: o.len ?? end },
+      uHead: { value: o.head ?? 0.06 }, uTail: { value: o.tail ?? 0 }, uBand: { value: o.band ?? 0 },
+    },
+    vertexShader: RIB_VS, fragmentShader: RIB_FS, transparent: true, depthWrite: false,
+    blending: o.add === false ? THREE.NormalBlending : THREE.AdditiveBlending, side: THREE.DoubleSide,
+  });
+  const m = new THREE.Mesh(geo, mat); m.renderOrder = o.order ?? 20; m.frustumCulled = false; scene.add(m);
+  ribMats.push(mat);
+  return { mesh: m, mat, end };
+}
+
+// glow sprites (flashes at hits, tips, molecule absorption)
+const glowGeo = new THREE.PlaneGeometry(1, 1);
+const glowMats = [];
+function glow(color, size, z, order) {
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uC: { value: new THREE.Color(...color) }, uA: { value: 0 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+    fragmentShader: `uniform vec3 uC; uniform float uA; varying vec2 vUv;
+      void main(){ float d=length(vUv-0.5)*2.0; float g=exp(-d*d*5.0) + 0.5*exp(-d*d*28.0); gl_FragColor=vec4(uC*g*uA*(1.0-smoothstep(0.85,1.0,d)),1.0); }`,
+  });
+  const m = new THREE.Mesh(glowGeo, mat); m.scale.setScalar(size); m.position.z = z ?? Z_FX + 0.01; m.renderOrder = order ?? 25; m.visible = false;
+  scene.add(m); glowMats.push(mat);
+  return { mesh: m, mat };
+}
+const putGlow = (g, x, y, a) => { g.mesh.visible = a > 0.003; g.mesh.position.x = x; g.mesh.position.y = y; g.mat.uniforms.uA.value = a; };
+
+// ---------------------------------------------------------------- sunlight: parallel beams from the upper-left
+const dIn = norm2([0.55, -0.835]);
+const reflect2 = (d, n) => { const k = 2 * (d[0] * n[0] + d[1] * n[1]); return [d[0] - k * n[0], d[1] - k * n[1]]; };
+function refract2(d, n, eta) {
+  const ci = -(d[0] * n[0] + d[1] * n[1]), k = 1 - eta * eta * (1 - ci * ci), c = eta * ci - Math.sqrt(k);
+  return norm2([eta * d[0] + c * n[0], eta * d[1] + c * n[1]]);
+}
+function hitCircle(Pt, d, r) {
+  const b = Pt[0] * d[0] + Pt[1] * d[1], c = Pt[0] * Pt[0] + Pt[1] * Pt[1] - r * r, sq = Math.sqrt(Math.max(0, b * b - c));
+  const t1 = -b - sq; return t1 > 1e-6 ? t1 : -b + sq;
+}
+const S0 = CFG.sunStart;
+// a = where the beam meets the cloud tops (degrees about the globe's centre); kind: bounce (most of them) or pass (a few reach the ground)
+const RAYS = [
+  { a: 158, kind: "bounce", t0: S0 + 0.10 }, { a: 134, kind: "bounce", t0: S0 + 0.17 }, { a: 124, kind: "pass", t0: S0 + 0.00 },
+  { a: 110, kind: "bounce", t0: S0 + 0.21 }, { a: 97, kind: "pass", t0: S0 + 0.07 }, { a: 85, kind: "bounce", t0: S0 + 0.13 },
+  { a: 72, kind: "bounce", t0: S0 + 0.25 }, { a: 59, kind: "bounce", t0: S0 + 0.18 }, { a: 47, kind: "bounce", t0: S0 + 0.29 },
+];
+const SPEED_IN = 6.0, SPEED_OUT = 5.0, SPEED_PASS = 2.4;
+const BEAM_COL = [1.0, 0.80, 0.28], BEAM_CORE = [1.0, 0.97, 0.80];
+const RAY_W = [0.050, 0.074, 0.056, 0.064, 0.080, 0.052, 0.068, 0.050, 0.060];
+const rayObjs = [];
+RAYS.forEach((r, ri) => {
+  const n = e_r(r.a * D2R), Hh = [n[0] * 1.004, n[1] * 1.004];
+  const Lin = 2.3, Lout = 1.5, P0 = [Hh[0] - dIn[0] * Lin, Hh[1] - dIn[1] * Lin];
+  const dRef = reflect2(dIn, n), P1 = [Hh[0] + dRef[0] * Lout, Hh[1] + dRef[1] * Lout];
+  const o = { color: BEAM_COL, coreC: BEAM_CORE, coreK: 0.6, width: RAY_W[ri], flow: 0.9, freq: 1.4, amp: 0.15, fadeIn: 1.0, head: 0.08 };
+  let passLen = 0, S = null;
+  if (r.kind === "pass") {
+    const dT = refract2(dIn, n, 1 / 1.4);
+    passLen = hitCircle(Hh, dT, R_SURF + 0.006); S = [Hh[0] + dT[0] * passLen, Hh[1] + dT[1] * passLen];
+  }
+  const tot = Lin + Lout + passLen, parts = [];
+  parts.push(ribMesh([P0, Hh], { ...o, len: tot, s0: 0 }));                                                   // in
+  const shaft = ribMesh([P0, Hh], { ...o, len: tot, s0: 0, width: 0.26, alpha: 0.15, coreK: 0, color: [1.0, 0.66, 0.18], amp: 0, order: 19 }); // soft light shaft
+  parts.push(ribMesh([Hh, P1], { ...o, len: tot, s0: Lin, alpha: r.kind === "pass" ? 0.30 : 0.85, fadeIn: 0.01, fadeOut: 1.05, width: 0.05 })); // bounced back out
+  if (r.kind === "pass") parts.push(ribMesh([Hh, S], { ...o, len: tot, s0: Lin + Lout, width: 0.05, alpha: 1.0, fadeIn: 0.01, fadeOut: 0.01, flow: 0.5, coreK: 0.8 })); // through the deck, to the ground
+  rayObjs.push({ r, Hh, S, Lin, Lout, passLen, parts, shaft, flash: glow([1.0, 0.86, 0.45], 0.5, Z_FX + 0.015, 26), land: S ? glow([1.0, 0.74, 0.30], 0.62, Z_FX + 0.012, 26) : null });
+});
+// every leg has its own head clock, so pass rays slow down inside the planet
+function updateRay(R, t) {
+  const tau = t - R.r.t0, tHit = R.Lin / SPEED_IN, afterHit = tau - tHit;
+  const [mIn, mRef, mPass] = R.parts;
+  mIn.mat.uniforms.uReveal.value = tau < 0 ? -1 : (tau >= tHit ? R.Lin + 0.3 : (tau / tHit) * R.Lin);
+  R.shaft.mat.uniforms.uReveal.value = mIn.mat.uniforms.uReveal.value;
+  mRef.mat.uniforms.uReveal.value = afterHit < 0 ? -1 : R.Lin + afterHit * SPEED_OUT;
+  if (mPass) mPass.mat.uniforms.uReveal.value = afterHit < 0 ? -1 : R.Lin + R.Lout + afterHit * SPEED_PASS;
+  // flash where the beam meets the cloud tops, then a soft shimmer
+  const hf = afterHit > -0.06 ? Math.exp(-Math.pow(afterHit / 0.11, 2)) : 0;
+  const keep = afterHit > 0 ? 0.20 * (0.75 + 0.25 * Math.sin(t * 11 + R.r.a)) * (R.r.kind === "pass" ? 0.5 : 1) : 0;
+  putGlow(R.flash, R.Hh[0], R.Hh[1], clamp01(hf * 1.15 + keep) * (R.r.kind === "pass" ? 0.8 : 1));
+  if (R.land) {                                                                      // the ground flashes where a pass ray lands
+    const lf = afterHit - R.passLen / SPEED_PASS;
+    const lg = lf < -0.05 ? 0 : Math.exp(-Math.pow(Math.max(lf, 0) / 0.30, 1.4)) * 0.95 + (lf > 0 ? 0.42 * smooth(0, 0.35, lf) : 0);
+    putGlow(R.land, R.S[0], R.S[1], clamp01(lg));
+  }
+}
+
+// ---------------------------------------------------------------- heat: wavy red-orange rays from the ground, bounced back by CO2 molecules
+function wavyLeg(A, B, amp, waves, phase, n = 26) {
+  const dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, out = [];
+  for (let i = 0; i <= n; i++) {
+    const u = i / n, w = amp * Math.sin(Math.PI * 2 * waves * u + phase) * Math.pow(Math.sin(Math.PI * u), 0.6);
+    out.push([A[0] + dx * u + nx * w, A[1] + dy * u + ny * w]);
+  }
+  return out;
+}
+function uTurn(U, D, outDir, n = 14) {
+  const M = [(U[0] + D[0]) / 2, (U[1] + D[1]) / 2], Rv = [U[0] - M[0], U[1] - M[1]], Rr = Math.hypot(Rv[0], Rv[1]), out = [];
+  for (let i = 1; i < n; i++) {
+    const ph = Math.PI * i / n;
+    out.push([M[0] + Rv[0] * Math.cos(ph) + outDir[0] * Rr * 1.15 * Math.sin(ph), M[1] + Rv[1] * Math.cos(ph) + outDir[1] * Rr * 1.15 * Math.sin(ph)]);
+  }
+  return out;
+}
+const HEAT_T0 = 1.98;
+const HEAT = [                                    // a = where the ray leaves the ground, d = how far it is sent sideways when the CO2 turns it back
+  { a: 52, d: -0.17, rt: 0.680, t0: 0.10 }, { a: 66.5, d: -0.17, rt: 0.640, t0: 0.00 },
+  { a: 113.5, d: 0.17, rt: 0.660, t0: 0.06 }, { a: 128, d: 0.17, rt: 0.690, t0: 0.16 },
+];
+const HEAT_SPEED = 1.45;
+// travelling arrowhead (a notched chevron, tip at +x) that rides the front of each heat ray: up, round the molecule, back down
+const headShape = (k) => { const sh = new THREE.Shape(); sh.moveTo(0.078 * k, 0); sh.lineTo(-0.066 * k, 0.082 * k); sh.lineTo(-0.028 * k, 0); sh.lineTo(-0.066 * k, -0.082 * k); sh.closePath(); return sh; };
+const headGeo = new THREE.ShapeGeometry(headShape(0.74)), headOutGeo = new THREE.ShapeGeometry(headShape(0.74 * 1.22));
+const headMat = new THREE.MeshBasicMaterial({ color: 0xff5412 }), headOutMat = new THREE.MeshBasicMaterial({ color: 0x3b0a02 });
+const heatObjs = [];
+HEAT.forEach((h, i) => {
+  const a = h.a * D2R, a2 = a + h.d, r0 = R_SURF + 0.012;
+  const S1 = [e_r(a)[0] * r0, e_r(a)[1] * r0], U = [e_r(a)[0] * h.rt, e_r(a)[1] * h.rt];
+  const D = [e_r(a2)[0] * h.rt, e_r(a2)[1] * h.rt], S2 = [e_r(a2)[0] * r0, e_r(a2)[1] * r0];
+  const mid = e_r((a + a2) / 2);
+  const pts = [...wavyLeg(S1, U, 0.027, 1.0, i * 1.3, 30), ...uTurn(U, D, mid), ...wavyLeg(D, S2, 0.027, 1.0, i * 0.9 + 2, 30)];
+  const cum = [0]; for (let k = 1; k < pts.length; k++) cum.push(cum[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]));
+  const T = { head: 0.012, fadeIn: 0.02, fadeOut: 0.02, add: false };
+  const under = ribMesh(pts, { ...T, color: [0.20, 0.012, 0.0], coreC: [0, 0, 0], coreK: 0, width: 0.094, band: 1, alpha: 0.90, flow: 0, amp: 0, freq: 1, z: Z_FX + 0.003, order: 21 });
+  const rib = ribMesh(pts, { ...T, head: 0.05, color: [0.90, 0.10, 0.02], coreC: [1.0, 0.72, 0.24], coreK: 0.95, width: 0.072, band: 1, add: false, flow: 1.4, freq: 2.2, amp: 0.10,
+    alpha: 1.0, z: Z_FX + 0.006, order: 22 });
+  const hd = new THREE.Mesh(headGeo, headMat), ho = new THREE.Mesh(headOutGeo, headOutMat);
+  hd.position.z = Z_FX + 0.06; ho.position.z = Z_FX + 0.055; hd.visible = ho.visible = false; scene.add(hd, ho);
+  const apex = [mid[0] * (h.rt + 0.06), mid[1] * (h.rt + 0.06)];
+  heatObjs.push({ h, rib, under, pts, cum, hd, ho, apex, t0: HEAT_T0 + h.t0, ang: Math.atan2(apex[1], apex[0]),
+    absorb: glow([1.0, 0.55, 0.15], 0.42, Z_FX + 0.07, 27) });
+});
+function pathAt(H2, s) {                          // point on the heat path at arc length s
+  const { pts, cum } = H2, n = pts.length; s = Math.max(0, Math.min(cum[n - 1], s));
+  let k = 1; while (k < n - 1 && cum[k] < s) k++;
+  const u = (s - cum[k - 1]) / Math.max(1e-6, cum[k] - cum[k - 1]);
+  return [lerp(pts[k - 1][0], pts[k][0], u), lerp(pts[k - 1][1], pts[k][1], u)];
+}
+
+// ---------------------------------------------------------------- CO2 molecules in the lower atmosphere (and the ones that bounce the heat)
+const molMat = new THREE.MeshBasicMaterial({ map: molTex, transparent: true, depthWrite: false });
+const molGeo = new THREE.PlaneGeometry(0.235, 0.235 * 112 / 256);
+const mols = [];
+function addMol(x, y, rot, sc, z, bob) {
+  const m = new THREE.Mesh(molGeo, molMat.clone()); m.position.set(x, y, z); m.renderOrder = 24; m.visible = false;
+  scene.add(m); const o = { m, x, y, rot, sc, bob, ph: rnd() * 6.28 }; mols.push(o); return o;
+}
+heatObjs.forEach((H2, i) => { const a = H2.apex; H2.mol = addMol(a[0] * 0.965, a[1] * 0.965, (H2.ang - Math.PI / 2) + (i % 2 ? 0.25 : -0.25), 1, Z_FX + 0.03, 0.006); });
+{ // scattered ones for density: avoid the label spot (centre) and keep them inside the lower atmosphere
+  let tries = 0;
+  while (mols.length < 13 && tries++ < 1500) {
+    const a = lerp(A0, A1, 0.03 + 0.94 * rnd()) , r = lerp(R_SURF + 0.07, R_CLOUD - 0.07, rnd());
+    const x = Math.cos(a) * r, y = Math.sin(a) * r;
+    if (x > -0.26 && x < 0.26 && r < 0.78) continue;                                      // label spot
+    if (heatObjs.some((H2) => H2.pts.some((q) => Math.hypot(q[0] - x, q[1] - y) < 0.115))) continue; // keep the heat rays readable
+    if (mols.some((o) => Math.hypot(o.x - x, o.y - y) < 0.17)) continue;
+    addMol(x, y, rnd() * 6.28, 0.50 + 0.22 * rnd(), Z_FX + 0.02, 0.01);
+  }
+}
+
+// ---------------------------------------------------------------- pressure arrows (extruded 3D, radial, pushing down onto the surface)
+function arrowShape(L, sw, hw, hl, grow = 0) {
+  const s = new THREE.Shape();
+  s.moveTo(-grow, -sw / 2); s.lineTo(L - hl, -sw / 2); s.lineTo(L - hl, -hw / 2); s.lineTo(L + grow * 1.6, 0); s.lineTo(L - hl, hw / 2); s.lineTo(L - hl, sw / 2); s.lineTo(-grow, sw / 2);
+  s.closePath(); return s;
+}
+const ARROW_TAIL = 1.08, ARROW_TIP = R_SURF + 0.052;
+const AL = ARROW_TAIL - ARROW_TIP, SW = 0.092, HW = 0.215, HL = 0.15;
+const arrowGeo = new THREE.ExtrudeGeometry(arrowShape(AL, SW, HW, HL), { depth: 0.07, bevelEnabled: true, bevelThickness: 0.022, bevelSize: 0.016, bevelSegments: 3, curveSegments: 1 });
+arrowGeo.translate(0, 0, -0.035);
+const outlineGeo = new THREE.ExtrudeGeometry(arrowShape(AL, SW + 0.052, HW + 0.07, HL + 0.01, 0.026), { depth: 0.05, bevelEnabled: false });
+outlineGeo.translate(0, 0, -0.07);
+const arrowMat = new THREE.MeshStandardMaterial({ color: 0xfff1cf, roughness: 0.38, metalness: 0.12, emissive: 0xff9a40, emissiveIntensity: 0.22 });
+const outlineMat = new THREE.MeshBasicMaterial({ color: 0x3a1408 });
+const ARROWS = [{ a: 58, t0: 0.0 }, { a: 122, t0: 0.07 }];
+const arrows = ARROWS.map((o) => {
+  const g = new THREE.Group(); g.add(new THREE.Mesh(arrowGeo, arrowMat), new THREE.Mesh(outlineGeo, outlineMat));
+  g.position.z = 0.15; scene.add(g);
+  const tip = glow([1.0, 0.62, 0.22], 0.5, Z_FX + 0.02, 26);
+  return { o, g, tip };
+});
+
+// ---------------------------------------------------------------- dust motes in the warm haze
+const moteN = 90, moteBase = [];
+for (let i = 0; i < moteN; i++) moteBase.push([lerp(-2.4, 2.4, rnd()), lerp(-2.6, 2.7, rnd()), lerp(-2.5, 2.0, rnd()), 0.3 + rnd() * 0.7, rnd() * 6.28]);
+const moteGeo = new THREE.BufferGeometry();
+moteGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(moteN * 3), 3));
+const motes = new THREE.Points(moteGeo, new THREE.PointsMaterial({ map: dotTex, color: 0xffd9a0, size: 0.075, transparent: true, opacity: 0.32, depthWrite: false, blending: THREE.AdditiveBlending }));
+motes.frustumCulled = false; motes.renderOrder = 30; scene.add(motes);
+
+// ---------------------------------------------------------------- label
+const labEl = document.getElementById("lab");
+labEl.style.display = CFG.label ? "" : "none";
+const labPos = new THREE.Vector3(0.012, 0.585, Z_FX + 0.1);
+
+// ---------------------------------------------------------------- frame
+const tmpV = new THREE.Vector3();
+function renderAt(t) {
+  const k = clamp01(t / TT);
+  // camera: slow orbit (yaw eases from CFG.yaw to ~55 %) and a gentle push-in
+  const yaw = lerp(CFG.yaw, CFG.yaw * 0.55, smooth(0, 1, k)) * D2R, pitch = CFG.pitch * D2R;
+  const D = D0 / (1 + 0.045 * k);
+  camera.position.set(Math.sin(yaw) * Math.cos(pitch) * D, Math.sin(pitch) * D, Math.cos(yaw) * Math.cos(pitch) * D);
+  camera.lookAt(0, 0, 0); camera.updateMatrixWorld();
+
+  // state shared by shaders
+  const heatLvl = smooth(2.0, 3.05, t);
+  const tp = t - 0.30, ppu = tp > 0 && t < CFG.pressEnd + 0.1 ? 0.5 - 0.5 * Math.cos(Math.PI * 2 * tp / 0.62) : 0;
+  const pulse = ppu * ppu;                                                        // subtle push rhythm
+  bg.material.uniforms.uT.value = t;
+  cloudMat.uniforms.uT.value = t; cloudMat.uniforms.uHeat.value = heatLvl;
+  halo.material.uniforms.uHeat.value = heatLvl;
+  for (const m of wallMats) { m.uniforms.uT.value = t; m.uniforms.uHeat.value = heatLvl; m.uniforms.uPulse.value = pulse * (1 - smooth(CFG.pressEnd - 0.05, CFG.pressEnd + 0.12, t)); }
+  halo.position.copy(camera.position).normalize().multiplyScalar(-1.06); halo.quaternion.copy(camera.quaternion);
+
+  // arrows: slide in from above the cloud tops, push in rhythm, leave when the sun comes
+  for (const A of arrows) {
+    const a = A.o.a * D2R, u = (t - A.o.t0) / 0.5;
+    const slide = (1 - easeOutCubic(u)) * 0.55;
+    const push = pulse * 0.052;
+    const shrink = 1 - easeInCubic((t - CFG.pressEnd) / 0.18);
+    const on = t >= A.o.t0 ? 1 : 0;
+    A.g.visible = on && shrink > 0.01;
+    const s = (0.55 + 0.45 * backOut(u * 1.3)) * shrink;
+    const e = e_r(a), off = slide - push;
+    // arrow origin sits at the tail; its +x points to the planet's centre
+    A.g.position.set(e[0] * (ARROW_TAIL + off), e[1] * (ARROW_TAIL + off), 0.15);
+    A.g.rotation.set(0, 0, a + Math.PI);
+    A.g.scale.set(1, Math.max(0.01, s), Math.max(0.01, s));
+    putGlow(A.tip, e[0] * (R_SURF + 0.02), e[1] * (R_SURF + 0.02), A.g.visible ? clamp01(pulse * 0.95 * shrink) * smooth(0.25, 0.45, t) : 0);
+  }
+
+  // sunlight
+  for (const R of rayObjs) updateRay(R, t);
+
+  // heat rays + molecules that turn them back
+  for (const H2 of heatObjs) {
+    const tau = t - H2.t0, len = H2.rib.end, rv = tau < 0 ? -1 : tau * HEAT_SPEED;
+    H2.rib.mat.uniforms.uReveal.value = rv; H2.under.mat.uniforms.uReveal.value = rv;
+    // arrowhead rides the front of the ray (stays on the ground at the end)
+    const on = rv + 0.03 > len * 0.5 + 0.04;                                       // only after the turn: "sent back down"
+    H2.hd.visible = H2.ho.visible = on;
+    if (on) {
+      const s0 = Math.min(len, rv + 0.03), p = pathAt(H2, s0), p0 = pathAt(H2, s0 - 0.07), p1 = pathAt(H2, s0 + 0.01);
+      const ang = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]);
+      const pop = 1 + 0.30 * Math.exp(-Math.pow(Math.max(0, rv + 0.03 - len * 0.5 - 0.04) / 0.10, 1.5));
+      for (const m of [H2.hd, H2.ho]) { m.position.x = p[0]; m.position.y = p[1]; m.rotation.z = ang; m.scale.setScalar(pop); }
+    }
+    // the head reaches the apex at about half of the path; the molecule flashes then and the layer keeps glowing
+    const tApex = len * 0.5 / HEAT_SPEED, f = tau - tApex;
+    const fl = f < -0.05 ? 0 : Math.exp(-Math.pow(Math.max(f, 0) / 0.20, 1.5)) + (f > 0 ? 0.28 * smooth(0, 0.3, f) : 0);
+    putGlow(H2.absorb, H2.apex[0], H2.apex[1], clamp01(fl) * 0.95);
+  }
+  for (const m of ribMats) m.uniforms.uT.value = t;
+
+  // molecules: fade in as the arrows leave, drift a little
+  const molOn = smooth(CFG.pressEnd - 0.1, CFG.pressEnd + 0.3, t);
+  for (const o of mols) {
+    const j = Math.sin(t * 1.7 + o.ph) * o.bob;
+    o.m.visible = molOn > 0.01;
+    o.m.position.set(o.x + j, o.y + Math.cos(t * 1.3 + o.ph) * o.bob, o.m.position.z);
+    o.m.rotation.z = o.rot + Math.sin(t * 1.1 + o.ph) * 0.15;
+    o.m.scale.setScalar(o.sc * (o.pop || 1) * (0.6 + 0.4 * molOn));
+    o.m.material.opacity = molOn * 0.95;
+    o.pop = 1;
+  }
+  // the molecule that turns a heat ray back swells when the ray reaches it
+  for (const H2 of heatObjs) { const o = H2.mol, f = (t - H2.t0) - H2.rib.end * 0.5 / HEAT_SPEED; o.m.scale.setScalar(o.sc * (f > -0.03 ? 1 + 0.45 * Math.exp(-Math.pow(Math.max(f, 0) / 0.16, 1.4)) : 1) * (0.6 + 0.4 * molOn)); }
+
+  // motes
+  const pa = moteGeo.attributes.position;
+  for (let i = 0; i < moteN; i++) {
+    const b = moteBase[i];
+    pa.setXYZ(i, b[0] + Math.sin(t * 0.5 * b[3] + b[4]) * 0.12, ((b[1] + t * 0.10 * b[3] + 2.6) % 5.4) - 2.6, b[2]);
+  }
+  pa.needsUpdate = true;
+
+  renderer.render(scene, camera);
+
+  // label "CO2" on the lower atmosphere, anchored to its 3D spot
+  if (CFG.label) {
+    const wob = Math.sin(t * 2.1) * 0.004;
+    tmpV.set(labPos.x, labPos.y + wob, labPos.z).project(camera);
+    const px = (tmpV.x * 0.5 + 0.5) * W, py = (1 - (tmpV.y * 0.5 + 0.5)) * H;
+    const u = (t - 0.5) / 0.35;
+    labEl.style.left = (px - 150).toFixed(1) + "px";
+    labEl.style.top = (py - 40 + 14 * (1 - easeOutCubic(u))).toFixed(1) + "px";
+    labEl.style.opacity = clamp01(u * 1.4).toFixed(3);
+  }
+}
+window.addEventListener("hf-seek", (e) => renderAt(e.detail.time));
+renderAt(window.__hfThreeTime || 0);
+window.__sceneReady = true;
+</script>
+</body>
+</html>

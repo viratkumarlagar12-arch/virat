@@ -113,9 +113,10 @@ function voronoi(C, u, v) {
 
 // ---------------------------------------------------------------- canvas textures
 function makeCanvas(w, h = w) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
-function paint(w, h, fn, fn2) { // fn(u, v, o) writes RGBA into o (0..255); optional fn2 second canvas from the same pass
+function paint(w, h, fn) { // fn(u, v, o[, o2]) writes RGBA into o (0..255); a 4-argument fn also gets a second canvas (bump map)
+  const two = fn.length > 3;
   const c = makeCanvas(w, h), img = c.getContext("2d").createImageData(w, h);
-  const c2 = fn2 ? makeCanvas(w, h) : null, img2 = c2 ? c2.getContext("2d").createImageData(w, h) : null;
+  const c2 = two ? makeCanvas(w, h) : null, img2 = c2 ? c2.getContext("2d").createImageData(w, h) : null;
   const o = [0, 0, 0, 255], o2 = [0, 0, 0, 255];
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
     o[3] = 255; o2[3] = 255;
@@ -136,54 +137,65 @@ function tex(c, { srgb = true, rep = [1, 1], repeat = true } = {}) {
   return t;
 }
 
-// ground: dark brown basalt slabs with cracks, pebble patches and ochre dust (colour + height), tileable
+// ground: dark basalt slabs with hairline cracks, pebble patches and ochre dust (colour + height), tileable
 const GT = 1024;
-const slabs = makeCells(6), pebs = makeCells(44), grit = makeCells(110);
+const slabs = makeCells(11), pebs = makeCells(52), grit = makeCells(120);
 const [groundC, groundBC] = paint(GT, GT, (u, v, o, b) => {
-  const wu = u + (tfbm(u + 0.31, v + 0.77, 6, 3) - 0.5) * 0.05, wv = v + (tfbm(u + 0.62, v + 0.18, 6, 3) - 0.5) * 0.05;
+  const wu = u + (tfbm(u + 0.31, v + 0.77, 7, 3) - 0.5) * 0.06, wv = v + (tfbm(u + 0.62, v + 0.18, 7, 3) - 0.5) * 0.06;
   voronoi(slabs, ((wu % 1) + 1) % 1, ((wv % 1) + 1) % 1);
   const edge = VF2 - VF1, tone = slabs.tone[VID];
-  const crack = 1 - smooth(0.0, 0.05, edge);
-  const chip = 1 - smooth(0.04, 0.12, edge);                           // broken slab rims
+  const crack = 1 - smooth(0.0, 0.028, edge);
+  const chip = 1 - smooth(0.03, 0.14, edge);                           // soft broken slab rims
   voronoi(pebs, u, v); const pd = VF1, ptone = pebs.tone[VID];
-  const peb = 1 - smooth(0.05, 0.42, pd);
-  const pebMask = smooth(0.5, 0.66, tfbm(u + 0.5, v + 0.1, 5, 3));
-  voronoi(grit, u, v); const gr = 1 - smooth(0.0, 0.35, VF1), gtone = grit.tone[VID];
-  const n = tfbm(u, v, 4, 5), dust = smooth(0.52, 0.78, tfbm(u + 0.9, v + 0.4, 3, 4));
-  const fine = tnoise(u * 256, v * 256, 256, 256) - 0.5;
-  const t = clamp01(tone * 0.55 + n * 0.6 - 0.1);
-  let r = lerp(46, 92, t), g = lerp(33, 64, t), bl = lerp(24, 42, t);    // basalt brown
-  const pk = pebMask * smooth(0.2, 0.5, peb);                           // pebbles over the slab
-  r = lerp(r, lerp(52, 98, ptone) * (0.7 + 0.45 * peb), pk); g = lerp(g, lerp(37, 68, ptone) * (0.7 + 0.45 * peb), pk); bl = lerp(bl, lerp(26, 44, ptone) * (0.7 + 0.45 * peb), pk);
-  const gk = smooth(0.35, 0.7, gr) * 0.35 * (1 - pk);                  // grit
-  r = lerp(r, lerp(40, 110, gtone), gk); g = lerp(g, lerp(30, 78, gtone), gk); bl = lerp(bl, lerp(22, 50, gtone), gk);
-  const dk = dust * 0.4 * (1 - pk);                                     // ochre dust drifts in the low parts
-  r = lerp(r, 128, dk); g = lerp(g, 88, dk); bl = lerp(bl, 52, dk);
-  const shade = 1 - 0.6 * crack - 0.15 * chip;
-  o[0] = (r + fine * 14) * shade; o[1] = (g + fine * 11) * shade; o[2] = (bl + fine * 8) * shade;
-  const hgt = 0.55 + 0.18 * tone + 0.12 * n - 0.55 * crack - 0.12 * chip + pk * 0.35 * peb + gk * 0.3 + fine * 0.08 - dk * 0.1;
+  const peb = 1 - smooth(0.05, 0.45, pd);
+  const pebMask = smooth(0.46, 0.64, tfbm(u + 0.5, v + 0.1, 5, 3));
+  voronoi(grit, u, v); const gr = 1 - smooth(0.0, 0.4, VF1), gtone = grit.tone[VID];
+  const n = tfbm(u, v, 4, 5), n2 = tfbm(u + 0.2, v + 0.6, 16, 3), dust = smooth(0.5, 0.76, tfbm(u + 0.9, v + 0.4, 3, 4));
+  const fine = tnoise(u * 256, v * 256, 256, 256) - 0.5, fine2 = tnoise(u * 128 + 9, v * 128, 128, 128) - 0.5;
+  const t = clamp01(tone * 0.4 + n * 0.55 + (n2 - 0.5) * 0.35 - 0.05);
+  let r = lerp(40, 88, t), g = lerp(32, 68, t), bl = lerp(26, 52, t);     // dark basalt, neutral-brown albedo
+  const pk = pebMask * smooth(0.25, 0.55, peb);                           // pebbles over the slab
+  const pr = lerp(46, 92, ptone) * (0.65 + 0.5 * peb), pg = lerp(37, 72, ptone) * (0.65 + 0.5 * peb), pb = lerp(30, 56, ptone) * (0.65 + 0.5 * peb);
+  r = lerp(r, pr, pk); g = lerp(g, pg, pk); bl = lerp(bl, pb, pk);
+  const gk = smooth(0.4, 0.8, gr) * 0.16 * (1 - pk);                      // grit
+  r = lerp(r, lerp(40, 96, gtone), gk); g = lerp(g, lerp(32, 76, gtone), gk); bl = lerp(bl, lerp(26, 58, gtone), gk);
+  const dk = dust * 0.34 * (1 - pk);                                       // ochre dust drifts in the low parts
+  r = lerp(r, 118, dk); g = lerp(g, 86, dk); bl = lerp(bl, 56, dk);
+  const shade = 1 - 0.42 * crack - 0.1 * chip;
+  const grain = 1 + fine * 0.5 + fine2 * 0.35;
+  o[0] = r * grain * shade; o[1] = g * grain * shade; o[2] = bl * grain * shade;
+  const hgt = 0.55 + 0.16 * tone + 0.12 * n - 0.5 * crack - 0.12 * chip + pk * 0.35 * peb + gk * 0.3 + fine * 0.12 + fine2 * 0.08 - dk * 0.1;
   b[0] = b[1] = b[2] = 255 * clamp01(hgt);
 });
 const groundMap = tex(groundC, { rep: [1, 1] }), groundBump = tex(groundBC, { srgb: false });
 
 // hull: equirect for the sphere (seams, rivets, grime streaks) + bump
 const [hullC, hullBC] = paint(512, 256, (u, v, o, b) => {
+  // smooth machined sphere (a pressure vessel is not a barrel): fine latitude brushing, a few thin welded belts,
+  // three flush access plates with rivets, faint grime below the flange. No longitudinal staves, no marbling.
   const lat = (0.5 - v) * Math.PI;                          // canvas top = sphere top
-  const lon = u * TAU;
-  const g = tfbm(u, v * 0.5, 8, 4), streak = tfbm(u * 1.0, v * 0.12, 32, 3);
-  const panel = (Math.floor(u * 12) % 2) * 0.04;
-  let s = 0.82 + 0.16 * (g - 0.5) + panel - 0.12 * smooth(0.55, 0.8, streak);
-  let h = 0.6 + 0.1 * g;
-  const seamLat = [0.0, 0.38, -0.42, 0.95, -0.9];
-  for (const L of seamLat) { const d = Math.abs(lat - L) * 256 / Math.PI; s -= 0.35 * (1 - smooth(0.4, 1.6, d)); h -= 0.5 * (1 - smooth(0.4, 1.6, d)); }
-  const du = Math.abs(((u * 12) % 1) - 0.5) * 2;           // longitudinal seams every 30 deg
-  const dl = (1 - du) * 512 / 12 * Math.cos(lat);
-  if (Math.abs(lat) < 0.95) { s -= 0.25 * (1 - smooth(0.3, 1.2, dl)); h -= 0.35 * (1 - smooth(0.3, 1.2, dl)); }
+  const lon = u * 360;                                      // degrees
+  const brush = tfbm(u * 2.0, v * 0.5, 64, 2) - 0.5, g = tfbm(u, v * 0.5, 4, 3) - 0.5;
+  let s = 0.84 + 0.05 * g + 0.035 * brush;
+  let h = 0.62 + 0.05 * g + 0.03 * brush;
+  const seamLat = [0.38, -0.42, 0.95, -0.9];
+  for (const L of seamLat) { const d = Math.abs(lat - L) * 256 / Math.PI; const k = 1 - smooth(0.4, 1.4, d); s -= 0.16 * k; h -= 0.3 * k; }
+  const plates = [[40, 0.46, 15, 0.2], [212, -0.18, 17, 0.18], [128, 0.2, 12, 0.16]]; // lon deg, lat rad, half width deg, half height rad
+  for (const [pl, pa, hw, hh] of plates) {
+    const dx = Math.abs(((lon - pl + 540) % 360) - 180) / hw, dy = Math.abs(lat - pa) / hh, m = Math.max(dx, dy);
+    if (m < 1.0) {
+      const e = 1 - smooth(0.0, 0.07, 1.0 - m);              // thin outline
+      s += 0.03 - 0.2 * e; h += 0.05 - 0.35 * e;
+      const rx = ((dx * hw * 96 / 360) % 1), ry = ((dy * hh * 256 / Math.PI) % 4) / 4; // rivets near the edge
+      if (m > 0.8 && Math.abs(rx - 0.5) < 0.08 && ry < 0.12) { s += 0.1; h += 0.25; }
+    }
+  }
+  s -= 0.06 * smooth(0.45, 0.85, tfbm(u, v * 0.12, 24, 2)) * smooth(0.0, 0.25, lat); // faint vertical grime above the equator
   // rivets along the equator flange rows
   for (const L of [0.03, -0.03]) {
     const dy = (lat - L) * 256 / Math.PI, cu = ((u * 96) % 1) - 0.5, dx = cu * 512 / 96 * Math.cos(lat);
     const rr = Math.sqrt(dx * dx + dy * dy);
-    if (rr < 1.6) { s += 0.18 * (1 - rr / 1.6); h += 0.4 * (1 - rr / 1.6); }
+    if (rr < 1.6) { s += 0.12 * (1 - rr / 1.6); h += 0.4 * (1 - rr / 1.6); }
   }
   s = Math.max(0.3, s);
   o[0] = 255 * Math.min(1, s * 0.98); o[1] = 255 * Math.min(1, s * 0.97); o[2] = 255 * Math.min(1, s * 0.95);
@@ -240,11 +252,11 @@ function puffCanvas(n, opt) {
     for (const [lx, ly, lr] of lobes) { const q = Math.hypot(x - lx, (y - ly) * opt.sy) / lr; d = Math.max(d, 1 - q); }
     d *= 1 - smooth(opt.flat, opt.flat + 0.4, y);
     d *= 1 - smooth(0.82, 1.0, Math.max(Math.abs(x), Math.abs(y)));
-    const nn = tfbm((u * opt.nx + off) % 1, (v * opt.ny + off * 0.37) % 1, 4, 5);
-    const dens = d * 1.5 + (nn - 0.5) * 0.95;
-    const a = smooth(0.06, 0.62, dens) * opt.alpha;
-    const shade = 0.8 + 0.22 * (-y) + 0.25 * (nn - 0.5) + 0.12 * smooth(0.1, 0.8, d);
-    const s = Math.max(0.35, Math.min(1.08, shade));
+    const nn = tfbm((u * opt.nx + off) % 1, (v * opt.ny + off * 0.37) % 1, 3, 6);
+    const dens = d * 1.3 + (nn - 0.5) * 1.3;
+    const a = Math.pow(smooth(0.0, 0.85, dens), 1.3) * opt.alpha;
+    const shade = 0.74 + 0.3 * (-y) + 0.42 * (nn - 0.5) + 0.12 * smooth(0.1, 0.8, d);
+    const s = Math.max(0.3, Math.min(1.12, shade));
     o[0] = 255 * Math.min(1, s); o[1] = 255 * Math.min(1, s * 0.94); o[2] = 255 * Math.min(1, s * 0.84); o[3] = 255 * a;
   });
 }
@@ -295,9 +307,9 @@ const camera = new THREE.PerspectiveCamera(FOV, W / H, 0.1, 3000);
   const eqC = paint(256, 128, (u, v, o) => {
     const e = 0.5 - v; // +0.5 = zenith
     let r, g, b;
-    if (e > 0) { const k = smooth(0, 0.5, e); r = lerp(250, 205, k); g = lerp(196, 140, k); b = lerp(110, 66, k);
+    if (e > 0) { const k = smooth(0, 0.5, e); r = lerp(238, 190, k); g = lerp(196, 146, k); b = lerp(140, 96, k);
       const glow = Math.exp(-Math.pow((u - 0.18) / 0.12, 2)) * smooth(0.02, 0.25, e) * (1 - smooth(0.25, 0.48, e)); r += 30 * glow; g += 26 * glow; b += 14 * glow; }
-    else { const k = smooth(0, 0.12, -e); r = lerp(210, 62, k); g = lerp(150, 42, k); b = lerp(80, 26, k); }
+    else { const k = smooth(0, 0.12, -e); r = lerp(200, 56, k); g = lerp(150, 44, k); b = lerp(100, 34, k); }
     o[0] = Math.min(255, r); o[1] = Math.min(255, g); o[2] = Math.min(255, b);
   });
   const eq = tex(eqC, { repeat: false }); eq.mapping = THREE.EquirectangularReflectionMapping;
@@ -325,9 +337,9 @@ const sky = new THREE.Mesh(new THREE.SphereGeometry(1500, 48, 24), new THREE.Sha
       if (e > 0.004) {
         vec2 p = d.xz / max(e, 0.03) * ceilH * 0.012 + cOff;
         float c = texture2D(tCeil, p).r * 0.65 + texture2D(tCeil, p * 2.7 + 0.31).r * 0.35;
-        col *= 1.0 + (c - 0.5) * 0.42 * ceilA * smoothstep(0.03, 0.3, e);
+        col *= 1.0 + (c - 0.5) * 0.75 * ceilA * smoothstep(0.03, 0.3, e);
       }
-      float g = pow(max(dot(d, glowDir), 0.0), 5.0);
+      float g = pow(max(dot(d, glowDir), 0.0), 3.0) * smoothstep(0.03, 0.3, e);
       col += cGlow * g;
       gl_FragColor = vec4(col, 1.0);
     }`,
@@ -337,22 +349,22 @@ scene.fog = new THREE.FogExp2(0xc08040, 0.012);
 
 // ---------------------------------------------------------------- the plain: gently rolling, low ridges far away
 const ground = (() => {
-  const S = 1000, N = 200;
+  const S = 1000, N = 280;
   const g = new THREE.PlaneGeometry(S, S, N, N); g.rotateX(-Math.PI / 2);
   const p = g.attributes.position, col = new Float32Array(p.count * 3);
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), z = p.getZ(i), r = Math.hypot(x, z);
     let h = (fbm2(x / 35 + 11, z / 35 + 5, 3) - 0.5) * 2.4 * smooth(10, 45, r);
     const ridge = 1 - Math.abs(fbm2(x / 90 + 3, z / 90 + 17, 4) - 0.5) * 2;
-    h += Math.pow(ridge, 3) * 22 * smooth(90, 220, r) + (fbm2(x / 60, z / 60, 3) - 0.45) * 10 * smooth(120, 260, r);
+    h += Math.pow(ridge, 3) * 7.5 * smooth(110, 260, r) + (fbm2(x / 60, z / 60, 3) - 0.45) * 4 * smooth(120, 300, r);
     p.setY(i, h);
     const m = fbm2(x / 14 + 40, z / 14 + 9, 4), m2 = fbm2(x / 4 + 7, z / 4 + 3, 2);
-    const k = 0.62 + 0.75 * (m - 0.5) + 0.25 * (m2 - 0.5);
-    col[3 * i] = k * 1.02; col[3 * i + 1] = k * 0.97; col[3 * i + 2] = k * 0.92;
+    const k = 0.78 + 0.7 * (m - 0.5) + 0.25 * (m2 - 0.5);
+    col[3 * i] = k * 1.02; col[3 * i + 1] = k * 0.98; col[3 * i + 2] = k * 0.94;
   }
   g.setAttribute("color", new THREE.BufferAttribute(col, 3));
   g.computeVertexNormals();
-  const rep = S / 4.2;
+  const rep = S / 4.6;
   groundMap.repeat.set(rep, rep); groundBump.repeat.set(rep, rep);
   const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: groundMap, bumpMap: groundBump, bumpScale: 2.2,
     vertexColors: true, roughness: 0.96, metalness: 0, envMapIntensity: 0.7 }));
@@ -396,11 +408,11 @@ function corridorDist(x, z, az, len) { // distance from (x,z) to the segment ori
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), sv = new THREE.Vector3(), pv = new THREE.Vector3();
   const colr = new THREE.Color();
   let placed = 0, tries = 0;
-  while (placed < 520 && tries < 6000) {
+  while (placed < 900 && tries < 9000) {
     tries++;
-    const a = rnd() * TAU, r = 1.7 + Math.pow(rnd(), 1.6) * 70;
+    const a = rnd() * TAU, r = 1.7 + Math.pow(rnd(), 1.5) * 95;
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
-    let s = 0.04 + Math.pow(rnd(), 3.2) * (0.35 + r * 0.012);
+    let s = 0.04 + Math.pow(rnd(), 2.6) * (0.4 + r * 0.02);
     if (r < 3.2) s = Math.min(s, 0.14);
     const kind = rnd() < 0.22 ? 3 : Math.floor(rnd() * 3);
     if (kind === 3) s *= 1.6;
@@ -416,6 +428,16 @@ function corridorDist(x, z, az, len) { // distance from (x,z) to the segment ori
     per[kind].push([m4.clone(), colr.setRGB(tone, tone * (0.95 + rnd() * 0.05), tone * (0.9 + rnd() * 0.08)).clone()]);
     placed++;
   }
+  for (let i = 0; i < 16; i++) {
+    const side = i % 2 ? 1 : -1, a = (CAM_AZ_D + side * (0.42 + rnd() * 0.75)) % TAU, r = 3.8 + rnd() * 12;
+    const x = Math.sin(a) * r, z = Math.cos(a) * r, s = 0.22 + Math.pow(rnd(), 1.5) * 0.7, kind = rnd() < 0.4 ? 3 : Math.floor(rnd() * 3);
+    q.setFromEuler(e.set((rnd() - 0.5) * 0.25, rnd() * TAU, (rnd() - 0.5) * 0.25));
+    sv.set(s * (1.0 + rnd() * 0.6), s * (kind === 3 ? 1.2 : 1), s * (0.9 + rnd() * 0.5));
+    pv.set(x, -0.1 * s, z); m4.compose(pv, q, sv);
+    const tone = 0.85 + rnd() * 0.35;
+    if (corridorDist(x, z, CAM_AZ_R, 11) < 2.2 + s * 2) continue;
+    per[kind].push([m4.clone(), colr.setRGB(tone, tone * 0.97, tone * 0.93).clone()]);
+  }
   per.forEach((list, k) => {
     const im = new THREE.InstancedMesh(rockGeos[k], rockMat, list.length);
     list.forEach(([m, c], i) => { im.setMatrixAt(i, m); im.setColorAt(i, c); });
@@ -427,17 +449,17 @@ function corridorDist(x, z, az, len) { // distance from (x,z) to the segment ori
 // ---------------------------------------------------------------- the lander (origin = centre of the ring's ground contact)
 const lander = new THREE.Group(); scene.add(lander);
 const body = new THREE.Group(); lander.add(body);
-const hullMat = new THREE.MeshStandardMaterial({ color: 0x4d4c49, map: hullMap, bumpMap: hullBump, bumpScale: 0.8,
-  metalness: 0.6, roughness: 0.42, envMapIntensity: 1.1, emissive: 0x000000, emissiveMap: hullMap });
-const discMat = new THREE.MeshStandardMaterial({ color: 0x96938c, map: panelMap, bumpMap: panelBump, bumpScale: 0.6,
+const hullMat = new THREE.MeshStandardMaterial({ color: 0x5f6168, map: hullMap, bumpMap: hullBump, bumpScale: 0.6,
+  metalness: 0.6, roughness: 0.4, envMapIntensity: 1.0, emissive: 0x000000, emissiveMap: hullMap });
+const discMat = new THREE.MeshStandardMaterial({ color: 0x8e8e92, map: panelMap, bumpMap: panelBump, bumpScale: 0.6,
   metalness: 0.55, roughness: 0.4, envMapIntensity: 1.1, emissive: 0x000000, side: THREE.DoubleSide });
-const ringMat = new THREE.MeshStandardMaterial({ color: 0x75726b, map: panelMap, bumpMap: panelBump, bumpScale: 0.5,
+const ringMat = new THREE.MeshStandardMaterial({ color: 0x6c6c70, map: panelMap, bumpMap: panelBump, bumpScale: 0.5,
   metalness: 0.5, roughness: 0.5, envMapIntensity: 1.0, emissive: 0x000000 });
 const strutMat = new THREE.MeshStandardMaterial({ color: 0x5c5a55, metalness: 0.6, roughness: 0.45, emissive: 0x000000 });
 const darkMat = new THREE.MeshStandardMaterial({ color: 0x141312, metalness: 0.3, roughness: 0.6 });
 const glassMat = new THREE.MeshStandardMaterial({ color: 0x0b0d10, metalness: 0.9, roughness: 0.08, envMapIntensity: 1.6 });
-const goldMat = new THREE.MeshStandardMaterial({ color: 0xd7a84e, map: foilMap, bumpMap: foilBump, bumpScale: 1.2,
-  metalness: 0.85, roughness: 0.32, envMapIntensity: 1.3, emissive: 0x000000 });
+const goldMat = new THREE.MeshStandardMaterial({ color: 0x9a7b3c, map: foilMap, bumpMap: foilBump, bumpScale: 0.35,
+  metalness: 0.8, roughness: 0.4, envMapIntensity: 1.0, emissive: 0x000000 });
 const greyBoxMat = new THREE.MeshStandardMaterial({ color: 0x8a8781, metalness: 0.3, roughness: 0.55, emissive: 0x000000 });
 const heatMats = [hullMat, discMat, ringMat, strutMat, greyBoxMat, goldMat];
 const add = (geo, mat, parent = body) => { const m = new THREE.Mesh(geo, mat); parent.add(m); return m; };
@@ -457,7 +479,7 @@ add(new THREE.TorusGeometry(0.84, 0.018, 8, 120).rotateX(Math.PI / 2).translate(
   body.add(holes);
 }
 add(new THREE.LatheGeometry([[0.72, 0.2], [0.66, 0.27], [0.5, 0.38], [0.36, 0.47], [0.3, 0.52]].map(([r, y]) => new THREE.Vector2(r, y)), 72),
-  new THREE.MeshStandardMaterial({ color: 0x55534e, metalness: 0.55, roughness: 0.5, side: THREE.DoubleSide, emissive: 0x000000 }));
+  new THREE.MeshStandardMaterial({ color: 0x4d4b4a, metalness: 0.45, roughness: 0.5, side: THREE.DoubleSide, emissive: 0x000000 }));
 {
   const up = new THREE.Vector3(0, 1, 0);
   for (let i = 0; i < 8; i++) {
@@ -612,7 +634,7 @@ const pyroFlash = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, colo
 scene.add(pyroPuff, pyroFlash);
 
 // ---------------------------------------------------------------- descent kinematics (lander altitude table)
-const V1 = 5.5, VMAX = 13, VLAND = 6;
+const V1 = 7, VMAX = 14, VLAND = 6;
 function vel(t) {
   if (t < CUT) return V1;
   return V1 + (VMAX - V1) * (1 - Math.exp(-(t - CUT) / 0.3)) - (VMAX - VLAND) * smooth(CUT + 1.2, TOUCH - 0.2, t);
@@ -624,8 +646,8 @@ const altAt = (t) => (t >= TOUCH ? 0 : sAt(TOUCH) - sAt(t));
 const CLOUD_BASE = 27;
 
 // camera rig (descent): looks at the lander's middle from a little above; lens shift puts it low in the frame
-const D_PITCH = 9, D_FRAMEY = 1262;
-const dDist = (t) => lerp(15.0, 13.7, smooth(0, DUR, t));
+const D_PITCH = 7, D_FRAMEY = 1250;
+const dDist = (t) => lerp(14.3, 13.2, smooth(0, DUR, t));
 const dAz = (t) => lerp(18, 30, t / DUR);
 function camPosDescent(t) { // world position of the camera if the lander were exactly on its path (no lag/shake)
   const A = altAt(t), d = dDist(t), az = dAz(t) * D2R, pt = D_PITCH * D2R;
@@ -641,35 +663,37 @@ function addCloud(x, y, z, size, k, tint, op, rot, stretch = 1) {
   scene.add(s); clouds.push({ s, op });
 }
 if (MODE === "descent") {
-  const camDirXZ = [Math.sin(24 * D2R), Math.cos(24 * D2R)];
+  // Sprites must never veil the lander: each one sits either behind the lander (along the view direction) or off to the
+  // side of the camera -> lander corridor (checked for the whole azimuth sweep of the camera).
+  const DP = 14 * Math.cos(D_PITCH * D2R);
+  const cloudOK = (x, z, size) => {
+    for (const azd of [17, 24, 31]) {
+      const az = azd * D2R, sd = DP - (x * Math.sin(az) + z * Math.cos(az)), l = x * Math.cos(az) - z * Math.sin(az);
+      if (sd < -0.5 * size) continue;                                    // entirely behind the camera
+      if (sd < DP + 0.5 * size + 1.0 && Math.abs(l) < 0.205 * Math.max(sd, 0) + 0.3 * size + 0.5) return false;
+    }
+    return true;
+  };
   let n = 0, tries = 0;
-  while (n < 70 && tries < 3000) {
+  while (n < 120 && tries < 6000) {
     tries++;
-    const y = 22 + Math.pow(rnd(), 0.8) * 40;
-    const a = rnd() * TAU, r = 3 + Math.pow(rnd(), 0.7) * 48, x = Math.cos(a) * r, z = Math.sin(a) * r;
-    const size = 9 + rnd() * 16;
-    const along = x * camDirXZ[0] + z * camDirXZ[1], lat = Math.abs(x * camDirXZ[1] - z * camDirXZ[0]);
-    if (along > -2 && along < 17 && lat < 3.5 + size * 0.3) continue;     // keep the camera -> lander corridor open
-    const hi = smooth(22, 40, y);
-    const tint = new THREE.Color().setRGB(lerp(0.86, 1.0, hi), lerp(0.66, 0.86, hi), lerp(0.42, 0.6, hi), THREE.SRGBColorSpace);
-    addCloud(x, y, z, size, Math.floor(rnd() * 3), tint, 0.55 + rnd() * 0.4, (rnd() - 0.5) * 0.5);
+    const y = 26 + Math.pow(rnd(), 0.9) * 46;
+    const a = rnd() * TAU, r = 3 + Math.pow(rnd(), 0.65) * 70, x = Math.cos(a) * r, z = Math.sin(a) * r;
+    const size = 9 + rnd() * 17;
+    if (!cloudOK(x, z, size)) continue;
+    const hi = smooth(26, 62, y);
+    const tint = new THREE.Color().setRGB(lerp(0.9, 1.0, hi), lerp(0.55, 0.82, hi), lerp(0.26, 0.48, hi), THREE.SRGBColorSpace);
+    addCloud(x, y, z, size, Math.floor(rnd() * 3), tint, 0.6 + rnd() * 0.3, (rnd() - 0.5) * 0.5);
     n++;
   }
-  // stragglers below the deck
-  for (let i = 0; i < 16; i++) {
-    const y = 13 + rnd() * 10, a = rnd() * TAU, r = 6 + rnd() * 40, x = Math.cos(a) * r, z = Math.sin(a) * r;
-    const along = x * camDirXZ[0] + z * camDirXZ[1], lat = Math.abs(x * camDirXZ[1] - z * camDirXZ[0]);
-    if (along > -2 && along < 17 && lat < 6) continue;
-    addCloud(x, y, z, 6 + rnd() * 8, 3, new THREE.Color().setRGB(0.85, 0.62, 0.4, THREE.SRGBColorSpace), 0.35 + rnd() * 0.3, (rnd() - 0.5) * 0.3, 1.5);
-  }
-  // near-camera wisps that rush past (mostly before the cards arrive; later ones pass at the frame edges)
-  const wisps = [[0.15, 0.0, 3.5], [0.45, -1.4, 5], [0.75, 1.2, 4], [1.05, -0.4, 6.5], [1.3, 1.6, 3.2], [1.6, -2.4, 5.5],
-    [2.0, 2.8, 6], [2.35, -3.0, 7], [2.7, 3.2, 8]];
-  for (const [tw, lat, depth] of wisps) {
+  // thin wisps right beside the lens, placed on the camera's own path: they whip past at the frame edges (speed cue)
+  for (let i = 0; i < 26; i++) {
+    const tw = 0.1 + i * 0.1 + rnd() * 0.06, depth = 3.5 + rnd() * 5, side = i % 2 ? 1 : -1, size = 2.4 + depth * 0.3;
+    const lat = side * (0.205 * depth + 0.15 * size + 0.25 + rnd() * 1.0);
     const cp = camPosDescent(tw), az = dAz(tw) * D2R;
     const fx = -Math.sin(az), fz = -Math.cos(az), rx = Math.cos(az), rz = -Math.sin(az);
-    addCloud(cp.x + fx * depth + rx * lat, cp.y - 1.0, cp.z + fz * depth + rz * lat, 4 + depth * 0.5, rnd() < 0.5 ? 3 : 2,
-      new THREE.Color().setRGB(1.0, 0.86, 0.62, THREE.SRGBColorSpace), 0.6, (rnd() - 0.5) * 0.3, 1.7);
+    addCloud(cp.x + fx * depth + rx * lat, cp.y - 0.3 - rnd() * 1.4, cp.z + fz * depth + rz * lat, size, 3,
+      new THREE.Color().setRGB(1.0, 0.76, 0.48, THREE.SRGBColorSpace), 0.35 + rnd() * 0.25, (rnd() - 0.5) * 0.25, 1.9);
   }
 }
 
@@ -685,16 +709,16 @@ for (let i = 0; i < 34; i++) {
 }
 // smoke wisp (reveal)
 const smoke = [];
-for (let i = 0; i < 14; i++) {
-  const m = new THREE.SpriteMaterial({ map: dustTex, color: new THREE.Color().setRGB(0.36, 0.31, 0.28, THREE.SRGBColorSpace), transparent: true, opacity: 0, depthWrite: false });
+for (let i = 0; i < 16; i++) {
+  const m = new THREE.SpriteMaterial({ map: dustTex, color: new THREE.Color().setRGB(0.24, 0.2, 0.18, THREE.SRGBColorSpace), transparent: true, opacity: 0, depthWrite: false });
   m.rotation = rnd() * TAU;
   const s = new THREE.Sprite(m); s.visible = false; scene.add(s);
-  smoke.push({ s, born: BLINK + 0.06 + i * 0.075, sway: rnd() * TAU, op: 0.45 + rnd() * 0.25 });
+  smoke.push({ s, born: BLINK + 0.06 + i * 0.07, sway: rnd() * TAU, op: 0.6 + rnd() * 0.25 });
 }
 
 // ---------------------------------------------------------------- lights (dim, diffuse, warm)
-const hemi = new THREE.HemisphereLight(0xffd59a, 0x3a2414, 0.9); scene.add(hemi);
-const key = new THREE.DirectionalLight(0xffc98a, 1.5); key.position.set(-5, 9, 6); scene.add(key);
+const hemi = new THREE.HemisphereLight(0xf0d4a8, 0x3a2a1c, 0.9); scene.add(hemi);
+const key = new THREE.DirectionalLight(0xffd6a8, 1.5); key.position.set(-5, 9, 6); scene.add(key);
 const rim = new THREE.DirectionalLight(0xffb468, 1.6); rim.position.set(6, 5, -9); scene.add(rim);
 lander.add(key.target); // directions only; targets at origin are fine
 
@@ -702,7 +726,7 @@ lander.add(key.target); // directions only; targets at origin are fine
 const postU = {
   tScene: { value: rt.texture }, tNoise: { value: shimTex }, uTime: { value: 0 }, uFrame: { value: 0 },
   uHot: { value: new THREE.Vector4(0.5, 0.5, 0.1, 0.1) }, uHotAmt: { value: 0 },
-  uBand: { value: new THREE.Vector2(0.5, 0.05) }, uBandAmt: { value: 0 }, uExposure: { value: 1.0 },
+  uBand: { value: new THREE.Vector2(0.5, 0.05) }, uBandAmt: { value: 0 }, uExposure: { value: 0.9 },
 };
 const postScene = new THREE.Scene(), postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
@@ -729,7 +753,9 @@ const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMater
       }
       vec3 c = texture2D(tScene, uv).rgb;
       c = srgb(aces(c * uExposure));
-      c = mix(c, c * c * (3.0 - 2.0 * c), 0.2);
+      c = mix(c, c * c * (3.0 - 2.0 * c), 0.25);
+      float lum = dot(c, vec3(0.299, 0.587, 0.114));
+      c = clamp(mix(vec3(lum), c, 1.22), 0.0, 1.0);
       c += vec3(0.02, 0.009, -0.004) * (1.0 - c);
       vec2 vq = (vUv - 0.5) * vec2(1.0, 0.72);
       c *= 1.0 - 0.5 * pow(clamp(length(vq) * 1.5, 0.0, 1.0), 2.6);
@@ -760,26 +786,32 @@ function setBand(amt) { // shimmer band along the horizon
   const [, y] = toScreen(f);
   postU.uBand.value.set(1 - y / H, 0.045); postU.uBandAmt.value = amt;
 }
-const C_CLOUD = { hor: new THREE.Color(0xe2b46a), zen: new THREE.Color(0xeec890), fog: new THREE.Color(0xdcac64) };
-const C_HAZE = { hor: new THREE.Color(0xd4954a), zen: new THREE.Color(0x9c5f26), fog: new THREE.Color(0xc98a44) };
+const C_CLOUD = { hor: new THREE.Color(0xe8a044), zen: new THREE.Color(0xf0b055), fog: new THREE.Color(0xe09838) };
+const C_HAZE = { hor: new THREE.Color(0xca7428), zen: new THREE.Color(0x60320f), fog: new THREE.Color(0xbe6c28) };
 const _c = new THREE.Color();
 function atmosphere(inCloud, camAlt) {
   const fog = scene.fog;
   fog.color.copy(C_HAZE.fog).lerp(C_CLOUD.fog, inCloud);
-  fog.density = lerp(0.0125, 0.042, inCloud);
+  fog.density = lerp(MODE === "reveal" ? 0.0115 : 0.0082, 0.0105, inCloud);
   skyU.cHor.value.copy(fog.color);
   skyU.cZen.value.copy(C_HAZE.zen).lerp(C_CLOUD.zen, inCloud);
-  skyU.cGlow.value.copy(_c.setRGB(0.5, 0.33, 0.14)).multiplyScalar(1 - inCloud);
+  skyU.cGlow.value.copy(_c.setRGB(0.42, 0.24, 0.07)).multiplyScalar(1 - inCloud);
   skyU.ceilA.value = 1 - inCloud;
   skyU.ceilH.value = Math.max(2, CLOUD_BASE + 6 - camAlt);
-  hemi.intensity = lerp(0.85, 1.25, inCloud);
+  hemi.intensity = lerp(0.8, 1.1, inCloud);
   key.intensity = lerp(1.45, 0.9, inCloud);
   rim.intensity = lerp(1.7, 1.0, inCloud);
   scene.environmentIntensity = lerp(0.8, 1.05, inCloud);
 }
+for (const m of heatMats) m.onBeforeCompile = (sh) => { // glow is stronger toward the top of the lander (world height)
+  sh.vertexShader = sh.vertexShader.replace("#include <common>", "#include <common>\nvarying float vHY;")
+    .replace("#include <begin_vertex>", "#include <begin_vertex>\nvHY = (modelMatrix * vec4(transformed, 1.0)).y;");
+  sh.fragmentShader = sh.fragmentShader.replace("#include <common>", "#include <common>\nvarying float vHY;")
+    .replace("#include <emissivemap_fragment>", "#include <emissivemap_fragment>\ntotalEmissiveRadiance *= mix(0.4, 1.3, smoothstep(0.1, 2.0, vHY));");
+};
 function setHeat(k) { // 0..1: hull + disc glow dull red-orange
-  const e = (m, s) => { m.emissive.setRGB(1.0, 0.24, 0.05); m.emissiveIntensity = k * s; };
-  e(hullMat, 1.25); e(discMat, 1.0); e(ringMat, 0.7); e(strutMat, 0.8); e(greyBoxMat, 0.5); e(goldMat, 0.35);
+  const e = (m, s) => { m.emissive.setRGB(1.0, 0.1, 0.014); m.emissiveIntensity = k * s; };
+  e(hullMat, 0.52); e(discMat, 0.44); e(ringMat, 0.3); e(strutMat, 0.4); e(greyBoxMat, 0.25); e(goldMat, 0.16);
   discMat.emissiveMap = panelMap; ringMat.emissiveMap = panelMap;
 }
 
@@ -813,7 +845,7 @@ function descent(t) {
   // clouds: fade near the lens, hide while far below the camera's view
   for (const c of clouds) {
     const d = c.s.position.distanceTo(camera.position);
-    c.s.material.opacity = c.op * smooth(1.2, 4.5, d);
+    c.s.material.opacity = c.op * smooth(0.3, 0.9, d / c.s.scale.x);
     c.s.visible = c.s.material.opacity > 0.003;
   }
 
@@ -857,8 +889,9 @@ function descent(t) {
     const a = tau, e = 1 - Math.exp(-a / 0.32);
     const r = p.r0 + p.sp * e * (p.ring ? 1 : 0.4);
     p.s.visible = true;
-    p.s.position.set(Math.cos(p.a) * r, 0.12 + p.up * e + (p.ring ? 0 : 0.35 * a), Math.sin(p.a) * r);
-    p.s.scale.setScalar(p.size * (1 + p.grow * e + 0.25 * a));
+    const sc = p.size * (1 + p.grow * e + 0.25 * a);
+    p.s.position.set(Math.cos(p.a) * r, 0.05 + sc * 0.42 + p.up * e + (p.ring ? 0 : 0.35 * a), Math.sin(p.a) * r);
+    p.s.scale.setScalar(sc);
     p.s.material.opacity = p.op * smooth(0, 0.05, a) * Math.exp(-a / (p.ring ? 1.25 : 0.9));
   }
   // heat shimmer: faint over the horizon and above the lander once landed
@@ -879,7 +912,7 @@ function reveal(t) {
   lander.rotation.set(0, CAM_AZ_R - 0.2, 0);
   lander.updateMatrixWorld();
   const e = smooth(0, DUR, t);
-  aimCamera(new THREE.Vector3(0, 1.02, 0), lerp(8.9, 8.0, e), lerp(-14, -10, e), 3.5, 1168);
+  aimCamera(new THREE.Vector3(0, 1.02, 0), lerp(9.1, 8.2, e), lerp(-14, -10, e), 3.5, 1135);
   atmosphere(0, camera.position.y);
   skyU.cOff.value.set(t * 0.004, 0);
   sky.position.copy(camera.position);
@@ -888,11 +921,11 @@ function reveal(t) {
   // heating ramp
   const k = Math.pow(smooth(0.05, DUR - 0.1, t), 1.15);
   setHeat(0.08 + 0.92 * k);
-  heatLight.intensity = 6 * (0.1 + 0.9 * k);
+  heatLight.intensity = 4 * (0.1 + 0.9 * k);
   heatHalo.visible = true;
   const back = _a.copy(camera.position).setY(0).normalize().multiplyScalar(-0.9);
   heatHalo.position.set(back.x, 1.05, back.z);
-  heatHalo.material.opacity = 0.32 * k;
+  heatHalo.material.opacity = 0.26 * k;
 
   // status light: steady + heartbeat, then blinks and dies (signal lost)
   let on;
@@ -907,9 +940,9 @@ function reveal(t) {
     const a = t - p.born;
     if (a <= 0) { p.s.visible = false; continue; }
     p.s.visible = true;
-    p.s.position.set(src.x + 0.22 * a + 0.05 * Math.sin(a * 3 + p.sway), src.y + 0.62 * a - 0.04 * a * a, src.z + 0.05 * Math.cos(a * 2.5 + p.sway));
-    p.s.scale.setScalar(0.12 + 0.42 * a);
-    p.s.material.opacity = p.op * smooth(0, 0.12, a) * Math.exp(-a / 0.9);
+    p.s.position.set(src.x + 0.22 * a + 0.05 * Math.sin(a * 3 + p.sway), src.y + 0.8 * a - 0.04 * a * a, src.z + 0.05 * Math.cos(a * 2.5 + p.sway));
+    p.s.scale.setScalar(0.17 + 0.55 * a);
+    p.s.material.opacity = p.op * smooth(0, 0.1, a) * Math.exp(-a / 1.3);
   }
   setHot(new THREE.Vector3(0, 2.25, 0), 1.5, 1.2, 0.5 + 0.9 * k);
   setBand(0.2);

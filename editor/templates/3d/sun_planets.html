@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<title>Sun, Mercury and Venus 3D</title>
+<!-- "Mercury is closest to the Sun... but the hottest planet is Venus": an orrery seen from above-and-ahead in warm golden
+     light (to match the Venus-surface AI footage). Three.js inside HyperFrames, CPU-renderable, deterministic, a pure function of t.
+     Procedural everything: cratered Mercury (crater splats -> height -> normal map), cloud-banded Venus with a drifting haze layer
+     and a glowing atmosphere, a granulated Sun with corona rays, thin glowing orbit rings with a bright trail behind each planet,
+     stars on a warm dust dome. The two thermometers are DOM elements (glass tube + bulb, red fill) driven from t, same scale for both
+     (0 to scaleMax degrees C), so 430 vs 465 is honestly a small difference; Venus's tube has a dashed tick at Mercury's level.
+     Beats (CFG.ab / CFG.bc are camera moves, absolute seconds):
+       0.0 - 1.7   camera on Mercury (close, tracking it); its thermometer fills 0.25 -> 1.25 to "~430°C" (pops 1.05), small label "MERCURY (DIN MEIN)".
+       1.5 - 2.15  camera pulls back / pans down to the wide shot (Sun top-left, Mercury upper-middle, Venus lower-middle/right).
+       1.95 - 2.9  Venus's thermometer appears and rises past Mercury's level (dashed tick, passed at ~2.65), turns hot red, "~465°C" pops 2.82.
+       2.95 - 3.2  Mercury, its thermometer and its tag cross-fade out (gone before the word).
+       2.9 - 4.2   camera pushes in on Venus (Venus is locked to a monotonic screen path, eases out toward the cut); Venus glows warmer
+                   from 2.75; the big word "VENUS" pops at CFG.word (3.15).
+     Layout: y 1250-1450 px is kept free of key detail (captions go there): planets, bulbs and tags stay above y 1250 in every beat
+     (only the fast pull-back at 1.8-2.1 passes through, with the new thermometer still faint). Only text: the labels above.
+     Settings: the one-line window.CFG below; render3d.py --config '{"merc":430}' merges JSON over it.
+       duration, merc / venus (degrees C shown), scaleMax (top of the tube), tB (time of the wide-shot layout), ab / bc (camera move
+       windows), word (time the VENUS word pops), seed. -->
+<script>
+window.CFG = { duration: 4.2, merc: 430, venus: 465, scaleMax: 500, tB: 2.4, ab: [1.5, 2.15], bc: [2.9, 4.5], word: 3.15, seed: 5 };
+</script>
+<script src="assets/gsap.min.js"></script>
+<script type="importmap">{ "imports": { "three": "./assets/three.module.js" } }</script>
+<style>
+@font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-900.ttf"); font-weight: 900; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+#root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #0a0503; }
+#gl { position: absolute; inset: 0; width: 1080px; height: 1920px; display: block; }
+#vig { position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 120% 80% at 38% 48%, rgba(8,3,1,0) 58%, rgba(8,3,1,0.5) 100%),
+    linear-gradient(to bottom, rgba(8,3,1,0) 0%, rgba(8,3,1,0) 66%, rgba(8,3,1,0.34) 100%); }
+/* thermometer: white outline layer, dark glass layer (opaque shapes inside one translucent group), red fill, ticks, labels */
+.thermo { position: absolute; width: 104px; height: 352px; opacity: 0; transform: scale(1.15); transform-origin: 52px 352px; --hot: #ff5a2c; --glow: rgba(255,90,40,.55); }
+.thermo div { position: absolute; }
+.o-tube { left: 23px; top: 0; width: 58px; height: 300px; background: #fff; border-radius: 29px 29px 0 0; }
+.o-bulb { left: 0; top: 248px; width: 104px; height: 104px; background: #fff; border-radius: 50%; }
+.glass { left: 0; top: 0; width: 104px; height: 352px; opacity: .93; }
+.g-tube { left: 29px; top: 6px; width: 46px; height: 294px; background: #1b0f0a; border-radius: 23px 23px 0 0; }
+.g-bulb { left: 6px; top: 254px; width: 92px; height: 92px; background: #1b0f0a; border-radius: 50%; }
+.f-bulb { left: 12px; top: 260px; width: 80px; height: 80px; background: var(--hot); border-radius: 50%; box-shadow: 0 0 22px var(--glow); }
+.f-col { left: 35px; width: 34px; background: var(--hot); border-radius: 17px 17px 0 0; box-shadow: 0 0 18px var(--glow); }
+.f-col::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 9px; border-radius: 17px 17px 0 0; background: rgba(255,255,255,.38); }
+.shine { left: 40px; top: 24px; width: 6px; height: 250px; border-radius: 3px; background: rgba(255,255,255,.2); }
+.tick { left: 90px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.85); }
+.ref { left: -8px; width: 120px; height: 4px; opacity: 0;
+  background: repeating-linear-gradient(90deg, #ffd479 0 12px, rgba(255,212,121,0) 12px 20px); filter: drop-shadow(0 0 6px rgba(255,190,80,.9)); }
+.tag { left: -98px; top: -86px; width: 300px; text-align: center; font-family: "Montserrat"; font-weight: 900; font-size: 64px; line-height: 1;
+  color: #fff; white-space: nowrap; opacity: 0; text-shadow: 0 0 26px var(--glow), 0 5px 20px rgba(0,0,0,.75); letter-spacing: -0.01em; }
+.lab { left: -98px; top: 366px; width: 300px; text-align: center; font-family: "Montserrat"; font-weight: 900; font-size: 31px; line-height: 1.16;
+  color: #fff1dc; opacity: 0; letter-spacing: .05em; text-shadow: 0 0 12px rgba(0,0,0,.7), 0 3px 14px rgba(0,0,0,.9); }
+#word { position: absolute; left: 0; width: 1080px; text-align: center; font-family: "Montserrat"; font-weight: 900; font-size: 206px; line-height: 1;
+  letter-spacing: .01em; color: #fff; opacity: 0; transform-origin: 50% 60%;
+  text-shadow: 0 0 40px rgba(255,150,40,.85), 0 0 90px rgba(255,110,20,.55), 0 10px 34px rgba(0,0,0,.7); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4.2" data-width="1080" data-height="1920">
+  <canvas id="gl" width="1080" height="1920"></canvas>
+  <div id="vig"></div>
+  <div class="thermo" id="thM"></div>
+  <div class="thermo" id="thV"></div>
+  <div id="word">VENUS</div>
+</div>
+<script>
+  (function () {
+    const C = window.CFG;
+    document.getElementById("root").setAttribute("data-duration", String(C.duration));
+    const tl = gsap.timeline({ paused: true });
+    tl.set({}, {}, C.duration); // timeline length == composition length; all motion is a pure function of t in renderAt()
+    window.__timelines = window.__timelines || {};
+    window.__timelines["main"] = tl;
+  })();
+</script>
+<script type="module">
+import * as THREE from "three";
+
+const CFG = window.CFG;
+const W = 1080, H = 1920, FOV = 28, D2R = Math.PI / 180;
+const TT = CFG.duration;
+const PXK = (H / 2) / Math.tan(FOV / 2 * D2R);          // pixels per world unit at distance 1
+const clamp01 = (x) => Math.max(0, Math.min(1, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const smoother = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * t * (t * (t * 6 - 15) + 10); };
+const easeOutCubic = (u) => 1 - Math.pow(1 - clamp01(u), 3);
+const easeOutQuad = (u) => 1 - Math.pow(1 - clamp01(u), 2);
+const backOut = (u, s = 1.9) => { u = clamp01(u) - 1; return 1 + (s + 1) * u * u * u + s * u * u; };
+let seed = 424242 + (CFG.seed | 0) * 7919;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+
+// ---------------------------------------------------------------- seeded 3D value noise (static textures only)
+const P = new Uint8Array(512);
+for (let i = 0; i < 256; i++) P[i] = i;
+for (let i = 255; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [P[i], P[j]] = [P[j], P[i]]; }
+for (let i = 0; i < 256; i++) P[i + 256] = P[i];
+const fade = (t) => t * t * (3 - 2 * t);
+function vnoise(x, y, z) {
+  const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
+  x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+  const u = fade(x), v = fade(y), w = fade(z);
+  const h = (a, b, c) => P[P[P[a] + b] + c] / 255;
+  const l = (a, b, t) => a + (b - a) * t;
+  return l(l(l(h(X, Y, Z), h(X + 1, Y, Z), u), l(h(X, Y + 1, Z), h(X + 1, Y + 1, Z), u), v),
+           l(l(h(X, Y, Z + 1), h(X + 1, Y, Z + 1), u), l(h(X, Y + 1, Z + 1), h(X + 1, Y + 1, Z + 1), u), v), w);
+}
+function fbm(x, y, z, oct = 5) {
+  let a = 0.5, f = 1, s = 0;
+  for (let i = 0; i < oct; i++) { s += a * vnoise(x * f, y * f, z * f); f *= 2; a *= 0.5; }
+  return s;
+}
+
+// ---------------------------------------------------------------- sphere texture grids (same mapping as THREE.SphereGeometry)
+function makeGrid(w, h) {
+  const X = new Float32Array(w * h), Y = new Float32Array(w * h), Z = new Float32Array(w * h);
+  for (let j = 0; j < h; j++) {
+    const th = Math.PI * (j + 0.5) / h, st = Math.sin(th), ct = Math.cos(th);
+    for (let i = 0; i < w; i++) {
+      const ph = 2 * Math.PI * (i + 0.5) / w, k = j * w + i;
+      X[k] = -Math.cos(ph) * st; Y[k] = ct; Z[k] = Math.sin(ph) * st;
+    }
+  }
+  return { w, h, X, Y, Z };
+}
+function toTexture(w, h, data, srgbWrap = true) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const ctx = c.getContext("2d"); const img = ctx.createImageData(w, h);
+  img.data.set(data); ctx.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.NoColorSpace; t.anisotropy = 4; t.wrapS = THREE.RepeatWrapping;
+  return t;
+}
+const c8 = (v) => (v < 0 ? 0 : v > 1 ? 255 : (v * 255 + 0.5) | 0);
+
+// ---- Mercury: crater splats (power-law sizes, bowl + rim + apron + central peak, a few ray systems) -> height -> normal map
+function genMercury() {
+  const G = makeGrid(1024, 512), { w, h, X, Y, Z } = G, n = w * h;
+  const hgt = new Float32Array(n), alb = new Float32Array(n);
+  for (let k = 0; k < n; k++) {
+    hgt[k] = 0.010 * (fbm(X[k] * 2.3 + 5, Y[k] * 2.3, Z[k] * 2.3, 5) - 0.5) + 0.0035 * (fbm(X[k] * 11 + 2, Y[k] * 11, Z[k] * 11, 3) - 0.5);
+    alb[k] = 1;
+  }
+  const cr = [], rmin = 0.021, rmax = 0.36, NC = 820;
+  for (let i = 0; i < NC; i++) {
+    const u = rnd(), rho = rmin / Math.sqrt(1 - u * (1 - (rmin / rmax) * (rmin / rmax)));
+    const z = rnd() * 2 - 1, a = rnd() * Math.PI * 2, s = Math.sqrt(1 - z * z);
+    cr.push({ rho, cx: s * Math.cos(a), cy: z, cz: s * Math.sin(a), fresh: rnd() < 0.16, rs: rnd() * 10 });
+  }
+  cr.sort((a, b) => b.rho - a.rho);
+  const rayers = cr.filter((c) => c.rho > 0.05 && c.fresh).slice(0, 7);
+  const sm = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+  for (const c of cr) {
+    const rho = c.rho, ext = rho * 1.8, depth = 0.22 * rho / (1 + rho * 5.5);
+    splat(c, ext, (k, q) => {
+      if (q < 1) {
+        hgt[k] -= depth * (1 - q * q) * (q < 0.35 && rho > 0.1 ? 0.8 : 1);
+        alb[k] *= 1 - (rho > 0.09 ? 0.16 : 0.07) * (1 - q * q);
+        if (rho > 0.1) hgt[k] += 0.38 * depth * Math.exp(-(q / 0.11) * (q / 0.11));
+      }
+      const rim = Math.exp(-((q - 1.0) / 0.1) * ((q - 1.0) / 0.1));
+      hgt[k] += 0.34 * depth * rim;
+      if (q > 1) hgt[k] += 0.06 * depth * Math.exp(-(q - 1) / 0.55);
+      alb[k] *= 1 + 0.12 * rim + (c.fresh && q > 1 ? 0.18 * Math.exp(-(q - 1) / 0.7) : 0);
+    });
+  }
+  function splat(c, ext, fn) {
+    const th0 = Math.acos(c.cy), cosExt = Math.cos(Math.min(ext, Math.PI));
+    const j0 = Math.max(0, Math.floor((th0 - ext) / Math.PI * h)), j1 = Math.min(h - 1, Math.ceil((th0 + ext) / Math.PI * h));
+    const ph0 = (Math.atan2(c.cz, -c.cx) + 2 * Math.PI) % (2 * Math.PI), i0 = Math.floor(ph0 / (2 * Math.PI) * w);
+    const pole = th0 - ext < 0 || th0 + ext > Math.PI;
+    for (let j = j0; j <= j1; j++) {
+      const s = Math.sin(Math.PI * (j + 0.5) / h);
+      const dph = pole ? Math.PI : Math.min(Math.PI, ext / Math.max(s, 1e-3));
+      const di = Math.min(w / 2, Math.ceil(dph / (2 * Math.PI) * w) + 1);
+      for (let i = i0 - di; i <= i0 + di; i++) {
+        const k = j * w + ((i % w) + w) % w;
+        const d = c.cx * X[k] + c.cy * Y[k] + c.cz * Z[k];
+        if (d < cosExt) continue;
+        fn(k, Math.acos(Math.min(1, d)) / c.rho);
+      }
+    }
+  }
+  for (const c of rayers) { // bright ray systems from a few young craters
+    const ref = Math.abs(c.cy) < 0.9 ? [0, 1, 0] : [1, 0, 0];
+    let e1 = [c.cy * ref[2] - c.cz * ref[1], c.cz * ref[0] - c.cx * ref[2], c.cx * ref[1] - c.cy * ref[0]];
+    const l1 = Math.hypot(...e1); e1 = e1.map((v) => v / l1);
+    const e2 = [c.cy * e1[2] - c.cz * e1[1], c.cz * e1[0] - c.cx * e1[2], c.cx * e1[1] - c.cy * e1[0]];
+    splat(c, c.rho * 7, (k, q) => {
+      if (q < 1.15) return;
+      const dx = X[k], dy = Y[k], dz = Z[k], dd = c.cx * dx + c.cy * dy + c.cz * dz;
+      const px = dx - dd * c.cx, py = dy - dd * c.cy, pz = dz - dd * c.cz;
+      const ang = Math.atan2(px * e2[0] + py * e2[1] + pz * e2[2], px * e1[0] + py * e1[1] + pz * e1[2]);
+      const r = Math.max(0, Math.sin(ang * 13 + c.rs) * Math.sin(ang * 5.3 + c.rs * 2.1)), ray = r * r * r;
+      alb[k] *= 1 + 0.34 * ray * Math.exp(-(q - 1) / 3.2) * sm(1.15, 1.6, q);
+    });
+  }
+  const A = new Uint8ClampedArray(n * 4), N = new Uint8ClampedArray(n * 4);
+  const dPh = 2 * Math.PI / w, dTh = Math.PI / h;
+  for (let j = 0; j < h; j++) {
+    const s = Math.max(Math.sin(Math.PI * (j + 0.5) / h), 0.04);
+    for (let i = 0; i < w; i++) {
+      const k = j * w + i, kE = j * w + ((i + 1) % w), kW = j * w + ((i + w - 1) % w);
+      const kN = Math.max(0, j - 1) * w + i, kS = Math.min(h - 1, j + 1) * w + i;
+      const sx = (hgt[kE] - hgt[kW]) / (2 * dPh * s), sy = (hgt[kN] - hgt[kS]) / (2 * dTh);
+      let nx = -sx * 1.7, ny = -sy * 1.7, nz = 1; const l = Math.hypot(nx, ny, nz); nx /= l; ny /= l; nz /= l;
+      N[k * 4] = c8(nx * 0.5 + 0.5); N[k * 4 + 1] = c8(ny * 0.5 + 0.5); N[k * 4 + 2] = c8(nz * 0.5 + 0.5); N[k * 4 + 3] = 255;
+      const var1 = 0.9 + 0.2 * fbm(X[k] * 3.4 + 20, Y[k] * 3.4, Z[k] * 3.4, 4), patch = 0.88 + 0.16 * sm(0.42, 0.62, fbm(X[k] * 1.3 + 40, Y[k] * 1.3 + 3, Z[k] * 1.3, 3));
+      const m = alb[k] * var1 * patch;
+      A[k * 4] = c8(0.50 * m); A[k * 4 + 1] = c8(0.465 * m); A[k * 4 + 2] = c8(0.43 * m); A[k * 4 + 3] = 255;
+    }
+  }
+  return { albedo: toTexture(w, h, A), normal: toTexture(w, h, N) };
+}
+
+// ---- Venus: pale yellow-cream, latitude-banded, domain-warped cloud swirls; plus a thin drifting haze layer
+function genVenus() {
+  const G = makeGrid(1024, 512), { w, h, X, Y, Z } = G, n = w * h, A = new Uint8ClampedArray(n * 4);
+  const sm = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+  for (let k = 0; k < n; k++) {
+    const x = X[k], y = Y[k], z = Z[k];
+    const wx = fbm(x * 2 + 3, y * 2, z * 2, 4) - 0.5, wy = fbm(x * 2 + 11, y * 2 + 5, z * 2, 4) - 0.5, wz = fbm(x * 2 + 19, y * 2, z * 2 + 7, 4) - 0.5;
+    const band = 0.5 + 0.5 * Math.sin(Math.asin(y) * 9 + 3.2 * wy + 1.1);
+    const sw = fbm(x * 1.5 + wx * 1.4 + 31, y * 5.5 + wy * 1.6, z * 1.5 + wz * 1.4, 6);
+    const fine = fbm(x * 4 + wx * 2.2 + 60, y * 15 + wy * 2, z * 4 + wz * 2.2, 4) - 0.5;
+    const v = clamp01(0.55 * sw * 1.5 + 0.38 * band - 0.1 + 0.26 * fine);
+    const t1 = sm(0.28, 0.72, v), t2 = sm(0.68, 0.92, v);
+    let r = lerp(0.80, 0.97, t1), g = lerp(0.62, 0.90, t1), b = lerp(0.34, 0.66, t1);
+    r = lerp(r, 1.0, t2 * 0.6); g = lerp(g, 0.97, t2 * 0.6); b = lerp(b, 0.84, t2 * 0.6);
+    const pol = sm(0.78, 0.98, Math.abs(y)); r *= 1 - 0.1 * pol; g *= 1 - 0.14 * pol; b *= 1 - 0.2 * pol;
+    A[k * 4] = c8(r); A[k * 4 + 1] = c8(g); A[k * 4 + 2] = c8(b); A[k * 4 + 3] = 255;
+  }
+  const G2 = makeGrid(512, 256), n2 = G2.w * G2.h, B = new Uint8ClampedArray(n2 * 4);
+  for (let k = 0; k < n2; k++) {
+    const x = G2.X[k], y = G2.Y[k], z = G2.Z[k];
+    const c = fbm(x * 2.2 + 70 + 0.8 * fbm(x * 3, y * 3, z * 3, 3), y * 6 + 0.5, z * 2.2 + 9, 5);
+    B[k * 4] = 255; B[k * 4 + 1] = 245; B[k * 4 + 2] = 215; B[k * 4 + 3] = c8(sm(0.5, 0.78, c) * 0.55);
+  }
+  return { albedo: toTexture(w, h, A), haze: toTexture(G2.w, G2.h, B) };
+}
+
+// ---- Sun granulation (brightness multiplier in R) and the warm dust dome
+function genSun() {
+  const G = makeGrid(1024, 512), { w, h, X, Y, Z } = G, n = w * h, A = new Uint8ClampedArray(n * 4);
+  for (let k = 0; k < n; k++) {
+    const g = fbm(X[k] * 30, Y[k] * 30, Z[k] * 30, 3), l = fbm(X[k] * 5 + 9, Y[k] * 5, Z[k] * 5, 4);
+    const v = clamp01(0.25 + g * 0.9 + (l - 0.5) * 0.5);
+    A[k * 4] = c8(v); A[k * 4 + 1] = c8(v); A[k * 4 + 2] = c8(v); A[k * 4 + 3] = 255;
+  }
+  return toTexture(w, h, A);
+}
+function genDust() {
+  const G = makeGrid(768, 384), { w, h, X, Y, Z } = G, n = w * h, A = new Uint8ClampedArray(n * 4);
+  for (let k = 0; k < n; k++) {
+    const x = X[k], y = Y[k], z = Z[k];
+    const a = fbm(x * 4.5 + 5, y * 4.5, z * 4.5, 5), b = fbm(x * 9 + 50, y * 9 + 2, z * 9, 4);
+    const c = Math.pow(clamp01((a - 0.38) * 2.2), 1.6) * (0.5 + 0.7 * b);
+    const r = 0.026 + 0.15 * c, g = 0.014 + 0.066 * c, bl = 0.009 + 0.03 * c;
+    A[k * 4] = c8(r); A[k * 4 + 1] = c8(g); A[k * 4 + 2] = c8(bl); A[k * 4 + 3] = 255;
+  }
+  return toTexture(w, h, A);
+}
+const mercTex = genMercury(), venTex = genVenus(), sunTex = genSun(), dustTex = genDust();
+
+// ---------------------------------------------------------------- renderer / scene / camera
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("gl"), antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H, false); renderer.setPixelRatio(1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.setClearColor(0x0a0503, 1);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(FOV, W / H, 0.5, 400);
+const AZ0 = -0.38, EL0 = 50 * D2R, D0 = 40;
+const dirOf = (az, el) => new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+function placeCamera(T, D, sx, sy, az) {
+  camera.position.copy(T).addScaledVector(dirOf(az, EL0), D);
+  camera.up.set(0, 1, 0); camera.lookAt(T);
+  camera.setViewOffset(W, H, -sx, -sy, W, H);
+  camera.updateMatrixWorld(true);
+}
+function unprojectToPlane(px, py) {
+  const v = new THREE.Vector3((px / W) * 2 - 1, -((py / H) * 2 - 1), 0.5).unproject(camera);
+  const d = v.sub(camera.position).normalize(), t = -camera.position.y / d.y;
+  return camera.position.clone().addScaledVector(d, t);
+}
+function screenOf(p) { const v = p.clone().project(camera); return new THREE.Vector2((v.x * 0.5 + 0.5) * W, (-v.y * 0.5 + 0.5) * H); }
+function depthOf(p) { return -p.clone().applyMatrix4(camera.matrixWorldInverse).z; }
+
+// ---- layout of the wide shot (screen px) -> world positions, orbit radii, planet sizes
+const L = { sun: [-40, 125], sunR: 300, merc: [410, 505], mercR: 85, ven: [705, 1010], venR: 165 };
+const ORIGIN = new THREE.Vector3(0, 0, 0);
+placeCamera(ORIGIN, D0, L.sun[0] - W / 2, L.sun[1] - H / 2, AZ0);
+const camB = camera.position.clone();
+const mercW0 = unprojectToPlane(...L.merc), venW0 = unprojectToPlane(...L.ven);
+const R_SUN = L.sunR * D0 / PXK;
+const R_M = L.mercR * camB.distanceTo(mercW0) / PXK, R_V = L.venR * camB.distanceTo(venW0) / PXK;
+const r1 = Math.hypot(mercW0.x, mercW0.z), r2 = Math.hypot(venW0.x, venW0.z);
+const a1 = Math.atan2(mercW0.z, mercW0.x), a2 = Math.atan2(venW0.z, venW0.x);
+const W1 = 8.5 * D2R, W2 = 3.1 * D2R;                       // orbital angular speed (rad/s), Mercury faster than Venus
+const mercAt = (t) => new THREE.Vector3(r1 * Math.cos(a1 + W1 * (t - CFG.tB)), 0, r1 * Math.sin(a1 + W1 * (t - CFG.tB)));
+const venAt = (t) => new THREE.Vector3(r2 * Math.cos(a2 + W2 * (t - CFG.tB)), 0, r2 * Math.sin(a2 + W2 * (t - CFG.tB)));
+// close-up framings: Mercury (beat A) and Venus (beat C)
+const VIEW_A = { px: [410, 850], r: 155 }, VIEW_C = { px: [610, 925], r: 292 };
+const D_A = R_M * PXK / VIEW_A.r, D_C = R_V * PXK / VIEW_C.r;
+
+// ---------------------------------------------------------------- shaders
+const DITHER = `float dith(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233))) * 43758.5453) - 0.5; }`;
+// backdrop dome + stars
+const dome = new THREE.Mesh(new THREE.SphereGeometry(150, 48, 32), new THREE.ShaderMaterial({
+  uniforms: { uTex: { value: dustTex }, uT: { value: 0 } }, side: THREE.BackSide, depthWrite: false, depthTest: false,
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `uniform sampler2D uTex; uniform float uT; varying vec2 vUv; ${DITHER}
+    void main(){ vec3 c = texture2D(uTex, vUv + vec2(uT*0.0006, 0.0)).rgb; gl_FragColor = vec4(c + dith(gl_FragCoord.xy)/255.0, 1.0); }`,
+}));
+dome.renderOrder = -20; dome.frustumCulled = false; scene.add(dome);
+
+const starPos = [], starCol = [], starSize = [], starPh = [];
+{ // stars live in a cone around the (fixed) viewing direction, so a few hundred land inside the 28 x 16 degree frustum
+  const f0 = dirOf(AZ0 + 0.03, EL0).negate(), e1 = new THREE.Vector3().crossVectors(f0, new THREE.Vector3(0, 1, 0)).normalize(), e2 = new THREE.Vector3().crossVectors(f0, e1);
+  const cosMax = Math.cos(21 * D2R);
+  for (let i = 0; i < 5200; i++) {
+    const ct = lerp(cosMax, 1, rnd()), st = Math.sqrt(1 - ct * ct), ph = rnd() * Math.PI * 2, r = 120;
+    const d = f0.clone().multiplyScalar(ct).addScaledVector(e1, st * Math.cos(ph)).addScaledVector(e2, st * Math.sin(ph));
+    starPos.push(d.x * r, d.y * r, d.z * r);
+    const k = rnd(), warm = rnd(), br = 0.28 + 0.72 * Math.pow(rnd(), 2.4);
+    starCol.push(br * (0.92 + 0.08 * warm), br * (0.84 + 0.12 * warm), br * (0.72 + 0.22 * (1 - warm)));
+    starSize.push(k < 0.012 ? 5.5 + 2.5 * rnd() : k < 0.07 ? 3.4 + 1.2 * rnd() : 1.8 + 1.0 * rnd());
+    starPh.push(rnd() * 6.28);
+  }
+}
+const sg = new THREE.BufferGeometry();
+sg.setAttribute("position", new THREE.Float32BufferAttribute(starPos, 3));
+sg.setAttribute("aCol", new THREE.Float32BufferAttribute(starCol, 3));
+sg.setAttribute("aSize", new THREE.Float32BufferAttribute(starSize, 1));
+sg.setAttribute("aPh", new THREE.Float32BufferAttribute(starPh, 1));
+const starMat = new THREE.ShaderMaterial({
+  uniforms: { uT: { value: 0 } }, transparent: false, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false,
+  vertexShader: `attribute vec3 aCol; attribute float aSize; attribute float aPh; uniform float uT; varying vec3 vC;
+    void main(){ vC = aCol * (0.82 + 0.18*sin(uT*(1.3 + aPh*0.25) + aPh*3.0)); gl_PointSize = aSize;
+      gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+  fragmentShader: `varying vec3 vC; void main(){ float d = length(gl_PointCoord - 0.5); float a = smoothstep(0.5, 0.05, d); gl_FragColor = vec4(vC*a*a*1.9, 1.0); }`,
+});
+const stars = new THREE.Points(sg, starMat); stars.renderOrder = -19; stars.frustumCulled = false; scene.add(stars);
+
+// Sun: halo with rays (billboard, additive, drawn before the disc), granulated emissive disc, screen-space veil on top
+const billboardVS = `varying vec2 vP; void main(){ vP = position.xy; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`;
+const sunHaloMat = new THREE.ShaderMaterial({
+  uniforms: { uT: { value: 0 }, uS: { value: 11 }, uK: { value: 1 } }, transparent: false, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false,
+  vertexShader: billboardVS,
+  fragmentShader: `uniform float uT; uniform float uS; uniform float uK; varying vec2 vP; ${DITHER}
+    void main(){
+      float q = length(vP) * uS; float a = atan(vP.y, vP.x);
+      float rays = 0.5 + 0.5 * sin(a*7.0 + uT*0.10) * sin(a*13.0 - uT*0.07 + 1.3);
+      float near = q < 1.0 ? 1.0 : exp(-(q-1.0)*2.1);
+      float mid = 1.0/(1.0 + pow(q/2.0, 2.0)); mid *= mid;
+      float far = exp(-q*0.5)*0.30;
+      float rayT = 1.0 + 0.30*rays*exp(-(q-1.0)*0.35)*smoothstep(1.0,1.5,q);
+      vec3 c = (vec3(1.0,0.55,0.17)*near*1.0 + vec3(1.0,0.42,0.10)*mid*0.62 + vec3(0.9,0.30,0.06)*far*0.5) * rayT * uK;
+      c *= smoothstep(1.0, 0.8, length(vP));
+      c = 1.0 - exp(-c*1.25);
+      gl_FragColor = vec4(c + dith(gl_FragCoord.xy)/255.0*0.6, 1.0); }`,
+});
+const sunHalo = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), sunHaloMat);
+sunHalo.renderOrder = -10; sunHalo.frustumCulled = false; scene.add(sunHalo);
+const sunDisc = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), new THREE.ShaderMaterial({
+  uniforms: { uTex: { value: sunTex }, uT: { value: 0 } },
+  vertexShader: `varying vec2 vUv; varying vec3 vNw; varying vec3 vW; void main(){ vUv = uv; vNw = normalize(mat3(modelMatrix)*normal);
+    vec4 wp = modelMatrix*vec4(position,1.0); vW = wp.xyz; gl_Position = projectionMatrix*viewMatrix*wp; }`,
+  fragmentShader: `uniform sampler2D uTex; uniform float uT; varying vec2 vUv; varying vec3 vNw; varying vec3 vW;
+    void main(){ vec3 N = normalize(vNw), V = normalize(cameraPosition - vW); float mu = clamp(dot(N,V), 0.0, 1.0);
+      float g = texture2D(uTex, vUv + vec2(uT*0.004, 0.0)).r; float limb = pow(mu, 0.75);
+      vec3 c = mix(vec3(1.25,0.27,0.02), vec3(2.15,0.92,0.17), limb) * (0.84 + 0.34*g) + vec3(1.0,0.74,0.32)*0.8*pow(mu, 9.0);
+      c += vec3(1.0,0.5,0.12) * 0.25 * pow(1.0 - mu, 3.0);
+      c = 1.0 - exp(-c*1.45); gl_FragColor = vec4(c, 1.0); }`,
+}));
+sunDisc.renderOrder = -9; sunDisc.scale.setScalar(R_SUN); scene.add(sunDisc);
+const veil = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+  uniforms: { uSun: { value: new THREE.Vector2() }, uK: { value: 0.075 }, uS: { value: 1000 } }, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false,
+  vertexShader: `void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+  fragmentShader: `uniform vec2 uSun; uniform float uK; uniform float uS; ${DITHER}
+    void main(){ float d = length(gl_FragCoord.xy - uSun)/uS; float v = uK*exp(-d*1.15) + uK*0.5/(1.0+d*d*3.0);
+      gl_FragColor = vec4(vec3(1.0,0.62,0.24)*v + dith(gl_FragCoord.xy)/255.0*0.5, 1.0); }`,
+}));
+veil.renderOrder = 50; veil.frustumCulled = false; scene.add(veil);
+
+// orbit rings in the orbital plane: constant-pixel-width glow lines, brighter in a trail behind each planet
+const ringMat = new THREE.ShaderMaterial({
+  uniforms: { uR1: { value: r1 }, uR2: { value: r2 }, uA1: { value: a1 }, uA2: { value: a2 } },
+  transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+  vertexShader: `varying vec3 vW; void main(){ vec4 wp = modelMatrix*vec4(position,1.0); vW = wp.xyz; gl_Position = projectionMatrix*viewMatrix*wp; }`,
+  fragmentShader: `uniform float uR1; uniform float uR2; uniform float uA1; uniform float uA2; varying vec3 vW;
+    float ring(float rad, float R, float fw, float ang, float pa, float k){
+      float d = abs(rad - R)/max(fw, 1e-5);
+      float core = exp(-d*d/(2.0*1.25*1.25)); float glow = exp(-d/8.0)*0.22;
+      float da = ang - pa; da = mod(da + 3.14159265, 6.2831853) - 3.14159265;
+      float trail = 0.30 + 0.95*exp(-abs(da)*1.6) + (da < 0.0 ? 0.55*exp(-abs(da)*0.7) : 0.0);
+      return (core*0.95 + glow) * trail * k; }
+    void main(){ float rad = length(vW.xz); float fw = fwidth(rad); float ang = atan(vW.z, vW.x);
+      float v = ring(rad, uR1, fw, ang, uA1, 1.0) + ring(rad, uR2, fw, ang, uA2, 0.92);
+      gl_FragColor = vec4(vec3(1.0,0.74,0.38)*v, 1.0); }`,
+});
+const rings = new THREE.Mesh(new THREE.PlaneGeometry(240, 240).rotateX(-Math.PI / 2), ringMat);
+rings.renderOrder = 1; rings.frustumCulled = false; scene.add(rings);
+
+// planets: one lit-sphere shader (key light cheated to come from the Sun's side of the screen, toward the viewer)
+function planetMat(o) {
+  return new THREE.ShaderMaterial({
+    defines: o.normal ? { NMAP: 1 } : {},
+    uniforms: {
+      uAlbedo: { value: o.albedo }, uNormal: { value: o.normal || null }, uL: { value: new THREE.Vector3(0, 0, 1) }, uRot: { value: new THREE.Matrix3() },
+      uLightCol: { value: new THREE.Vector3(1.0, 0.86, 0.66) }, uK: { value: o.k }, uAmb: { value: new THREE.Vector3(...o.amb) }, uWrap: { value: o.wrap },
+      uRimCol: { value: new THREE.Vector3(...o.rimCol) }, uRimK: { value: o.rimK }, uRimPow: { value: o.rimPow }, uTint: { value: new THREE.Vector3(1, 1, 1) },
+      uOpacity: { value: 1 }, uDim: { value: 1 }, uExposure: { value: o.exposure || 1.15 },
+    },
+    transparent: !!o.transparent, depthWrite: !o.transparent,
+    vertexShader: `varying vec2 vUv; varying vec3 vNo; varying vec3 vW; void main(){ vUv = uv; vNo = normalize(position);
+      vec4 wp = modelMatrix*vec4(position,1.0); vW = wp.xyz; gl_Position = projectionMatrix*viewMatrix*wp; }`,
+    fragmentShader: `uniform sampler2D uAlbedo; uniform sampler2D uNormal; uniform vec3 uL; uniform mat3 uRot; uniform vec3 uLightCol; uniform float uK;
+      uniform vec3 uAmb; uniform float uWrap; uniform vec3 uRimCol; uniform float uRimK; uniform float uRimPow; uniform vec3 uTint; uniform float uOpacity; uniform float uDim; uniform float uExposure;
+      varying vec2 vUv; varying vec3 vNo; varying vec3 vW; ${DITHER}
+      void main(){
+        vec3 No = normalize(vNo); vec3 Ng = normalize(uRot*No); vec3 Nw = Ng;
+        #ifdef NMAP
+          vec3 east = normalize(vec3(No.z, 0.0, -No.x) + vec3(1e-4,0.0,0.0)); vec3 north = cross(No, east);
+          vec3 tn = texture2D(uNormal, vUv).xyz*2.0 - 1.0;
+          Nw = normalize(uRot*normalize(east*tn.x + north*tn.y + No*tn.z));
+        #endif
+        vec4 tx = texture2D(uAlbedo, vUv); vec3 alb = pow(tx.rgb, vec3(2.2)) * uTint;
+        float ndl = dot(Nw, uL); float diff = clamp((ndl + uWrap)/(1.0 + uWrap), 0.0, 1.0);
+        vec3 V = normalize(cameraPosition - vW); float fr = pow(1.0 - clamp(dot(Ng, V), 0.0, 1.0), uRimPow);
+        float lit = smoothstep(-0.35, 0.45, dot(Ng, uL));
+        vec3 col = alb*(uLightCol*uK*diff + uAmb) + uRimCol*uRimK*fr*lit;
+        col = 1.0 - exp(-col*uExposure); col *= uDim;
+        gl_FragColor = vec4(pow(col, vec3(1.0/2.2)) + dith(gl_FragCoord.xy)/255.0, tx.a*uOpacity); }`,
+  });
+}
+const mercMat = planetMat({ albedo: mercTex.albedo, normal: mercTex.normal, k: 2.6, amb: [0.012, 0.008, 0.006], wrap: 0.0, rimCol: [1.0, 0.7, 0.4], rimK: 0.05, rimPow: 3, exposure: 1.2 });
+const venMat = planetMat({ albedo: venTex.albedo, k: 2.2, amb: [0.03, 0.02, 0.012], wrap: 0.45, rimCol: [1.0, 0.72, 0.36], rimK: 0.5, rimPow: 2.4, exposure: 1.25 });
+const hazeMat = planetMat({ albedo: venTex.haze, k: 2.2, amb: [0.03, 0.02, 0.012], wrap: 0.45, rimCol: [1, 0.7, 0.35], rimK: 0.3, rimPow: 2.4, exposure: 1.25, transparent: true });
+mercMat.transparent = true; mercMat.depthWrite = true;
+const mercTilt = new THREE.Group(), mercury = new THREE.Mesh(new THREE.SphereGeometry(1, 128, 96), mercMat);
+mercTilt.rotation.set(0.35, 0, 1.2); mercTilt.add(mercury); mercTilt.scale.setScalar(R_M); scene.add(mercTilt);
+const venTilt = new THREE.Group(), venus = new THREE.Mesh(new THREE.SphereGeometry(1, 128, 96), venMat);
+const haze = new THREE.Mesh(new THREE.SphereGeometry(1.012, 96, 72), hazeMat);
+venTilt.rotation.set(0.3, 0, -0.1); venTilt.add(venus, haze); venTilt.scale.setScalar(R_V); scene.add(venTilt);
+// Venus atmosphere glow (camera-facing billboard, additive, ring around the limb)
+const atmoMat = new THREE.ShaderMaterial({
+  uniforms: { uCol: { value: new THREE.Vector3(1.0, 0.86, 0.52) }, uK: { value: 0.9 }, uS: { value: 2.0 }, uW: { value: 0.1 }, uSun: { value: new THREE.Vector2(-1, 1) } },
+  transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false,
+  vertexShader: billboardVS,
+  fragmentShader: `uniform vec3 uCol; uniform float uK; uniform float uS; uniform float uW; uniform vec2 uSun; varying vec2 vP; ${DITHER}
+    void main(){ float q = length(vP)*uS; vec2 dd = normalize(vP + 1e-5);
+      float side = 0.45 + 0.55*clamp(dot(dd, uSun)*0.5 + 0.5, 0.0, 1.0);
+      float g = (exp(-(q-1.0)/uW) + 0.18*exp(-(q-1.0)/(uW*3.5))) * smoothstep(0.985, 1.012, q) * side;
+      g *= smoothstep(1.0, 0.85, length(vP));
+      vec3 c = 1.0 - exp(-uCol*g*uK); gl_FragColor = vec4(c + dith(gl_FragCoord.xy)/255.0*0.5, 1.0); }`,
+});
+const atmo = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), atmoMat); atmo.renderOrder = 10; atmo.frustumCulled = false; scene.add(atmo);
+
+// ---------------------------------------------------------------- thermometers (DOM)
+const TUBE = 272, TOP0 = 300;                                 // px of fill at scaleMax; y of the bulb centre inside the box
+function buildThermo(host) {
+  host.innerHTML = '<div class="o-tube"></div><div class="o-bulb"></div><div class="glass"><div class="g-tube"></div><div class="g-bulb"></div></div>' +
+    '<div class="f-bulb"></div><div class="f-col"></div><div class="shine"></div><div class="ref"></div><div class="tag"></div><div class="lab"></div>';
+  for (let T = CFG.scaleMax / 5; T <= CFG.scaleMax + 1e-6; T += CFG.scaleMax / 10) {
+    const d = document.createElement("div"); d.className = "tick";
+    const major = Math.round(T / (CFG.scaleMax / 10)) % 2 === 0; // majors every 100 deg
+    d.style.top = (TOP0 - (T / CFG.scaleMax) * TUBE - 2) + "px"; d.style.width = (major ? 18 : 10) + "px"; host.appendChild(d);
+  }
+  return { box: host, col: host.querySelector(".f-col"), tag: host.querySelector(".tag"), lab: host.querySelector(".lab"), ref: host.querySelector(".ref") };
+}
+const thM = buildThermo(document.getElementById("thM")), thV = buildThermo(document.getElementById("thV"));
+thM.tag.textContent = "~" + CFG.merc + "°C"; thV.tag.textContent = "~" + CFG.venus + "°C";
+thM.lab.innerHTML = "MERCURY<br>(DIN MEIN)";
+thV.ref.style.top = (TOP0 - (CFG.merc / CFG.scaleMax) * TUBE - 2) + "px";
+const wordEl = document.getElementById("word");
+function setThermo(th, p) {
+  th.box.style.left = (p.x - 52).toFixed(1) + "px"; th.box.style.top = (p.bottom - 352).toFixed(1) + "px"; th.box.style.opacity = p.op.toFixed(3);
+  th.col.style.top = (TOP0 - p.lvl * TUBE).toFixed(1) + "px"; th.col.style.height = (p.lvl * TUBE + 1).toFixed(1) + "px";
+  th.box.style.setProperty("--hot", p.hot); th.box.style.setProperty("--glow", p.glow);
+  th.tag.style.opacity = p.tagOp.toFixed(3); th.tag.style.transform = "scale(" + p.tagS.toFixed(4) + ")";
+  th.lab.style.opacity = (p.labOp || 0).toFixed(3);
+}
+const mix3 = (a, b, k) => a.map((v, i) => lerp(v, b[i], k));
+const rgb = (c) => "rgb(" + c.map((v) => Math.round(v)).join(",") + ")";
+
+// ---------------------------------------------------------------- the frame, a pure function of t
+const camQ = new THREE.Quaternion();
+function keyLight(pW, sunPx, pPx, front) {
+  let ux = sunPx.x - pPx.x, uy = -(sunPx.y - pPx.y); const l = Math.hypot(ux, uy) || 1; ux /= l; uy /= l;
+  const s = Math.sqrt(1 - front * front);
+  return new THREE.Vector3(ux * s, uy * s, front).normalize().applyQuaternion(camQ);
+}
+function renderAt(t) {
+  t = Math.max(0, Math.min(TT, t));
+  const mp = mercAt(t), vp = venAt(t);
+  // ---- camera: A (Mercury close, tracking) -> B (wide) -> C (Venus push-in)
+  const sAB = smoother(CFG.ab[0], CFG.ab[1], t);
+  const sBC = smoother(CFG.bc[0], CFG.bc[1], t) / smoother(CFG.bc[0], CFG.bc[1], TT);
+  const DA = D_A * (1 - 0.09 * clamp01(t / 1.8));
+  const T = mp.clone().lerp(ORIGIN, sAB).lerp(vp, sBC);
+  const lnD = lerp(lerp(Math.log(DA), Math.log(D0), sAB), Math.log(D_C), sBC);
+  const sx0 = lerp(VIEW_A.px[0] - W / 2, L.sun[0] - W / 2, sAB), sy0 = lerp(VIEW_A.px[1] - H / 2, L.sun[1] - H / 2, sAB);
+  const az = AZ0 + 0.06 * t / TT;
+  if (sBC <= 0) placeCamera(T, Math.exp(lnD), sx0, sy0, az);
+  else {
+    // push-in: Venus's screen position is locked to a straight eased path (its wide-shot spot -> final framing), so the planet
+    // never dips or drifts with the orbit while the camera dollies in; the rest of the scene gets the parallax.
+    placeCamera(mp.clone().lerp(ORIGIN, sAB), Math.exp(lerp(Math.log(DA), Math.log(D0), sAB)), sx0, sy0, az);
+    const vW = screenOf(vp);
+    placeCamera(T, Math.exp(lnD), 0, 0, az);
+    const p0 = screenOf(vp);
+    placeCamera(T, Math.exp(lnD), lerp(vW.x, VIEW_C.px[0], sBC) - p0.x, lerp(vW.y, VIEW_C.px[1], sBC) - p0.y, az);
+  }
+  camera.getWorldQuaternion(camQ);
+  // the big shape of the Sun: placed at the origin (shift above was chosen so the Sun lands top-left in the wide shot)
+  const sunPx = screenOf(ORIGIN), mPx = screenOf(mp), vPx = screenOf(vp);
+  const mR = R_M * PXK / depthOf(mp), vR = R_V * PXK / depthOf(vp);
+
+  // ---- warm Venus (beat C)
+  const warm = smooth(2.75, 3.95, t);
+
+  // ---- scene updates
+  dome.position.copy(camera.position); stars.position.copy(camera.position);
+  dome.material.uniforms.uT.value = t; starMat.uniforms.uT.value = t;
+  sunHalo.position.copy(ORIGIN); sunHalo.quaternion.copy(camQ); sunHalo.scale.setScalar(R_SUN * sunHaloMat.uniforms.uS.value);
+  sunDisc.material.uniforms.uT.value = t; sunHaloMat.uniforms.uT.value = t;
+  veil.material.uniforms.uSun.value.set(sunPx.x, H - sunPx.y);
+  veil.material.uniforms.uS.value = 1000 * (R_SUN * PXK / depthOf(ORIGIN)) / 300;
+  ringMat.uniforms.uA1.value = a1 + W1 * (t - CFG.tB); ringMat.uniforms.uA2.value = a2 + W2 * (t - CFG.tB);
+  // Mercury
+  mercTilt.position.copy(mp); mercury.rotation.y = 0.5 + t * 0.28;
+  mercTilt.updateMatrixWorld(true); mercMat.uniforms.uRot.value.setFromMatrix4(mercury.matrixWorld);
+  mercMat.uniforms.uL.value.copy(keyLight(mp, sunPx, mPx, 0.50)); mercMat.uniforms.uOpacity.value = 1 - smooth(2.95, 3.2, t); mercTilt.visible = t < 3.25;
+  // Venus
+  venTilt.position.copy(vp); venus.rotation.y = 1.2 + t * 0.05; haze.rotation.y = 2.0 + t * 0.2;
+  venTilt.updateMatrixWorld(true);
+  venMat.uniforms.uRot.value.setFromMatrix4(venus.matrixWorld); hazeMat.uniforms.uRot.value.setFromMatrix4(haze.matrixWorld);
+  const lv = keyLight(vp, sunPx, vPx, 0.52); venMat.uniforms.uL.value.copy(lv); hazeMat.uniforms.uL.value.copy(lv);
+  const tint = mix3([1, 1, 1], [1.0, 0.80, 0.52], warm);
+  venMat.uniforms.uTint.value.set(...tint); hazeMat.uniforms.uTint.value.set(...tint);
+  venMat.uniforms.uK.value = hazeMat.uniforms.uK.value = lerp(2.2, 2.9, warm);
+  venMat.uniforms.uRimCol.value.set(...mix3([1.0, 0.72, 0.36], [1.0, 0.42, 0.10], warm)); venMat.uniforms.uRimK.value = lerp(0.5, 1.15, warm);
+  atmo.position.copy(vp); atmo.quaternion.copy(camQ); atmo.scale.setScalar(R_V * atmoMat.uniforms.uS.value);
+  atmoMat.uniforms.uCol.value.set(...mix3([1.0, 0.86, 0.52], [1.0, 0.52, 0.16], warm));
+  atmoMat.uniforms.uK.value = lerp(0.8, 1.7, warm); atmoMat.uniforms.uW.value = lerp(0.085, 0.14, warm);
+  { let ux = sunPx.x - vPx.x, uy = -(sunPx.y - vPx.y); const l = Math.hypot(ux, uy) || 1; atmoMat.uniforms.uSun.value.set(ux / l, uy / l); }
+  renderer.render(scene, camera);
+
+  // ---- thermometers + word (DOM), anchored to the planets' projected positions
+  const lvlM0 = CFG.merc / CFG.scaleMax, lvlV0 = CFG.venus / CFG.scaleMax;
+  // Mercury: appears at once, fills 0.25 -> 1.25 s with a small settle, tag pops as it fills
+  const fM = easeOutCubic((t - 0.25) / 1.0), setM = t > 1.25 ? 0.006 * Math.sin((t - 1.25) * 20) * Math.exp(-(t - 1.25) * 6) : 0;
+  const mOp = smooth(0, 0.3, t) * (1 - smooth(2.95, 3.2, t));
+  const mx = Math.min(900, mPx.x + mR + 175), mBot = mPx.y + 205 + 24 * (1 - smooth(0, 0.35, t));
+  const mTagU = (t - 1.05) / 0.38;
+  setThermo(thM, { x: mx, bottom: mBot, op: mOp, lvl: lvlM0 * fM + setM, hot: "#ff6a2e", glow: "rgba(255,100,40,.55)",
+    tagOp: clamp01((t - 1.05) / 0.12), tagS: 0.5 + 0.5 * backOut(mTagU), labOp: smooth(0.45, 0.8, t) });
+  // Venus: appears 1.75, rises 1.95 -> 2.9 past Mercury's level (the dashed tick), goes hot red, tag pops at the top
+  const fV = easeOutQuad((t - 2.05) / 0.85), hot = smooth(2.3, 2.95, t);
+  const vOp = smooth(1.95, 2.25, t);
+  const vx = Math.max(160, vPx.x - vR - 135), vBot = vPx.y + 160 + 24 * (1 - smooth(1.95, 2.3, t));
+  const vTagU = (t - 2.82) / 0.38;
+  thV.ref.style.opacity = (smooth(2.05, 2.3, t) * (1 - smooth(3.0, 3.3, t)) * 0.95).toFixed(3);
+  setThermo(thV, { x: vx, bottom: vBot, op: vOp, lvl: lvlV0 * fV, hot: rgb(mix3([255, 106, 46], [255, 24, 28], hot)), glow: "rgba(255," + Math.round(lerp(100, 30, hot)) + ",30," + lerp(0.55, 0.95, hot).toFixed(2) + ")",
+    tagOp: clamp01((t - 2.82) / 0.12), tagS: 0.5 + 0.5 * backOut(vTagU), labOp: 0 });
+  // the big word: pops above Venus
+  const wu = (t - CFG.word) / 0.4, wS = 0.55 + 0.45 * backOut(wu) + 0.035 * clamp01((t - CFG.word - 0.4) / 0.8);
+  wordEl.style.top = "330px";
+  wordEl.style.opacity = clamp01((t - CFG.word) / 0.1).toFixed(3); wordEl.style.transform = "scale(" + wS.toFixed(4) + ")";
+}
+window.addEventListener("hf-seek", (e) => renderAt(e.detail.time));
+renderAt(window.__hfThreeTime || 0);
+window.__sceneReady = true;
+</script>
+</body>
+</html>
