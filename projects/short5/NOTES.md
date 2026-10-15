@@ -11,3 +11,10 @@ tighten_vo -> transcribe (hi; word_text for numbers: अड़तीस सौ -
 into the trench cross-section for the hook, car-on-thumbnail pressure) -> plan.json: hook text from frame 1, quiz (A shark /
 B octopus / C chhote jeev, answer C), depth ruler HUD with yellow milestones (1,000 m, 3,800 m Titanic marker, ~8 km, 10,935 m),
 pressure card, plastic bag card, comment + share CTA, "AI visual" tag, documentary music vol 9, channel end card with fades.
+
+## Scene 1 (hook) — done 2026-10-15
+`editor/templates/3d/everest_ocean.html` (Three.js, procedural, deterministic): split over-under shot, Everest sinks from
+1 km above the sea to ~2.09 km under it (0.5-2.0 s), camera pulls back + yellow bracket "~2.1 KM PAANI" (2.0-3.2 s), hold.
+Headline "EVEREST BHI / DOOB JAAYE!" + pill "11 KM NEECHE KYA HAI?" are HTML text; CFG.text=false gives a clean plate.
+Renders: `media/3d/scene1_everest.mp4` (with text), `media/3d/scene1_everest_clean.mp4` (no text) — 1080x1920, 30 fps, 4.0 s,
+~7 min each on 4 CPUs. Re-render: `python editor/scripts/render3d.py editor/templates/3d/everest_ocean.html <out.mp4>`.

@@ -2,6 +2,7 @@
 
 usage: python render3d.py <template.html> <out.mp4> [--title "..."] [--sub "..."] [--duration 6] [--draft]
                           [--config '{"mode":"spokes"}']
+       python render3d.py <template.html> --preview [--port 8765]   (serve it; open the printed URL in a browser)
 templates live in editor/templates/3d/
 
 --config merges a JSON object over the template's one-line defaults `window.CFG = {...};` (using --config on a
@@ -85,13 +86,18 @@ def stage(template, title=None, sub=None, duration=None, config=None):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("template")
-    ap.add_argument("out")
+    ap.add_argument("out", nargs="?")
     ap.add_argument("--title", help='title HTML; wrap the accent word as *word*')
     ap.add_argument("--sub")
     ap.add_argument("--duration", type=float)
     ap.add_argument("--config", help="JSON object merged over the template's `window.CFG = {...};` defaults")
     ap.add_argument("--draft", action="store_true")
+    ap.add_argument("--preview", action="store_true",
+                    help="serve the staged page on localhost instead of rendering (templates with a ?preview mode get play/scrub controls)")
+    ap.add_argument("--port", type=int, default=8765)
     a = ap.parse_args()
+    if not a.out and not a.preview:
+        ap.error("give an output .mp4 (or --preview)")
     config = None
     if a.config:
         try:
@@ -101,8 +107,23 @@ def main():
         if not isinstance(config, dict):
             raise SystemExit("--config must be a JSON object")
     tmp = stage(a.template, a.title, a.sub, a.duration, config)
+    if a.preview:
+        import functools
+        import http.server
+        handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(tmp))
+        handler.log_message = lambda *args: None
+        srv = http.server.ThreadingHTTPServer(("127.0.0.1", a.port), handler)
+        print(f"preview: http://localhost:{a.port}/index.html?preview   (Ctrl+C to stop)")
+        try:
+            srv.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            srv.server_close()
+            shutil.rmtree(tmp, ignore_errors=True)
+        return
     try:
-        env = {**os.environ, "HYPERFRAMES_NO_TELEMETRY": "1", "DO_NOT_TRACK": "1"}
+        env ={**os.environ, "HYPERFRAMES_NO_TELEMETRY": "1", "DO_NOT_TRACK": "1"}
         out = Path(a.out).resolve()
         r = subprocess.run([str(ED / "node_modules" / ".bin" / "hyperframes"), "render", "--quality",
                             "draft" if a.draft else "delivery", "--output", str(out)], cwd=tmp, capture_output=True,

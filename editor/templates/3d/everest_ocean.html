@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<title>Everest under the sea 3D</title>
+<!-- Hook scene for "11 KM neeche samundar mein kya hai?" (Mariana Trench Short): Mount Everest sinks into the ocean and
+     ends with ~2.1 km of water above its summit (Challenger Deep ~10.94 km minus Everest 8.85 km).
+     Look: a split "over-under" shot, like a camera dome half in the water: sky + the sea surface (moving waves, sky
+     reflection) above a wavy waterline, deep navy water below (light shafts, marine snow, depth haze).
+     Units are km. The mountain is a procedural heightfield (three-sided pyramid with ridges, erosion, rock strata, the
+     yellowish band near the top, snow on gentle slopes, baked sun shadows + occlusion), all from seeded noise.
+     Beats (CFG, absolute seconds):
+       0.0-0.5  summit just above the water, headline + sub already on screen (the first frame reads on its own)
+       sinkStart..sinkEnd  the mountain sinks; when the summit goes under: foam at the waterline, spray above it,
+                bubbles and churned water below it
+       revealStart..revealEnd  the camera pulls back so the whole gap shows; a yellow bracket draws from the surface
+                down to the summit; the "~2.1 KM PAANI" label pops at labelAt
+       then a hold with a slow drift.
+     Text is real HTML (Montserrat). CFG.text=false renders a clean plate (no headline, sub, bracket or label) for
+     edits that add their own overlays.
+     Preview: open index.html?preview in a browser (render3d.py <this> --preview serves it): play/pause + scrubber.
+     Render: python editor/scripts/render3d.py editor/templates/3d/everest_ocean.html out.mp4 (1080x1920, 30 fps). -->
+<script>
+window.CFG = { duration: 4, text: true, seed: 7, aboveKm: 1.0, gapKm: 2.09, sinkStart: 0.5, sinkEnd: 2.0, revealStart: 2.0, revealEnd: 3.2, bracketStart: 2.05, bracketEnd: 2.75, labelAt: 2.7 };
+</script>
+<script src="assets/gsap.min.js"></script>
+<script type="importmap">{ "imports": { "three": "./assets/three.module.js" } }</script>
+<style>
+@font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-900.ttf"); font-weight: 900; }
+@font-face { font-family: "Montserrat"; src: url("assets/fonts/Montserrat-800.ttf"); font-weight: 800; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+#root { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #020812; }
+#gl { position: absolute; inset: 0; width: 1080px; height: 1920px; display: block; }
+#head { position: absolute; left: 40px; right: 40px; top: 196px; text-align: center; font-family: "Montserrat"; font-weight: 900;
+  line-height: 1.0; letter-spacing: -0.01em; color: #fff;
+  text-shadow: 0 3px 6px rgba(0,0,0,.55), 0 10px 34px rgba(0,8,20,.75); }
+#head .l1 { font-size: 104px; }
+#head .l2 { font-size: 124px; color: #FFD60A; margin-top: 6px; }
+#sub { position: absolute; left: 0; right: 0; top: 1436px; text-align: center; }
+#sub span { display: inline-block; font-family: "Montserrat"; font-weight: 800; font-size: 54px; color: #fff; letter-spacing: 0.01em;
+  padding: 18px 38px 20px; border-radius: 60px; background: rgba(2,10,22,.62); border: 3px solid rgba(255,214,10,.85);
+  text-shadow: 0 2px 8px rgba(0,0,0,.6); }
+#meas { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible; }
+#meas line { stroke: #FFD60A; stroke-width: 6; stroke-linecap: round; }
+#meas .dash { stroke-width: 4; stroke-dasharray: 4 14; }
+#meas .shadow { stroke: rgba(0,0,0,.5); stroke-width: 12; }
+#mlabel { position: absolute; left: 0; top: 0; font-family: "Montserrat"; font-weight: 900; color: #FFD60A; line-height: 0.95;
+  text-shadow: 0 3px 6px rgba(0,0,0,.6), 0 8px 26px rgba(0,6,16,.85); white-space: nowrap; }
+#mlabel .big { display: block; font-size: 86px; }
+#mlabel .small { display: block; font-size: 54px; margin-top: 6px; }
+#pv { position: fixed; left: 0; right: 0; bottom: 0; height: 56px; display: flex; gap: 12px; align-items: center; padding: 0 14px;
+  background: #0d1520; color: #dfe9f5; font: 15px system-ui, sans-serif; z-index: 10; }
+#pv button { font: 600 15px system-ui; padding: 7px 16px; border: 0; border-radius: 6px; background: #FFD60A; color: #111; cursor: pointer; }
+#pv input { flex: 1; }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080" data-height="1920">
+  <canvas id="gl" width="1080" height="1920"></canvas>
+  <svg id="meas" viewBox="0 0 1080 1920">
+    <g id="mg">
+      <line id="sV" class="shadow" /><line id="sT" class="shadow" /><line id="sB" class="shadow" />
+      <line id="gS" class="dash" /><line id="bV" /><line id="bT" /><line id="bB" />
+    </g>
+  </svg>
+  <div id="mlabel"><span class="big">~2.1 KM</span><span class="small">PAANI</span></div>
+  <div id="head"><div class="l1">EVEREST BHI</div><div class="l2">DOOB JAAYE!</div></div>
+  <div id="sub"><span>11 KM NEECHE KYA HAI?</span></div>
+</div>
+<script>
+  (function () {
+    const C = window.CFG;
+    document.getElementById("root").setAttribute("data-duration", String(C.duration));
+    const tl = gsap.timeline({ paused: true });
+    tl.set({}, {}, C.duration); // timeline length == composition length; everything is drawn by renderAt(t)
+    window.__timelines = window.__timelines || {};
+    window.__timelines["main"] = tl;
+  })();
+</script>
+<script type="module">
+import * as THREE from "three";
+
+const CFG = window.CFG;
+const W = 1080, H = 1920, FOV = 38, D2R = Math.PI / 180;
+const TT = CFG.duration;
+const PXF = (H / 2) / Math.tan(FOV / 2 * D2R);           // focal length in px
+const HORIZON_Y = 600, MENISCUS_Y = 662, SUMMIT_X = 432;  // screen layout (px from top / left)
+const PITCH = Math.atan((H / 2 - HORIZON_Y) / PXF);
+const CAM_TOP_Y = 0.2, CAM_BOT_Y = -0.045;              // the two halves of the "dome" (km above/below the water)
+const clamp01 = (x) => Math.max(0, Math.min(1, x));
+const smooth = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+const ease = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
+const lerp = (a, b, t) => a + (b - a) * t;
+let seed = 1000003 + (CFG.seed | 0) * 7919;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+
+// ---------------------------------------------------------------- seeded value noise (JS, static detail)
+const P = new Uint8Array(512);
+for (let i = 0; i < 256; i++) P[i] = i;
+for (let i = 255; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [P[i], P[j]] = [P[j], P[i]]; }
+for (let i = 0; i < 256; i++) P[i + 256] = P[i];
+const fade = (t) => t * t * (3 - 2 * t);
+function vnoise(x, y, z) {
+  const X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
+  x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+  const u = fade(x), v = fade(y), w = fade(z);
+  const h = (a, b, c) => P[P[P[a] + b] + c] / 255;
+  const l = (a, b, t) => a + (b - a) * t;
+  return l(l(l(h(X, Y, Z), h(X + 1, Y, Z), u), l(h(X, Y + 1, Z), h(X + 1, Y + 1, Z), u), v),
+           l(l(h(X, Y, Z + 1), h(X + 1, Y, Z + 1), u), l(h(X, Y + 1, Z + 1), h(X + 1, Y + 1, Z + 1), u), v), w);
+}
+function fbm(x, y, z, oct) { let a = 0.5, f = 1, s = 0, n = 0; for (let i = 0; i < oct; i++) { s += a * vnoise(x * f, y * f, z * f); n += a; f *= 2.03; a *= 0.5; } return s / n; }
+function ridged(x, z, oct) { // ridged multifractal: sharp crests, eroded gullies
+  let s = 0, a = 0.5, f = 1, w = 1, n = 0;
+  for (let i = 0; i < oct; i++) {
+    let v = 1 - Math.abs(vnoise(x * f, 0.37 * i + 5.1, z * f) * 2 - 1); v *= v;
+    s += a * v * w; n += a; w = Math.min(1, v * 1.7); f *= 2.07; a *= 0.5;
+  }
+  return s / n;
+}
+
+// ---------------------------------------------------------------- the mountain heightfield (local km, base at y=0)
+const GN = 300, GS = 36;                  // grid cells per side, size (km)
+const HP = 8.85;                           // Everest above its base, km
+const RIDGES = [{ a: 0.42, s: 1.0, w: 0.05 }, { a: 2.38, s: 0.92, w: 0.06 }, { a: 4.25, s: 1.06, w: 0.05 }];
+const PEAKS = [{ x: 3.4, z: 1.0, h: 0.8, r: 1.3 }, { x: -3.9, z: 2.0, h: 0.55, r: 1.5 }, { x: -1.4, z: -4.8, h: 1.0, r: 1.8 }];
+const angDiff = (a, b) => { let d = (a - b) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return d; };
+function heightAt(x, z) {
+  const r = Math.hypot(x, z), th = Math.atan2(z, x);
+  let rf = 0;
+  for (const R of RIDGES) { const d = angDiff(th, R.a); rf = Math.max(rf, Math.exp(-d * d / R.w) * R.s); }
+  const warp = (fbm(x * 0.11 + 3.3, 1.3, z * 0.11 + 7.7, 3) - 0.5) * 3.4;
+  const R0 = 6.9 + 9.0 * rf + warp;
+  const k = clamp01(1 - r / R0);
+  let h = HP * Math.pow(k, 1.95) + 0.8 * rf * k * (1 - k) * 4;
+  const calm = 1 - Math.exp(-r * r / 1.1);                       // keep the summit a clean point
+  h += (ridged(x * 0.36 + 11.0, z * 0.36 - 5.0, 6) - 0.42) * 1.9 * Math.pow(k, 0.5) * calm;
+  h += (fbm(x * 1.3, 2.2, z * 1.3, 3) - 0.5) * 0.25 * k;
+  h += (ridged(x * 1.6 - 3.0, z * 1.6 + 8.0, 4) - 0.45) * 0.32 * Math.pow(k, 2.0) * (1 - Math.exp(-r * r / 0.05));
+  for (const p of PEAKS) { const d2 = (x - p.x) ** 2 + (z - p.z) ** 2; h += p.h * Math.exp(-d2 / (p.r * p.r)) * Math.pow(k, 0.4); }
+  const bed = (fbm(x * 0.2 + 40, 0.5, z * 0.2, 4) - 0.5) * 0.35;
+  return Math.max(h, bed);
+}
+const NV = GN + 1, CELL = GS / GN;
+const hgt = new Float32Array(NV * NV);
+for (let j = 0; j < NV; j++) for (let i = 0; i < NV; i++) hgt[j * NV + i] = heightAt(-GS / 2 + i * CELL, -GS / 2 + j * CELL);
+let iMax = 0; for (let i = 1; i < hgt.length; i++) if (hgt[i] > hgt[iMax]) iMax = i;
+const HMAX = hgt[iMax];
+const PEAK_X = -GS / 2 + (iMax % NV) * CELL, PEAK_Z = -GS / 2 + Math.floor(iMax / NV) * CELL;
+function hLookup(x, z) { // bilinear on the grid (local km)
+  const fx = clamp01((x + GS / 2) / GS) * GN, fz = clamp01((z + GS / 2) / GS) * GN;
+  const i = Math.min(GN - 1, Math.floor(fx)), j = Math.min(GN - 1, Math.floor(fz)), u = fx - i, v = fz - j;
+  const a = hgt[j * NV + i], b = hgt[j * NV + i + 1], c = hgt[(j + 1) * NV + i], d = hgt[(j + 1) * NV + i + 1];
+  return lerp(lerp(a, b, u), lerp(c, d, u), v);
+}
+// sun (world == local directions); low afternoon sun from the front-left, outside the frame
+const SUN = new THREE.Vector3(-0.55, 0.55, -0.62).normalize();
+// baked sun visibility (march towards the sun over the heightfield) and a cheap occlusion term (height vs local mean)
+const shade = new Float32Array(NV * NV), ao = new Float32Array(NV * NV);
+{
+  const sx = SUN.x, sz = SUN.z, sl = Math.hypot(sx, sz), rise = SUN.y / sl, step = 0.12;
+  for (let j = 0; j < NV; j++) for (let i = 0; i < NV; i++) {
+    const x = -GS / 2 + i * CELL, z = -GS / 2 + j * CELL, h0 = hgt[j * NV + i];
+    let vis = 1;
+    for (let s = 1; s <= 60; s++) {
+      const d = s * step, hh = hLookup(x + sx / sl * d, z + sz / sl * d), clear = h0 + 0.02 + rise * d - hh;
+      if (clear < 0) { vis = Math.min(vis, clamp01(1 + clear * 6)); if (vis <= 0) break; }
+      if (h0 + rise * d > HMAX) break;
+    }
+    shade[j * NV + i] = vis;
+  }
+  const R = 5, tmp = new Float32Array(NV * NV), mean = new Float32Array(NV * NV);
+  for (let j = 0; j < NV; j++) for (let i = 0; i < NV; i++) { let s = 0, n = 0; for (let k = -R; k <= R; k++) { const ii = i + k; if (ii >= 0 && ii < NV) { s += hgt[j * NV + ii]; n++; } } tmp[j * NV + i] = s / n; }
+  for (let j = 0; j < NV; j++) for (let i = 0; i < NV; i++) { let s = 0, n = 0; for (let k = -R; k <= R; k++) { const jj = j + k; if (jj >= 0 && jj < NV) { s += tmp[jj * NV + i]; n++; } } mean[j * NV + i] = s / n; }
+  for (let i = 0; i < NV * NV; i++) ao[i] = Math.max(0.35, Math.min(1.08, 1 - (mean[i] - hgt[i]) * 0.9));
+}
+
+// ---------------------------------------------------------------- renderer, targets
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("gl"), antialias: false, preserveDrawingBuffer: true });
+renderer.setSize(W, H, false); renderer.setPixelRatio(1);
+renderer.outputColorSpace = THREE.LinearSRGBColorSpace;   // the composite pass writes display-ready sRGB itself
+renderer.toneMapping = THREE.NoToneMapping;
+const rtOpts = { type: THREE.HalfFloatType, samples: 4, depthBuffer: true };
+const rtTop = new THREE.WebGLRenderTarget(W, H, rtOpts), rtBot = new THREE.WebGLRenderTarget(W, H, rtOpts);
+const sceneTop = new THREE.Scene(), sceneBot = new THREE.Scene();
+const camTop = new THREE.PerspectiveCamera(FOV, W / H, 0.01, 420), camBot = new THREE.PerspectiveCamera(FOV, W / H, 0.01, 420);
+camTop.rotation.order = "YXZ"; camBot.rotation.order = "YXZ";
+sceneBot.add(camBot);
+
+// ---------------------------------------------------------------- shared GLSL
+const GL_NOISE = `
+float hash3(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
+float vn(vec3 p){ vec3 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
+  return mix(mix(mix(hash3(i), hash3(i+vec3(1,0,0)), f.x), mix(hash3(i+vec3(0,1,0)), hash3(i+vec3(1,1,0)), f.x), f.y),
+             mix(mix(hash3(i+vec3(0,0,1)), hash3(i+vec3(1,0,1)), f.x), mix(hash3(i+vec3(0,1,1)), hash3(i+vec3(1,1,1)), f.x), f.y), f.z); }
+`;
+// dusk sky: dark navy zenith, cool steel horizon, warm glow towards the (off-frame) sun, thin cloud bands
+const GL_SKY = `
+uniform vec3 uSun;
+vec3 skyCol(vec3 d){
+  float y = max(d.y, -0.02);
+  vec3 zen = vec3(0.003, 0.008, 0.026), hor = vec3(0.070, 0.090, 0.135);
+  vec3 c = mix(hor, zen, pow(smoothstep(0.0, 0.55, y), 0.65));
+  vec3 sd = normalize(vec3(uSun.x, 0.0, uSun.z)), dh = normalize(vec3(d.x, 0.0, d.z) + 1e-5);
+  float az = max(dot(sd, dh), 0.0);
+  c += vec3(0.30, 0.15, 0.07) * pow(az, 6.0) * exp(-y * 7.0) * 0.7;
+  c += vec3(0.6, 0.45, 0.32) * pow(max(dot(d, uSun), 0.0), 40.0) * 0.6;
+  float cl = vn(vec3(d.x / max(y, 0.04) * 1.6, d.z / max(y, 0.04) * 0.25, 3.0)) * vn(vec3(d.x / max(y, 0.04) * 4.0, 1.7, d.z / max(y, 0.04)));
+  cl = smoothstep(0.32, 0.62, cl) * smoothstep(0.0, 0.05, y) * (1.0 - smoothstep(0.12, 0.35, y));
+  c = mix(c, vec3(0.05, 0.06, 0.08) + vec3(0.22, 0.13, 0.07) * pow(az, 3.0), cl * 0.75);
+  return c;
+}
+`;
+// underwater ambient colour by view direction and depth (km below the surface)
+const GL_WATER = `
+vec3 waterCol(vec3 d, float depth){
+  vec3 shallow = vec3(0.020, 0.105, 0.185), deep = vec3(0.0012, 0.0055, 0.014);
+  float k = smoothstep(-0.55, 0.06, d.y) * exp(-depth * 0.06);
+  return mix(deep, shallow, k);
+}
+`;
+
+// ---------------------------------------------------------------- mountain material (both halves)
+const MN = 380, gradeC = (u) => GS / 2 * (0.3 * u + 0.7 * u * u * u);
+const gridLerp = (arr, x, z) => {
+  const fx = clamp01((x + GS / 2) / GS) * GN, fz = clamp01((z + GS / 2) / GS) * GN;
+  const i = Math.min(GN - 1, Math.floor(fx)), j = Math.min(GN - 1, Math.floor(fz)), u = fx - i, v = fz - j;
+  return lerp(lerp(arr[j * NV + i], arr[j * NV + i + 1], u), lerp(arr[(j + 1) * NV + i], arr[(j + 1) * NV + i + 1], u), v);
+};
+const mGeo = new THREE.PlaneGeometry(2, 2, MN, MN); mGeo.rotateX(-Math.PI / 2);
+let MESH_MAX = -1, MESH_PX = 0, MESH_PZ = 0;
+{
+  const pos = mGeo.attributes.position, sh = new Float32Array(pos.count), oc = new Float32Array(pos.count);
+  for (let k = 0; k < pos.count; k++) {
+    const x = gradeC(pos.getX(k)), z = gradeC(pos.getZ(k)), y = heightAt(x, z);
+    pos.setXYZ(k, x, y, z); sh[k] = gridLerp(shade, x, z); oc[k] = gridLerp(ao, x, z);
+    if (y > MESH_MAX) { MESH_MAX = y; MESH_PX = x; MESH_PZ = z; }
+  }
+  mGeo.setAttribute("aShade", new THREE.BufferAttribute(sh, 1));
+  mGeo.setAttribute("aAO", new THREE.BufferAttribute(oc, 1));
+  mGeo.computeVertexNormals();
+}
+const bedGeo = new THREE.PlaneGeometry(700, 700, 1, 1); bedGeo.rotateX(-Math.PI / 2); bedGeo.translate(0, -0.03, 0);
+bedGeo.setAttribute("aShade", new THREE.BufferAttribute(new Float32Array(4).fill(1), 1));
+bedGeo.setAttribute("aAO", new THREE.BufferAttribute(new Float32Array(4).fill(0.8), 1));
+const rockMat = new THREE.ShaderMaterial({
+  uniforms: { uSun: { value: SUN }, uCam: { value: new THREE.Vector3() }, uUnder: { value: 0 }, uT: { value: 0 }, uHaze: { value: 0.028 } },
+  vertexShader: `attribute float aShade; attribute float aAO;
+    varying vec3 vW; varying vec3 vN; varying float vShade; varying float vAO; varying float vH;
+    void main(){ vec4 wp = modelMatrix * vec4(position, 1.0); vW = wp.xyz; vN = normalize(mat3(modelMatrix) * normal);
+      vShade = aShade; vAO = aAO; vH = position.y; gl_Position = projectionMatrix * viewMatrix * wp; }`,
+  fragmentShader: GL_NOISE + GL_SKY + GL_WATER + `
+    uniform vec3 uCam; uniform float uUnder, uT, uHaze;
+    varying vec3 vW; varying vec3 vN; varying float vShade; varying float vAO; varying float vH;
+    void main(){
+      vec3 lp = vec3(vW.x, vH, vW.z);
+      vec3 n = normalize(vN);
+      // fine rock relief (noise gradient bump)
+      float e = 0.05;
+      float n0 = vn(lp * 4.5) + 0.5 * vn(lp * 10.0);
+      float nx = vn((lp + vec3(e, 0.0, 0.0)) * 4.5) + 0.5 * vn((lp + vec3(e, 0.0, 0.0)) * 10.0);
+      float nz = vn((lp + vec3(0.0, 0.0, e)) * 4.5) + 0.5 * vn((lp + vec3(0.0, 0.0, e)) * 10.0);
+      vec3 nb = normalize(n + vec3(n0 - nx, 0.0, n0 - nz) * 2.0);
+      // rock: dark grey-brown with layered strata; the pale-yellow limestone band just under the summit
+      float strata = 0.5 + 0.5 * sin(vH * 11.0 + vn(lp * 1.3) * 5.0);
+      vec3 rock = mix(vec3(0.060, 0.055, 0.050), vec3(0.135, 0.118, 0.100), strata * 0.75 + 0.25 * vn(lp * 2.5));
+      float yb = smoothstep(7.70, 7.85, vH) * (1.0 - smoothstep(8.15, 8.30, vH));
+      rock = mix(rock, vec3(0.30, 0.24, 0.14), yb * 0.7);
+      // snow: on gentler slopes, more of it higher up, wind-streaked
+      float sl = n.y + 0.16 * (vn(lp * 3.0) - 0.5) + 0.08 * (vn(lp * 8.0) - 0.5);
+      float line = 3.0 + 0.9 * vn(lp * 0.7);
+      float snow = smoothstep(0.66, 0.80, sl) * smoothstep(line - 0.4, line + 1.2, vH);
+      snow = max(snow, 0.9 * smoothstep(0.30, 0.48, sl + 0.12 * (vn(vec3(lp.x * 6.0, vH * 3.0, lp.z * 6.0)) - 0.5)) * smoothstep(6.4, 7.4, vH));
+      snow *= 0.6 + 0.4 * smoothstep(0.25, 0.6, vn(vec3(lp.x * 4.0, vH * 1.5, lp.z * 4.0)));
+      vec3 alb = mix(rock, vec3(0.80, 0.84, 0.90), snow);
+      float dif = max(dot(nb, uSun), 0.0) * vShade;
+      vec3 col;
+      float dist = length(vW - uCam);
+      vec3 vdir = normalize(vW - uCam);
+      if (uUnder < 0.5) {
+        vec3 sunC = vec3(1.0, 0.82, 0.64) * 2.4, skyC = vec3(0.20, 0.28, 0.46) * 0.85;
+        col = alb * (sunC * dif + skyC * (0.45 + 0.55 * nb.y) * vAO);
+        vec3 h = normalize(uSun - vdir);
+        col += snow * vec3(1.0, 0.85, 0.7) * pow(max(dot(nb, h), 0.0), 60.0) * vShade * 1.2;
+        col = mix(col, skyCol(vdir) * 1.05, 1.0 - exp(-dist * uHaze));
+      } else {
+        float depth = max(0.0, -vW.y);
+        float lightK = exp(-depth * 0.21);                         // daylight left at this depth
+        vec3 ld = normalize(vec3(-0.40, 0.88, -0.10));
+        float dl = max(dot(nb, ld), 0.0);
+        vec3 down = vec3(0.42, 0.66, 0.95);
+        col = alb * down * (2.6 * dl * dl + 0.45 * (0.5 + 0.5 * nb.y)) * vAO * lightK;
+        // shallow caustics on the rock just under the surface
+        float ca = vn(vec3(lp.xz * 6.0, uT * 0.8)) * vn(vec3(lp.xz * 13.0 + 3.0, uT * 1.3));
+        col += alb * vec3(0.5, 0.8, 1.0) * smoothstep(0.30, 0.55, ca) * 3.0 * exp(-depth * 3.0) * max(nb.y, 0.0);
+        float tr = exp(-dist * 0.043);
+        col = mix(waterCol(vdir, depth), col, tr);
+      }
+      gl_FragColor = vec4(col, 1.0);
+    }`,
+});
+const mountainTop = new THREE.Mesh(mGeo, rockMat), mountainBot = new THREE.Mesh(mGeo, rockMat);
+const bedTop = new THREE.Mesh(bedGeo, rockMat), bedBot = new THREE.Mesh(bedGeo, rockMat);
+const groupTop = new THREE.Group(), groupBot = new THREE.Group();
+groupTop.add(mountainTop, bedTop); groupBot.add(mountainBot, bedBot);
+sceneTop.add(groupTop); sceneBot.add(groupBot);
+
+// heightmap texture for the water surface shader (foam where rock meets the surface)
+const hTex = (() => {
+  const d = new Uint16Array(NV * NV);
+  for (let i = 0; i < NV * NV; i++) d[i] = THREE.DataUtils.toHalfFloat(hgt[i]);
+  const t = new THREE.DataTexture(d, NV, NV, THREE.RedFormat, THREE.HalfFloatType);
+  t.magFilter = t.minFilter = THREE.LinearFilter; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.needsUpdate = true;
+  return t;
+})();
+
+// ---------------------------------------------------------------- sky (top half)
+const sky = new THREE.Mesh(new THREE.SphereGeometry(380, 48, 24), new THREE.ShaderMaterial({
+  uniforms: { uSun: { value: SUN } }, side: THREE.BackSide, depthWrite: false,
+  vertexShader: `varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: GL_NOISE + GL_SKY + `varying vec3 vD; void main(){ gl_FragColor = vec4(skyCol(normalize(vD)), 1.0); }`,
+}));
+sky.renderOrder = -10; sceneTop.add(sky);
+
+// ---------------------------------------------------------------- sea surface (top half)
+const seaGeo = new THREE.PlaneGeometry(760, 760, 1, 1); seaGeo.rotateX(-Math.PI / 2);
+const seaMat = new THREE.ShaderMaterial({
+  uniforms: { uSun: { value: SUN }, uCam: { value: new THREE.Vector3() }, uT: { value: 0 }, uYBase: { value: 0 },
+    uM: { value: new THREE.Vector2() }, uS: { value: new THREE.Vector2() }, uH: { value: hTex }, uGS: { value: GS }, uTc: { value: 99 }, uSplash: { value: 0 } },
+  vertexShader: `varying vec3 vW; void main(){ vec4 wp = modelMatrix * vec4(position, 1.0); vW = wp.xyz; gl_Position = projectionMatrix * viewMatrix * wp; }`,
+  fragmentShader: GL_NOISE + GL_SKY + `
+    uniform vec3 uCam; uniform float uT, uYBase, uGS, uTc, uSplash; uniform vec2 uM, uS; uniform sampler2D uH;
+    varying vec3 vW;
+    void main(){
+      vec3 toC = uCam - vW; float dist = length(toC); vec3 v = toC / dist;
+      vec2 p = vW.xz;
+      float fw = exp(-dist * 0.07);
+      // wave slopes: a few travelling swells (km units) + noise chop, faded with distance (no shimmer at the horizon)
+      vec2 g = vec2(0.0);
+      vec2 k1 = vec2(38.0, 9.0), k2 = vec2(-21.0, 30.0), k3 = vec2(61.0, -44.0), k4 = vec2(-90.0, -70.0);
+      g += 0.0040 * k1 * cos(dot(k1, p) - uT * 2.1);
+      g += 0.0034 * k2 * cos(dot(k2, p) - uT * 2.6 + 1.3);
+      g += 0.0018 * k3 * cos(dot(k3, p) - uT * 3.4 + 0.7);
+      g += 0.0010 * k4 * cos(dot(k4, p) - uT * 4.1 + 2.1);
+      float c0 = vn(vec3(p * 28.0, uT * 0.9)), cx = vn(vec3((p + vec2(0.008, 0.0)) * 28.0, uT * 0.9)), cz = vn(vec3((p + vec2(0.0, 0.008)) * 28.0, uT * 0.9));
+      g += vec2(c0 - cx, c0 - cz) * 5.0;
+      g *= fw;
+      vec3 n = normalize(vec3(-g.x * 0.5, 1.0, -g.y * 0.5));
+      float ndv = max(dot(n, v), 0.0);
+      float F = 0.02 + 0.98 * pow(1.0 - ndv, 5.0);
+      vec3 r = reflect(-v, n); r.y = abs(r.y);
+      vec3 body = vec3(0.004, 0.018, 0.032);
+      vec3 col = mix(body, skyCol(r) * 1.1, F);
+      col += vec3(1.0, 0.8, 0.6) * pow(max(dot(r, uSun), 0.0), 220.0) * 3.0 * fw;
+      // foam: churn where the rock is just under / at the surface, then a spreading ring after the summit goes under
+      vec2 uv = (p - uM) / uGS + 0.5;
+      float hb = texture2D(uH, uv).r + uYBase;          // rock height (world) under this point
+      float inside = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
+      float churn = (1.0 - smoothstep(0.0, 0.16, abs(hb + 0.05))) * inside;
+      float rr = length(p - uS);
+      float age = uT - uTc;
+      float ring = age > 0.0 ? exp(-pow((rr - (0.25 + 1.7 * age)) / 0.16, 2.0)) * exp(-age * 1.3) : 0.0;
+      float pch = age > 0.0 ? exp(-rr * rr / 0.5) * exp(-age * 1.0) : 0.0;
+      float fn = vn(vec3(p * 22.0, uT * 1.7)) * vn(vec3(p * 51.0 + 7.0, uT * 2.3));
+      float foam = clamp((churn * 0.9 + ring + pch * 0.9) * smoothstep(0.08, 0.35, fn) * 1.6, 0.0, 1.0) * uSplash;
+      col = mix(col, vec3(0.62, 0.68, 0.74), foam);
+      col = mix(col, skyCol(normalize(vec3(-v.x, 0.004, -v.z))) * 1.05, 1.0 - exp(-dist * 0.018));
+      gl_FragColor = vec4(col, 1.0);
+    }`,
+});
+const sea = new THREE.Mesh(seaGeo, seaMat); sceneTop.add(sea);
+
+// ---------------------------------------------------------------- underwater background (bottom half)
+const waterBg = new THREE.Mesh(new THREE.SphereGeometry(380, 48, 24), new THREE.ShaderMaterial({
+  uniforms: { uT: { value: 0 } }, side: THREE.BackSide, depthWrite: false,
+  vertexShader: `varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: GL_NOISE + GL_WATER + `uniform float uT; varying vec3 vD;
+    void main(){ vec3 d = normalize(vD); vec3 c = waterCol(d, 0.0);
+      c *= 0.92 + 0.16 * vn(vec3(d.x * 9.0, d.y * 14.0 + uT * 0.05, d.z * 9.0));
+      gl_FragColor = vec4(c, 1.0); }`,
+}));
+waterBg.renderOrder = -10; sceneBot.add(waterBg);
+
+// ---------------------------------------------------------------- particles
+function pointsMat(frag, blending = THREE.NormalBlending) {
+  return new THREE.ShaderMaterial({
+    uniforms: { uPx: { value: PXF }, uCol: { value: new THREE.Color(1, 1, 1) } }, transparent: true, depthWrite: false, blending,
+    vertexShader: `attribute float aSize; attribute float aAlpha; uniform float uPx; varying float vA;
+      void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mv;
+        gl_PointSize = clamp(aSize * uPx / max(-mv.z, 0.001), 1.0, 40.0); vA = aAlpha; }`,
+    fragmentShader: `uniform vec3 uCol; varying float vA; void main(){ vec2 c = gl_PointCoord * 2.0 - 1.0; float r = length(c); if (r > 1.0) discard; ${frag} }`,
+  });
+}
+function makePoints(n, mat) {
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+  g.setAttribute("aSize", new THREE.BufferAttribute(new Float32Array(n), 1));
+  g.setAttribute("aAlpha", new THREE.BufferAttribute(new Float32Array(n), 1));
+  const p = new THREE.Points(g, mat); p.frustumCulled = false; return p;
+}
+const SOFT = `float a = exp(-r * r * 3.2) * vA; gl_FragColor = vec4(uCol, a);`;
+const BUBBLE = `float rim = smoothstep(0.55, 0.92, r) * (1.0 - smoothstep(0.92, 1.0, r));
+  float hl = exp(-pow(length(c - vec2(-0.35, 0.35)) / 0.24, 2.0));
+  gl_FragColor = vec4(uCol * (0.35 + rim * 0.9 + hl * 1.4), (rim * 0.75 + hl * 0.8 + 0.07) * vA);`;
+// marine snow: lives in the bottom camera's space (always near the lens), drifts down, streams past on the pull-back
+const NSNOW = 520, snow = makePoints(NSNOW, pointsMat(SOFT, THREE.AdditiveBlending)); snow.material.uniforms.uCol.value.setRGB(0.55, 0.72, 0.85);
+const snowSeed = [];
+for (let i = 0; i < NSNOW; i++) snowSeed.push({ x: rnd() - 0.5, y: rnd() - 0.5, z: rnd(), v: 6 + rnd() * 22, s: 0.4 + rnd() * 1.4, a: 0.25 + rnd() * 0.5, ph: rnd() * 6.28 });
+camBot.add(snow);
+// bubbles + churned water released by the summit as it goes under (world space)
+const NBUB = 170, bub = makePoints(NBUB, pointsMat(BUBBLE)); bub.material.uniforms.uCol.value.setRGB(0.75, 0.9, 1.0); sceneBot.add(bub);
+const bubSeed = [];
+for (let i = 0; i < NBUB; i++) bubSeed.push({ u: rnd(), a: rnd() * 6.28, r: Math.pow(rnd(), 0.7), dy: rnd(), v: 0.55 + rnd() * 1.2, s: 0.018 + rnd() * 0.05, w: rnd() * 6.28 });
+const NCH = 26, churn = makePoints(NCH, pointsMat(SOFT)); churn.material.uniforms.uCol.value.setRGB(0.32, 0.55, 0.68); sceneBot.add(churn);
+const chSeed = []; for (let i = 0; i < NCH; i++) chSeed.push({ a: rnd() * 6.28, r: rnd(), y: rnd(), s: 0.5 + rnd() * 0.8, d: rnd() * 0.25 });
+// spray + mist thrown up where the summit plunges (top half, above the water)
+const NSP = 240, spray = makePoints(NSP, pointsMat(SOFT)); spray.material.uniforms.uCol.value.setRGB(0.80, 0.84, 0.88); sceneTop.add(spray);
+const spSeed = []; for (let i = 0; i < NSP; i++) spSeed.push({ t0: rnd(), a: rnd() * 6.28, vo: 0.2 + rnd() * 0.6, vu: 0.35 + rnd() * 1.0, s: 0.025 + rnd() * 0.07, l: 0.35 + rnd() * 0.5 });
+
+// ---------------------------------------------------------------- timing
+const summitY = (t) => lerp(CFG.aboveKm, -CFG.gapKm, ease(CFG.sinkStart, CFG.sinkEnd, t)) - 0.04 * smooth(0, CFG.sinkStart, t);
+let TC = 99; { let a = 0, b = TT; if (summitY(0) > 0 && summitY(TT) < 0) { for (let i = 0; i < 50; i++) { const m = (a + b) / 2; if (summitY(m) > 0) a = m; else b = m; } TC = (a + b) / 2; } }
+function camDist(t) {
+  return lerp(13.5, 14.6, smooth(0, CFG.revealStart, t) * 0.999) + (22.0 - 14.6) * ease(CFG.revealStart, CFG.revealEnd, t) + 0.6 * smooth(CFG.revealEnd, TT + 1.0, t);
+}
+const camPhi = (t) => lerp(0.22, 0.13, smooth(0, TT, t));
+const MX = MESH_PX, MZ = MESH_PZ; // summit position (x, z) in the world: the mountain only moves vertically
+
+// ---------------------------------------------------------------- composite (split, meniscus, light shafts, grade)
+const compMat = new THREE.ShaderMaterial({
+  uniforms: { tTop: { value: rtTop.texture }, tBot: { value: rtBot.texture }, uRes: { value: new THREE.Vector2(W, H) }, uT: { value: 0 },
+    uMen: { value: MENISCUS_Y }, uExp: { value: 1.25 }, uRay: { value: 0.15 }, uGrain: { value: 0.022 } },
+  vertexShader: `void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+  fragmentShader: `
+    uniform sampler2D tTop, tBot; uniform vec2 uRes; uniform float uT, uMen, uExp, uRay, uGrain;
+    float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    float n1(float x){ float i = floor(x), f = fract(x); f = f*f*(3.0-2.0*f); return mix(hash(vec2(i, 0.0)), hash(vec2(i + 1.0, 0.0)), f); }
+    vec3 aces(vec3 x){ return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
+    vec3 toSRGB(vec3 c){ return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
+    void main(){
+      vec2 px = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
+      float men = uMen + 5.0 * sin(px.x * 0.0105 + uT * 2.3) + 2.6 * sin(px.x * 0.029 - uT * 3.1 + 1.3) + 1.2 * sin(px.x * 0.071 + uT * 5.0);
+      float dy = px.y - men;
+      vec2 uv = gl_FragCoord.xy / uRes;
+      vec3 top = texture2D(tTop, uv).rgb;
+      float wob = exp(-max(dy, 0.0) / 46.0);
+      vec2 uvB = uv + vec2(0.0018 * wob * sin(px.y * 0.09 + uT * 3.0), -wob * (5.0 + 3.0 * sin(px.x * 0.043 + uT * 3.7)) / uRes.y);
+      vec3 bot = texture2D(tBot, uvB).rgb;
+      // light shafts from the surface (screen space, fanning out from a point above the frame), fading with depth
+      vec2 rv = px - vec2(uRes.x * 0.22, -1100.0);
+      float ang = atan(rv.x, rv.y);
+      float sh = n1(ang * 42.0 + uT * 0.30) * n1(ang * 97.0 - uT * 0.21 + 4.0) * n1(ang * 17.0 + 9.0);
+      float rays = pow(sh, 1.6) * exp(-max(dy, 0.0) / 620.0) * smoothstep(0.0, 30.0, dy);
+      bot += vec3(0.20, 0.48, 0.70) * rays * uRay * 3.0;
+      float k = smoothstep(-1.2, 1.2, dy);
+      vec3 col = mix(top, bot, k);
+      // the waterline on the dome: a bright film edge, a darker meniscus lens just under it
+      col += vec3(0.45, 0.70, 0.85) * exp(-abs(dy) / 1.7) * 0.45;
+      col *= 1.0 - 0.30 * exp(-max(dy, 0.0) / 9.0) * step(0.0, dy);
+      col = aces(col * uExp);
+      vec2 q = uv - 0.5;
+      col *= 1.0 - 0.42 * smoothstep(0.32, 0.86, length(q * vec2(1.0, 0.88)));
+      col = toSRGB(col);
+      col += (hash(gl_FragCoord.xy + floor(uT * 30.0 + 0.5) * 17.0) - 0.5) * uGrain;
+      gl_FragColor = vec4(col, 1.0);
+    }`,
+  depthTest: false, depthWrite: false,
+});
+const compScene = new THREE.Scene(), compCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+compScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), compMat));
+
+// ---------------------------------------------------------------- text overlay (bracket follows the 3D points)
+const $ = (id) => document.getElementById(id);
+const TXT = CFG.text !== false;
+for (const id of ["head", "sub", "meas", "mlabel"]) $(id).style.display = TXT ? "" : "none";
+const setLine = (el, x1, y1, x2, y2) => { el.setAttribute("x1", x1.toFixed(1)); el.setAttribute("y1", y1.toFixed(1)); el.setAttribute("x2", x2.toFixed(1)); el.setAttribute("y2", y2.toFixed(1)); };
+const proj = new THREE.Vector3();
+function toScreen(cam, x, y, z) { proj.set(x, y, z).project(cam); return [(proj.x * 0.5 + 0.5) * W, (-proj.y * 0.5 + 0.5) * H]; }
+function drawText(t) {
+  if (!TXT) return;
+  // headline + sub: on screen from frame 0; a slow settle so it never looks frozen
+  const s = 1.035 - 0.035 * smooth(0, 0.6, t);
+  $("head").style.transform = `scale(${s.toFixed(4)})`;
+  $("head").style.transformOrigin = "50% 0%";
+  $("sub").style.opacity = String(1 - 0.0 * t);
+  // measurement: surface point right above the summit (top half) to the summit (bottom half)
+  const [sx, sy] = toScreen(camBot, MX, summitY(t), MZ);
+  const [, wy] = toScreen(camTop, MX, 0, MZ);
+  const bx = sx + 132;
+  const pd = smooth(CFG.bracketStart, CFG.bracketEnd, t);
+  const yEnd = lerp(wy, sy, pd);
+  const show = t >= CFG.bracketStart ? 1 : 0;
+  $("mg").style.opacity = String(show * smooth(CFG.bracketStart, CFG.bracketStart + 0.12, t));
+  setLine($("bT"), bx - 24, wy, bx + 24, wy); setLine($("sT"), bx - 24, wy, bx + 24, wy);
+  setLine($("bV"), bx, wy, bx, yEnd); setLine($("sV"), bx, wy, bx, yEnd);
+  const pb = smooth(CFG.bracketEnd - 0.12, CFG.bracketEnd, t);
+  setLine($("bB"), bx - 24 * pb, sy, bx + 24 * pb, sy); setLine($("sB"), bx - 24 * pb, sy, bx + 24 * pb, sy);
+  setLine($("gS"), sx + 14, sy, sx + 14 + (bx - 24 - sx - 14) * pb, sy);
+  const lk = clamp01((t - CFG.labelAt) / 0.32);
+  const pop = lk <= 0 ? 0 : (lk < 0.6 ? lerp(0.6, 1.08, lk / 0.6) : lerp(1.08, 1.0, (lk - 0.6) / 0.4));
+  const lab = $("mlabel");
+  lab.style.opacity = String(smooth(0, 0.35, lk));
+  lab.style.left = `${(bx + 34).toFixed(1)}px`;
+  lab.style.top = `${((wy + sy) / 2 - 78).toFixed(1)}px`;
+  lab.style.transform = `scale(${pop.toFixed(4)})`;
+  lab.style.transformOrigin = "0% 50%";
+}
+
+// ---------------------------------------------------------------- frame
+function placeCameras(t) {
+  const D = camDist(t), ph = camPhi(t);
+  const yaw = ph - Math.atan((W / 2 - SUMMIT_X) / PXF);
+  for (const [c, y] of [[camTop, CAM_TOP_Y], [camBot, CAM_BOT_Y]]) {
+    c.position.set(MX + Math.sin(ph) * D, y, MZ + Math.cos(ph) * D);
+    c.rotation.set(-PITCH, yaw, 0);
+    c.updateMatrixWorld(); c.updateProjectionMatrix();
+  }
+}
+function updateParticles(t, yBase) {
+  // marine snow (camera space)
+  const sp = snow.geometry.attributes.position.array, ss = snow.geometry.attributes.aSize.array, sa = snow.geometry.attributes.aAlpha.array;
+  const th = Math.tan(FOV / 2 * D2R), back = (camDist(t) - camDist(0)) * 0.11;
+  for (let i = 0; i < NSNOW; i++) {
+    const q = snowSeed[i];
+    let zf = (q.z + back) % 1; const z = -(0.06 + zf * 1.2);
+    const az = -z;
+    sp[i * 3] = q.x * 2 * az * th * (W / H) * 1.1 + Math.sin(t * 0.7 + q.ph) * az * 0.004;
+    sp[i * 3 + 1] = q.y * 2 * az * th * 1.1 - q.v * t * az / PXF;
+    sp[i * 3 + 2] = z;
+    ss[i] = q.s * 0.00016;
+    sa[i] = q.a * smooth(0, 0.08, zf) * (1 - smooth(0.85, 1, zf)) * (0.55 + 0.45 * smooth(0.0, 0.4, az));
+  }
+  for (const n of ["position", "aSize", "aAlpha"]) snow.geometry.attributes[n].needsUpdate = true;
+  // bubbles: released from the summit while it sinks after TC, rising to the surface
+  const bp = bub.geometry.attributes.position.array, bs = bub.geometry.attributes.aSize.array, ba = bub.geometry.attributes.aAlpha.array;
+  for (let i = 0; i < NBUB; i++) {
+    const q = bubSeed[i], t0 = TC + q.u * 1.25, age = t - t0;
+    if (TC > TT || age <= 0) { ba[i] = 0; continue; }
+    const y0 = summitY(t0) - q.dy * 0.25, y = Math.min(-0.012, y0 + q.v * age + 0.15 * age * age);
+    const r = 0.08 + q.r * 0.75 + age * 0.12;
+    bp[i * 3] = MX + Math.cos(q.a) * r + Math.sin(age * 4 + q.w) * 0.03;
+    bp[i * 3 + 1] = y;
+    bp[i * 3 + 2] = MZ + Math.sin(q.a) * r * 0.6;
+    bs[i] = q.s;
+    ba[i] = smooth(0, 0.12, age) * (1 - smooth(-0.12, -0.02, y)) * 0.9;
+  }
+  for (const n of ["position", "aSize", "aAlpha"]) bub.geometry.attributes[n].needsUpdate = true;
+  // churned water around the plunge point
+  const cp = churn.geometry.attributes.position.array, cs = churn.geometry.attributes.aSize.array, ca = churn.geometry.attributes.aAlpha.array;
+  for (let i = 0; i < NCH; i++) {
+    const q = chSeed[i], age = t - TC - q.d;
+    if (TC > TT || age <= 0) { ca[i] = 0; continue; }
+    const r = 0.2 + q.r * 0.9 + age * 0.35;
+    cp[i * 3] = MX + Math.cos(q.a) * r; cp[i * 3 + 1] = -0.08 - q.y * 0.55 - age * 0.05; cp[i * 3 + 2] = MZ + Math.sin(q.a) * r * 0.5;
+    cs[i] = q.s * (0.8 + age * 0.6);
+    ca[i] = 0.16 * smooth(0, 0.2, age) * Math.exp(-age * 0.9);
+  }
+  for (const n of ["position", "aSize", "aAlpha"]) churn.geometry.attributes[n].needsUpdate = true;
+  // spray and mist above the plunge point
+  const pp = spray.geometry.attributes.position.array, ps = spray.geometry.attributes.aSize.array, pa = spray.geometry.attributes.aAlpha.array;
+  for (let i = 0; i < NSP; i++) {
+    const q = spSeed[i], t0 = TC - 0.12 + q.t0 * 0.55, age = t - t0;
+    if (TC > TT || age <= 0 || age > q.l) { pa[i] = 0; continue; }
+    const y = q.vu * age - 2.4 * age * age;
+    const r = 0.15 + q.vo * age;
+    pp[i * 3] = MX + Math.cos(q.a) * r; pp[i * 3 + 1] = Math.max(-0.05, y); pp[i * 3 + 2] = MZ + Math.sin(q.a) * r;
+    ps[i] = q.s * (1 + age * 2.0);
+    pa[i] = 0.55 * smooth(0, 0.08, age) * (1 - smooth(q.l * 0.45, q.l, age)) * (y > 0 ? 1 : 0);
+  }
+  for (const n of ["position", "aSize", "aAlpha"]) spray.geometry.attributes[n].needsUpdate = true;
+}
+function renderAt(t) {
+  t = Math.max(0, Math.min(TT, t));
+  const yBase = summitY(t) - MESH_MAX;
+  groupTop.position.y = yBase; groupBot.position.y = yBase;
+  placeCameras(t);
+  sky.position.copy(camTop.position); waterBg.position.copy(camBot.position);
+  seaMat.uniforms.uT.value = t; seaMat.uniforms.uYBase.value = yBase; seaMat.uniforms.uM.value.set(0, 0); seaMat.uniforms.uS.value.set(MX, MZ);
+  seaMat.uniforms.uTc.value = TC; seaMat.uniforms.uSplash.value = 1;
+  seaMat.uniforms.uCam.value.copy(camTop.position);
+  waterBg.material.uniforms.uT.value = t;
+  updateParticles(t, yBase);
+  rockMat.uniforms.uT.value = t;
+  // top half (air)
+  rockMat.uniforms.uUnder.value = 0; rockMat.uniforms.uCam.value.copy(camTop.position);
+  renderer.setRenderTarget(rtTop); renderer.render(sceneTop, camTop);
+  // bottom half (water)
+  rockMat.uniforms.uUnder.value = 1; rockMat.uniforms.uCam.value.copy(camBot.position);
+  renderer.setRenderTarget(rtBot); renderer.render(sceneBot, camBot);
+  // composite to the canvas
+  compMat.uniforms.uT.value = t;
+  renderer.setRenderTarget(null); renderer.render(compScene, compCam);
+  drawText(t);
+}
+window.renderAt = renderAt;
+window.addEventListener("hf-seek", (e) => renderAt(e.detail.time));
+renderAt(window.__hfThreeTime || 0);
+
+// ---------------------------------------------------------------- preview mode (?preview): play/pause + scrubber
+if (new URLSearchParams(location.search).has("preview")) {
+  const root = $("root");
+  const fit = () => { const k = Math.min(innerWidth / W, (innerHeight - 60) / H); root.style.transformOrigin = "0 0"; root.style.transform = `scale(${k})`; root.style.marginLeft = `${Math.max(0, (innerWidth - W * k) / 2)}px`;
+    document.body.style.width = innerWidth + "px"; document.body.style.height = innerHeight + "px"; document.documentElement.style.height = innerHeight + "px"; };
+  const bar = document.createElement("div"); bar.id = "pv";
+  bar.innerHTML = `<button id="pvPlay">Pause</button><input id="pvT" type="range" min="0" max="${TT}" step="${1 / 30}" value="0" /><span id="pvLab">0.00 s</span>`;
+  document.body.appendChild(bar); fit(); addEventListener("resize", fit);
+  let playing = true, t0 = performance.now(), cur = 0;
+  const show = (t) => { cur = t; renderAt(t); $("pvT").value = String(t); $("pvLab").textContent = `${t.toFixed(2)} s`; };
+  $("pvPlay").onclick = () => { playing = !playing; $("pvPlay").textContent = playing ? "Pause" : "Play"; t0 = performance.now() - cur * 1000; };
+  $("pvT").oninput = (e) => { playing = false; $("pvPlay").textContent = "Play"; show(parseFloat(e.target.value)); };
+  const loop = () => { if (playing) show(((performance.now() - t0) / 1000) % TT); requestAnimationFrame(loop); };
+  loop();
+}
+</script>
+</body>
+</html>

@@ -80,5 +80,6 @@ mood (or another with mid-range content) for facts/history videos.
 - HyperFrames lint: no CSS transform on elements GSAP animates; video b-roll must be in index.html statically
   (build.py writes it); timeline registers after fonts load (inline script in index.html).
 - Render speed ≈ 4.5× real time at 1080×1920 on 4 CPUs; Blender Cycles ≈ 20 s/frame at full res — prefer
-  Three.js templates (`editor/templates/3d/`) unless photoreal 3D is needed.
+  Three.js templates (`editor/templates/3d/`) unless photoreal 3D is needed. `render3d.py <template> --preview` serves a
+  template on localhost; templates with a `?preview` mode (e.g. `everest_ocean.html`) get play/pause + a scrubber.
 - Test project: `projects/_test/plan.json` (regenerate its clip with `editor/scripts/make_test_clip.py`).
