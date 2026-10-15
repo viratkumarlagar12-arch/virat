@@ -53,6 +53,9 @@ before assembling. AI-generated shots: small `tag` overlay "AI visual" and tell 
   Verified science + numbers are in `NOTES.md`. v3 uses the creator's AI clips (dal hook, whistle cooker) with "AI visual" tags.
 - `projects/short4` (Venus Hindi remake): Hindi VO script delivered (`script.md`); waiting for the creator's recording, then
   edit over their English Short's footage + Three.js 3D scenes (plan in `NOTES.md`).
+- `projects/viral_ref`: the creator's best Reel (Kola borehole, 55k views): beat sheet, Instagram Insights, top performers on
+  the topic and the formula to reuse. Read it before writing any new script.
+- `projects/short5` (Mariana Trench POV dive): Hindi script delivered (`script.md`); waiting for the recording + AI clips.
 
 ## AI voiceover ("you give new voice over")
 `tts.py <voice> script.txt out.wav --speed 1.34 --pauses '[...]' --json timings.json` — free offline Hindi voices
